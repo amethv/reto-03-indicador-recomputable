@@ -33,8 +33,8 @@ export async function startApp(){
    if(req.method!=='GET'){res.writeHead(405);res.end();return;}
    const vendors={'/vendor/papaparse.mjs':null,'/vendor/papaparse.umd.js':'node_modules/papaparse/papaparse.min.js','/vendor/ethers.mjs':'node_modules/ethers/dist/ethers.min.js'};
    if(url.pathname==='/vendor/papaparse.mjs'){res.writeHead(200,{'Content-Type':mime['.mjs']});res.end("export default globalThis.Papa;");return;}
-   const relative=vendors[url.pathname]||(url.pathname==='/'?'index.html':decodeURIComponent(url.pathname).slice(1));
-   const allowed=relative==='index.html'||relative==='README.md'||relative==='AUDITORIA_NIVEL_1.md'||/^src\/[\w.-]+$/.test(relative)||/^contracts\/[\w.-]+$/.test(relative)||/^datos\/[\w.-]+$/.test(relative)||/^evidencias\/[\w.-]+$/.test(relative)||Object.values(vendors).includes(relative);
+   const relative=vendors[url.pathname]||(url.pathname==='/'?'src/index.html':decodeURIComponent(url.pathname).slice(1));
+   const allowed=relative==='README.md'||/^docs\/[\w.-]+\.md$/.test(relative)||/^src\/[\w.-]+$/.test(relative)||/^contracts\/[\w.-]+$/.test(relative)||/^datos\/[\w.-]+$/.test(relative)||/^evidencias\/[\w.-]+$/.test(relative)||Object.values(vendors).includes(relative);
    if(!allowed){res.writeHead(404);res.end('No disponible');return;}
    const file=relative.startsWith('evidencias/')?path.resolve(EVIDENCE_DIR,relative.slice(11)):path.resolve(ROOT,relative);if(!file.startsWith(ROOT+path.sep))throw new Error('Ruta no permitida');
    const data=await fs.readFile(file);res.writeHead(200,{'Content-Type':mime[path.extname(file)]||'application/octet-stream'});res.end(data);

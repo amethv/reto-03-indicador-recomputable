@@ -2,7 +2,7 @@
 
 Indicador recomputable sobre los 187 tickets del paquete entregado. Valida los originales, ancla un compromiso en una EVM local y detecta cambios por ticket y campo. Alcance exclusivo: Nivel 1.
 
-Repositorio público: https://github.com/dapdigital/reto-03-indicador-recomputable
+Repositorio público: pendiente de publicar.
 
 ## Ejecutar
 
@@ -29,7 +29,7 @@ Detener cualquier servidor anterior y ejecutar:
 npm.cmd run demo
 ```
 
-Cada ejecución crea `.instances/demo-<fecha>/`, con contrato sin sellar. No borra ni reemplaza instancias. Seguir [DEMO_NIVEL_1.md](DEMO_NIVEL_1.md): cinco criterios en orden, cinco minutos. Para retomar una instancia, establecer `$env:ATENEA_INSTANCE='demo-...'` y ejecutar `npm.cmd start`. Para volver a la normal: `Remove-Item Env:ATENEA_INSTANCE -ErrorAction SilentlyContinue`.
+Cada ejecución crea `.instances/demo-<fecha>/`, con contrato sin sellar. No borra ni reemplaza instancias. Seguir [docs/DEMO.md](docs/DEMO.md): cinco criterios en orden, cinco minutos. Para retomar una instancia, establecer `$env:ATENEA_INSTANCE='demo-...'` y ejecutar `npm.cmd start`. Para volver a la normal: `Remove-Item Env:ATENEA_INSTANCE -ErrorAction SilentlyContinue`.
 
 ## Resultados sobre los originales
 
@@ -59,13 +59,13 @@ npm.cmd run verify:source -- "RUTA_A_LA_CARPETA_FUENTE/datos"
 
 El segundo comando compara una copia externa con las huellas del proyecto. También se comprueban los once archivos al iniciar. Una huella local es referencia de procedencia, no un certificado del organizador.
 
-Se corrigió fecha_reporte de TK-2026-04201: la copia anterior tenía 13:39:55 y la fuente 12:39:55, el 31 de julio de 2026 (UTC−05:00). Se restauraron sus 8,4 horas hábiles. Los hashes antiguo y nuevo quedan documentados. Ver [CORRECCION_Y_PROCEDENCIA.md](CORRECCION_Y_PROCEDENCIA.md).
+Se corrigió fecha_reporte de TK-2026-04201: la copia anterior tenía 13:39:55 y la fuente 12:39:55, el 31 de julio de 2026 (UTC−05:00). Se restauraron sus 8,4 horas hábiles. Los hashes antiguo y nuevo quedan documentados. Ver [docs/PROCEDENCIA.md](docs/PROCEDENCIA.md).
 
 ## Horas hábiles y feriados
 
 El motor calcula la intersección con lunes a viernes, 08:00–17:00 en UTC−05:00, independientemente de la zona del equipo. Rechaza fechas inexistentes e intervalos invertidos. Descuenta las fechas ISO de `src/calendar.mjs`; hay pruebas de feriados, fines de semana y entradas inválidas.
 
-**Supuesto del caso:** no se entregó calendario oficial de la entidad ficticia. La lista está vacía; no se presenta como calendario oficial. Si el organizador facilita fechas, incorporarlas con su fuente, incrementar la versión y usar una nueva instancia. El hash de reglas incluye el calendario. Ver [CALENDARIO.md](CALENDARIO.md).
+**Supuesto del caso:** no se entregó calendario oficial de la entidad ficticia. La lista está vacía; no se presenta como calendario oficial. Si el organizador facilita fechas, incorporarlas con su fuente, incrementar la versión y usar una nueva instancia. El hash de reglas incluye el calendario. Ver [docs/CALENDARIO.md](docs/CALENDARIO.md).
 
 El SLA procede del catálogo: crítica 4 h, alta 8 h, media 24 h, baja 72 h. Se recalculan horas desde fechas y se contrastan horas, SLA y cumplimiento declarados; no se usa cumple_sla como decisión de entrada. Con los originales actuales hay discrepancias en TK-2026-04385 y TK-2026-04386.
 
@@ -108,16 +108,16 @@ npm.cmd run audit
 
 Las pruebas del contrato usan EVM en memoria; la auditoría usa Edge y cadena persistida real. Comprueba sellado, recálculo, alteración, comparación, privacidad, caída RPC, recarga, reinicio y móvil. Exporta capturas y resultados a `evidencias/` y actualiza `AUDITORIA_NIVEL_1.md`. La prueba manual se acredita solo con confirmación humana y un CSV compatible con el mismo sello.
 
-`ci/github-actions-tests.yml` es una plantilla opcional, no un workflow activo: la credencial utilizada para publicar no tiene permiso de workflows. Las 29 pruebas y la auditoría se ejecutaron localmente. Para activar CI con una credencial autorizada, copiar la plantilla a `.github/workflows/tests.yml`.
+`.github/workflows/tests.yml` queda listo; se ejecutará cuando se publique el repositorio. Las 29 pruebas y la auditoría se ejecutaron localmente. 
 
 Para un ensayo asistido: sellar primero la instancia normal, detenerla y ejecutar `npm.cmd run manual`. Abre el navegador y espera que la persona edite la copia cuya ruta imprime. La carga y verificación son automáticas; no se atribuye a una persona una edición realizada por el script.
 
 ## Entregables
 
 - Código, contrato, pruebas y datos sintéticos.
-- `DEMO_NIVEL_1.md`: guion y preguntas del jurado.
-- `output/Nivel-1-arquitectura-y-delimitacion.pptx`: dos láminas editables.
-- `AUDITORIA_NIVEL_1.md` y `evidencias/`: resultados y edición manual confirmada.
-- `CALENDARIO.md`: supuesto y procedimiento para fechas oficiales.
+- `docs/DEMO.md`: guion y preguntas del jurado.
+- `presentacion/Nivel-1-arquitectura-y-delimitacion.pptx`: dos láminas editables.
+- `docs/AUDITORIA.md` y `evidencias/`: resultados y edición manual confirmada.
+- `docs/CALENDARIO.md`: supuesto y procedimiento para fechas oficiales.
 
 No se implementan penalidades, firmas de proveedores ni controles opcionales de niveles 2 y 3 del reto. Se incluyen los tickets de todos los niveles de soporte: son conceptos distintos a los niveles de entrega del hackathon.
