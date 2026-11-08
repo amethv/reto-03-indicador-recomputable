@@ -8,7 +8,7 @@ Repositorio público: https://github.com/dapdigital/reto-03-indicador-recomputab
 
 Requisitos: Node.js 22 o superior, npm y un navegador moderno. La auditoría y el asistente de edición manual requieren Microsoft Edge.
 
-En el equipo preparado puedes abrir **INICIAR_APP.cmd** o **INICIAR_DEMO.cmd** con doble clic. El lanzador usa Node instalado o el runtime disponible en este equipo. En otro equipo, instalar Node y las dependencias como se indica abajo.
+En el equipo preparado puedes abrir **INICIAR_APP.cmd** o **INICIAR_DEMO.cmd** con doble clic. El lanzador usa el node.exe del PATH; si no existe, indica instalar Node 22 o superior. En otro equipo, instalar Node y las dependencias como se indica abajo.
 
 ```powershell
 npm.cmd ci --no-audit --no-fund
@@ -59,7 +59,7 @@ npm.cmd run verify:source -- "RUTA_A_LA_CARPETA_FUENTE/datos"
 
 El segundo comando compara una copia externa con las huellas del proyecto. También se comprueban los once archivos al iniciar. Una huella local es referencia de procedencia, no un certificado del organizador.
 
-Se corrigió fecha_reporte de TK-2026-04201: la copia anterior tenía 13:39:55 y la fuente 12:39:55, el 31 de julio de 2026 (UTC−05:00). Se restauraron sus 8,4 horas hábiles. La cadena anterior se conserva en `historico/antes-correccion/` y en la antigua `.chain/`, excluidas de Git. Ver [CORRECCION_Y_PROCEDENCIA.md](CORRECCION_Y_PROCEDENCIA.md).
+Se corrigió fecha_reporte de TK-2026-04201: la copia anterior tenía 13:39:55 y la fuente 12:39:55, el 31 de julio de 2026 (UTC−05:00). Se restauraron sus 8,4 horas hábiles. Los hashes antiguo y nuevo quedan documentados. Ver [CORRECCION_Y_PROCEDENCIA.md](CORRECCION_Y_PROCEDENCIA.md).
 
 ## Horas hábiles y feriados
 
