@@ -1,6 +1,8 @@
 import {Contract,JsonRpcProvider} from 'ethers';
 import {ABI,readAnchor} from './chain.mjs';
-import {POLICY,PERIOD,SOURCES,csv,buildEvidence,verifyText,evidenceHash,authenticateEvidence,sealedValues} from './core.mjs';
+import {POLICY,PERIOD,SOURCES,BITACORA_HEADERS,csv,businessHours,buildEvidence,verifyText,evidenceHash,authenticateEvidence,sealedValues} from './core.mjs';
+import {simulateHolidays} from './findings.mjs';
+import {personalValues,searchPersonalData,collectChainData} from './privacy.mjs';
 
 const $=id=>document.getElementById(id);
 let network='local',config,provider,baseline,evidence=null,prepared=null,originalTexts=null,verified=null,sealed=false,busy=false;
@@ -20,7 +22,7 @@ function clearResults(message='VERIFICACIÓN INCOMPLETA · ejecuta la verificaci
  $('gap').textContent='Diferencia pendiente de verificación.';
  $('headline').textContent='Publicado 98,25 % · Solo confirmados por el usuario: pendiente de verificación';
  $('findings').hidden=true;$('explanation').textContent='';
- $('tickets').replaceChildren();$('tableCount').textContent='';$('changes').replaceChildren();
+ $('tickets').replaceChildren();$('tableCount').textContent='';$('changes').replaceChildren();$('holidayResult').replaceChildren();$('personal').replaceChildren();
 }
 function controls(){for(const el of document.querySelectorAll('button,input,select'))el.disabled=busy;$('seal').disabled=busy||!prepared||sealed;$('export').disabled=busy||!evidence;}
 async function run(task){if(busy)return;busy=true;controls();try{await task();}catch(error){clearResults(`${error.code==='CHAIN_CONNECTION'?'ERROR DE CONEXIÓN':'VERIFICACIÓN INCOMPLETA'} · ${error.message}`);status('sealStatus',error.message,'pending');console.error(error);}finally{busy=false;controls();}}
@@ -135,6 +137,26 @@ $('seal').onclick=()=>run(async()=>{
  status('sealStatus',`SELLADO CONFIRMADO · 187 tickets · bloque ${receipt.blockNumber}\nTX: ${anchor.transactionHash}${saved.ok?'\nEvidencia guardada en evidencias/sello-original.json':'\nNo se pudo guardar la evidencia en disco; descárgala antes de cerrar.'}`,'green');
 });
 $('verify').onclick=()=>run(doVerify);
+$('simulate').onclick=()=>run(async()=>{
+ if(!verified)throw new Error('Primero verifica el CSV original (sección 3) para simular sobre tickets verificados.');
+ const date=$('holidayDate').value;if(!/^\d{4}-\d{2}-\d{2}$/.test(date))throw new Error('Elige una fecha válida.');
+ const sim=simulateHolidays(verified.result.details,[date],businessHours),base=verified.findings.sla.corrected;
+ const rows=sim.changed.map(c=>`<tr${c.statusChanged?' class="flip"':''}><td>${esc(c.id)}</td><td>${fmt(c.hoursBefore)} h → ${fmt(c.hoursAfter)} h</td><td>${c.sla} h</td><td>${c.withinBefore?'Cumple':'No cumple'} → ${c.withinAfter?'Cumple':'No cumple'}</td></tr>`).join('');
+ $('holidayResult').innerHTML=`<div class="status pending">SIMULACIÓN NO SELLADA · ${esc(date)} como feriado. El sello y el calendario oficial (vacío) no cambian.</div>
+  <p><strong>${sim.changed.length}</strong> tickets cambian de horas y <strong>${sim.statusChanged.length}</strong> cambian de estado de SLA. Dentro de SLA: ${base.numerator}/${base.denominator} (${pct(base)}) → ${sim.within.numerator}/${sim.within.denominator} (${pct(sim.within)}).</p>
+  ${sim.changed.length?`<div class="tablewrap"><table><thead><tr><th>Ticket</th><th>Horas hábiles</th><th>SLA</th><th>Estado</th></tr></thead><tbody>${rows}</tbody></table></div>`:'<p>Ese día no afecta a ningún ticket.</p>'}
+  <p class="small">Para adoptar un feriado oficial hay que registrarlo con su fuente en src/calendar.mjs, cambiar la versión de las reglas y sellar una instancia nueva.</p>`;
+});
+$('searchPersonal').onclick=()=>run(async()=>{
+ const anchor=await readAnchor(provider,config);showAnchor(anchor);
+ const t=await texts(),values=personalValues(csv(t.tickets).rows,csv(t.bitacora,BITACORA_HEADERS).rows);
+ const chain=await collectChainData(provider,config,anchor),result=await searchPersonalData(chain.blobs,values);
+ const kind=result.matches.length?'red':'green';
+ $('personal').innerHTML=`<div class="status ${kind}">${result.matches.length} coincidencias de ${result.searched} valores buscados</div>
+  <p class="small">Se buscaron ${result.searched} nombres distintos (usuarios, técnicos, unidades y actores de la bitácora) en texto UTF-8, mayúsculas, minúsculas, SHA-256 y keccak256: ${result.patterns} patrones sobre ${result.bytes} bytes leídos de ${esc(result.sources.join('; '))}.</p>
+  ${result.matches.length?`<ul>${result.matches.map(m=>`<li>${esc(m.kind)} · ${esc(m.form)} · ${esc(m.source)} · byte ${m.offset}</li>`).join('')}</ul>`:''}
+  <h3>Lo que sí hay en la cadena</h3><table class="summary"><tbody>${chain.decoded.map(([k,v])=>`<tr><td>${esc(k)}</td><td class="mono-cell">${esc(v)}</td></tr>`).join('')}</tbody></table>`;
+});
 $('inspect').onclick=()=>run(async()=>showAnchor(await readAnchor(provider,config)));
 $('verifyFile').onchange=()=>clearResults();
 for(const id of Object.values(FILE_INPUTS))$(id).onchange=()=>{prepared=null;clearResults();controls();};

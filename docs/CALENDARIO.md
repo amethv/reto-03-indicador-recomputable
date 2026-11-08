@@ -15,3 +15,7 @@ Para incorporar fechas oficiales:
 El calendario forma parte de POLICY y su hash se registra en el contrato. El verificador rechaza reglas distintas. El calendario afecta horas y SLA, no los conteos A y B bajo la regla adoptada.
 
 Las fechas de feriados en pruebas son ejemplos ficticios de prueba, no un calendario oficial. Se prueba exclusión de jornada, fin de semana, fechas imposibles y duplicados.
+
+## Simulación en la interfaz
+
+El panel «Simular feriado» recalcula horas y SLA en el navegador para una fecha elegida (por ejemplo 2026-07-24) y muestra qué tickets cambian de estado. Es una simulación no sellada: no modifica `src/calendar.mjs`, las reglas ni el sello. Con 2026-07-24 cambian las horas de 26 tickets y 4 pasan a cumplir el SLA (120/187 → 124/187). TK-2026-04228 sigue contando como incumplido porque la bitácora registra que su fecha se editó.

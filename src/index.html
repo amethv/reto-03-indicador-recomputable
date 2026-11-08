@@ -83,6 +83,14 @@
   <div class="tablewrap"><table><thead><tr><th>ID / integridad</th><th>Prioridad</th><th>Reporte / resolución</th><th>Horas calculadas / SLA</th><th>Cumplimiento</th><th>Cierre / confirmación</th><th>Trazabilidad A y B</th></tr></thead><tbody id="tickets"></tbody></table></div>
 </section>
 
+<section id="holiday" class="aside">
+  <h2>Simular feriado</h2>
+  <p>El brief exige descontar feriados, pero el caso no entrega un calendario oficial: el sello usa una lista vacía como supuesto declarado (<a href="/docs/CALENDARIO.md" target="_blank" rel="noopener">docs/CALENDARIO.md</a>). Aquí puedes ver qué pasaría con una fecha concreta. Se recalcula en el navegador sobre los tickets verificados.</p>
+  <div class="inputs"><label>Fecha del feriado<input id="holidayDate" type="date" value="2026-07-24" min="2026-07-01" max="2026-08-31"></label></div>
+  <button id="simulate">Simular feriado</button>
+  <div id="holidayResult" aria-live="polite"></div>
+</section>
+
 <section id="s5">
   <h2>5. Privacidad en blockchain</h2>
   <h3>¿Qué almacenamos en blockchain?</h3>
@@ -91,6 +99,8 @@
   <div id="privacy" class="mono">Pendiente de consulta real.</div>
   <p id="explorer" class="explorer"></p>
   <button id="inspect">Consultar contrato y transacción</button>
+  <button id="searchPersonal">Buscar datos personales en la cadena</button>
+  <div id="personal" aria-live="polite"></div>
   <details><summary>Ver calldata, evento y almacenamiento consultados</summary><pre id="onchain">Sin consulta.</pre></details>
   <p>Un hash demuestra que un archivo coincide con lo sellado; no demuestra que sus datos fueran verdaderos antes del sellado.</p>
   <p><a href="/contracts/RegistroIndicador.sol" target="_blank" rel="noopener">Código fuente del contrato</a> · <a id="configLink" href="/evidencias/red-local.json" target="_blank" rel="noopener">Configuración y despliegue</a> · <a href="/docs/AUDITORIA.md" target="_blank" rel="noopener">Auditoría de aceptación</a> · <a href="/docs/HALLAZGOS.md" target="_blank" rel="noopener">Hallazgos</a></p>
