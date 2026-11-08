@@ -4,7 +4,7 @@ import {chromium,expect} from '@playwright/test';
 import {startApp} from './start.mjs';
 import {ROOT,STATE_ROOT,EVIDENCE_DIR,INSTANCE} from './runtime.mjs';
 import {readAnchor} from '../src/chain.mjs';
-import {csv,verifyText,sha} from '../src/core.mjs';
+import {SOURCES,csv,verifyText,sha} from '../src/core.mjs';
 const directory=path.join(STATE_ROOT,'manual');
 await fs.mkdir(directory,{recursive:true});
 const target=path.join(directory,`tickets-manual-${Date.now()}.csv`);
@@ -29,7 +29,8 @@ try{
  old.rows.forEach((row,i)=>{for(const key of old.headers)if(row[key]!==now.rows[i][key])changes.push({id:row.ticket_id,field:key,before:row[key],after:now.rows[i][key]});});
  if(changes.length!==1||changes[0].id!=='TK-2026-04201'||changes[0].field!=='fecha_resolucion')throw new Error('Se requiere cambiar solo fecha_resolucion de TK-2026-04201');
  const evidence=JSON.parse(await fs.readFile(path.join(EVIDENCE_DIR,'sello-original.json'),'utf8'));
- const result=await verifyText(changed,evidence,before,await fs.readFile(path.join(ROOT,'datos/catalogo_servicios.csv'),'utf8'),await fs.readFile(path.join(ROOT,'datos/indicador_mensual.csv'),'utf8'));
+ const aux=Object.fromEntries(await Promise.all(Object.entries(SOURCES).map(async([k,f])=>[k,await fs.readFile(path.join(ROOT,'datos',f),'utf8')])));
+ const result=await verifyText(changed,evidence,before,aux);
  if(result.status!=='ROJO')throw new Error('No se detectó alteración');
  await page.locator('#verifyFile').setInputFiles(target);await page.locator('#verify').click();
  await expect(page.locator('#verification')).toContainText('ROJO');

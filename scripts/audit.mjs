@@ -7,7 +7,7 @@ import Papa from 'papaparse';
 import {startApp} from './start.mjs';
 import {ROOT,STATE_ROOT,EVIDENCE_DIR,INSTANCE} from './runtime.mjs';
 import {readAnchor,ABI} from '../src/chain.mjs';
-import {PERIOD,csv,verifyText,authenticateEvidence,sha} from '../src/core.mjs';
+import {PERIOD,SOURCES,csv,verifyText,authenticateEvidence,sha} from '../src/core.mjs';
 import {verifySource} from './verify-source.mjs';
 const names=['Sellado de los 187 tickets','Recálculo independiente','Detección de alteraciones','Comparación de indicadores','Privacidad en blockchain'];
 const implementation=[
@@ -25,7 +25,7 @@ try {
  const context=await browser.newContext({viewport:{width:1440,height:1100}}),page=await context.newPage();
  page.on('pageerror',e=>report.browserErrors.push(e.message));
  await page.goto('http://127.0.0.1:8080');await page.waitForFunction(()=>window.__ateneaReady===true);
- originals={tickets:await fs.readFile(path.join(ROOT,'datos/tickets.csv'),'utf8'),catalog:await fs.readFile(path.join(ROOT,'datos/catalogo_servicios.csv'),'utf8'),report:await fs.readFile(path.join(ROOT,'datos/indicador_mensual.csv'),'utf8')};
+ originals=Object.fromEntries(await Promise.all(Object.entries(SOURCES).map(async([k,f])=>[k,await fs.readFile(path.join(ROOT,'datos',f),'utf8')])));
  // Se ejecutan las cinco demostraciones en el orden del jurado.
  step=1;let item=report.criteria[0];item.test='Cargar originales, pulsar sellado en navegador si aún no existe; comprobar código, recibo, evento y getSeal mediante JSON-RPC real.';
  await page.locator('#load').click();await expect(page.locator('#sealStatus')).toContainText('187/187');
@@ -36,7 +36,7 @@ try {
  item.status='APROBADO';item.result={count:187,root:anchor.root,transaction:anchor.transactionHash,block:anchor.blockNumber,address:anchor.address,chainId:anchor.chainId};item.evidence=['evidencias/red-local.json','evidencias/sello-original.json','evidencias/01-sellado.png'];await page.screenshot({path:path.join(STATE_ROOT,item.evidence[2]),fullPage:true});
  step=2;item=report.criteria[1];item.test='Verificar original en interfaz contra cadena real; contrastar resultados con recálculo desde registros, sin usar porcentaje publicado como resultado.';
  await page.locator('#verify').click();await expect(page.locator('#verification')).toContainText('VERDE',{timeout:30000});
- const originalResult=await verifyText(originals.tickets,evidence,anchor,originals.catalog,originals.report);assert.equal(originalResult.status,'VERDE');
+ const originalResult=await verifyText(originals.tickets,evidence,anchor,originals);assert.equal(originalResult.status,'VERDE');
  assert.equal(originalResult.result.numeratorA,187);assert.equal(originalResult.result.denominator,187);assert.equal(originalResult.result.percentA,100);assert.equal(originalResult.published,98.25);assert.equal(originalResult.difference,1.75);
  await expect(page.locator('#percentA')).toHaveText('100,00 %');await expect(page.locator('#published')).toContainText('1,75');await expect(page.locator('#tickets tr')).toHaveCount(187);
  item.status='APROBADO';item.result={numerator:187,denominator:187,recomputed:100,published:98.25,differencePP:1.75,calendarJuly:185,calendarAugust:2,scope:'lote entregado y estado final; no corte calendario estricto',slaDiscrepancies:originalResult.result.details.filter(r=>r.discrepancies.length).map(r=>r.id),outsideSLA:originalResult.result.details.filter(r=>r.within===false).length};item.evidence=['evidencias/02-recalculo.png'];await page.screenshot({path:path.join(STATE_ROOT,item.evidence[0]),fullPage:true});
@@ -46,7 +46,7 @@ try {
  const modified=Papa.unparse(rows,{columns:evidence.headers,newline:'\n'}),copy=path.join(EVIDENCE_DIR,'tickets-modificado.csv');await fs.writeFile(copy,modified);
  await page.locator('#verifyFile').setInputFiles(copy);await expect(page.locator('#percentA')).toHaveText('—');await page.locator('#verify').click();await expect(page.locator('#verification')).toContainText('ROJO',{timeout:30000});
  await expect(page.locator('#changes')).toContainText(id);await expect(page.locator('#changes')).toContainText('fecha_resolucion');await expect(page.locator('#changes li')).toHaveCount(1);await expect(page.locator('#percentB')).toHaveText('—');
- const modifiedResult=await verifyText(modified,evidence,anchor,originals.catalog,originals.report);assert.equal(modifiedResult.status,'ROJO');assert.deepEqual(modifiedResult.changes.map(r=>r.id),[id]);assert.equal(modifiedResult.result,undefined);
+ const modifiedResult=await verifyText(modified,evidence,anchor,originals);assert.equal(modifiedResult.status,'ROJO');assert.deepEqual(modifiedResult.changes.map(r=>r.id),[id]);assert.equal(modifiedResult.result,undefined);
  assert.equal((await readAnchor(app.provider,app.config)).transactionHash,anchor.transactionHash);assert.deepEqual(JSON.parse(await fs.readFile(path.join(EVIDENCE_DIR,'sello-original.json'),'utf8')),evidence);
  item.status='NO VERIFICADO';item.automatedStatus='APROBADO';item.result={color:'ROJO',ticket:id,fields:modifiedResult.changes[0].fields,originalSealUnchanged:true,automatedBrowserUpload:true};item.evidence=['evidencias/03-alteracion.png','evidencias/tickets-modificado.csv'];item.pending=['La edición y carga fueron automatizadas sobre un archivo real. Falta ejecutar y observar la edición manual en un editor y la carga por una persona, exigida literalmente en la demostración.'];await page.screenshot({path:path.join(STATE_ROOT,item.evidence[0]),fullPage:true});
  step=4;item=report.criteria[3];item.test='Restaurar entrada al original y verificar; comprobar dos tarjetas, mismo denominador, porcentajes calculados y filtro de los 83 excluidos de B.';
@@ -75,7 +75,7 @@ try {
  try {
   const manual=JSON.parse(await fs.readFile(path.join(ROOT,'evidencias/edicion-manual.json'),'utf8'));
   const manualCSV=await fs.readFile(path.join(ROOT,'evidencias/tickets-edicion-manual.csv'),'utf8');
-  const manualResult=await verifyText(manualCSV,evidence,anchor,originals.catalog,originals.report);
+  const manualResult=await verifyText(manualCSV,evidence,anchor,originals);
   if(manual.humanConfirmed===true&&manual.transactionHash===anchor.transactionHash&&manual.sourceHash===await sha(originals.tickets)&&manual.modifiedHash===await sha(manualCSV)&&manualResult.status==='ROJO'&&manualResult.changes.length===1&&manualResult.changes[0].id==='TK-2026-04201'&&JSON.stringify(manualResult.changes[0].fields)===JSON.stringify(['fecha_resolucion'])){
    const criterion=report.criteria[2];criterion.status='APROBADO';criterion.pending=[];
    criterion.manualEvidence=manual;criterion.evidence.push('evidencias/edicion-manual.json','evidencias/tickets-edicion-manual.csv','evidencias/07-edicion-manual.png');

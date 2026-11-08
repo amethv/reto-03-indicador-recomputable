@@ -1,7 +1,8 @@
 import Papa from 'papaparse';
 import {CALENDAR,holidaySet} from './calendar.mjs';
+import {HOURS_TOLERANCE,computeFindings,applyEdits} from './findings.mjs';
 export const PERIOD = 202607;
-export const POLICY = Object.freeze({version:'nivel1-v2',period:'2026-07',universe:'187 tickets del lote entregado; incluye 2 reportados en agosto',managed:'estado CERRADO, resolución y cierre válidos, cierre CONFIRMADO POR USUARIO o AUTOMATICO 7 DIAS',confirmed:'subconjunto gestionado con confirmado_por_usuario SI y tipo CONFIRMADO POR USUARIO',denominator:'todos los IDs únicos del lote entregado',sla:'horas hábiles calculadas, no condiciona el indicador de gestión',timezone:'UTC-05:00',hours:'lunes a viernes 08:00-17:00',holidays:CALENDAR.holidays,calendarVersion:CALENDAR.version,holidayNote:CALENDAR.status,cutoff:'estado final del lote, no corte estricto al 31 de julio'});
+export const POLICY = Object.freeze({version:'nivel1-v3',period:'2026-07',universe:'187 tickets del lote entregado; incluye 2 reportados en agosto',managed:'estado CERRADO, resolución y cierre válidos, cierre CONFIRMADO POR USUARIO o AUTOMATICO 7 DIAS',confirmed:'subconjunto gestionado con confirmado_por_usuario SI y tipo CONFIRMADO POR USUARIO',denominator:'todos los IDs únicos del lote entregado',sla:'horas hábiles calculadas, no condiciona el indicador de gestión; la bitácora corrige ediciones posteriores a la resolución',hoursTolerance:HOURS_TOLERANCE,evidenceFiles:'tickets, catálogo, reporte publicado, bitácora y reaperturas: solo sus SHA-256 entran en el compromiso',timezone:'UTC-05:00',hours:'lunes a viernes 08:00-17:00',holidays:CALENDAR.holidays,calendarVersion:CALENDAR.version,holidayNote:CALENDAR.status,cutoff:'estado final del lote, no corte estricto al 31 de julio'});
 export const HEADERS = ['ticket_id','fecha_reporte','usuario','unidad','servicio_id','en_catalogo','prioridad','canal','nivel_resolucion','area_nivel2','tecnico_asignado','fecha_resolucion','horas_habiles_resolucion','sla_horas','cumple_sla','estado','tipo_cierre','confirmado_por_usuario','fecha_cierre','ticket_origen'];
 export function csv(text, required=HEADERS) {
   const parsed=Papa.parse(text.replace(/^\uFEFF/,''),{header:false,skipEmptyLines:true,dynamicTyping:false});
@@ -30,6 +31,9 @@ export function businessHours(start,end,holidays=CALENDAR.holidays) {
   return total/3600000;
 }
 export const CATALOG_HEADERS=['servicio_id','nombre','nivel_previsto','prioridad','sla_horas_habiles','area_nivel2'];
+export const BITACORA_HEADERS=['evento_id','timestamp','actor','rol','accion','entidad_afectada','referencia','detalle','sistema','hash_evento'];
+export const REOPEN_HEADERS=['reapertura_id','ticket_original','ticket_generado','dias_habiles_desde_cierre','debio_conservar_numero','motivo','fecha'];
+export const SOURCES=Object.freeze({tickets:'tickets.csv',catalog:'catalogo_servicios.csv',report:'indicador_mensual.csv',bitacora:'bitacora_eventos.csv',reopenings:'reaperturas.csv'});
 export const REPORT_HEADERS=['periodo','nombre_indicador','incidentes_recibidos_publicado','incidentes_gestionados_publicado','porcentaje_publicado','meta','cumple','responsable','fecha_publicacion','documento'];
 export function validate(parsed,catalog) {
   const errors=[...parsed.errors], warnings=[], seen=new Set();
@@ -79,7 +83,7 @@ export function calculate(parsed,catalog) {
     const confirmed=managed&&r.confirmado_por_usuario==='SI'&&r.tipo_cierre==='CONFIRMADO POR USUARIO';
     const within=hours===null?null:hours<=sla+1e-9;
     const discrepancies=[];
-    if(hours!==null&&Math.abs(hours-Number(r.horas_habiles_resolucion))>0.011)discrepancies.push('horas declaradas');
+    if(hours!==null&&Math.abs(hours-Number(r.horas_habiles_resolucion))>HOURS_TOLERANCE+1e-9)discrepancies.push('horas declaradas');
     if(Number(r.sla_horas)!==sla)discrepancies.push('SLA declarado');
     if(within!==null&&within!==(r.cumple_sla==='SI'))discrepancies.push('cumple_sla');
     return {declaredHours:Number(r.horas_habiles_resolucion),declaredSLA:Number(r.sla_horas),declaredWithin:r.cumple_sla,id:r.ticket_id,priority:r.prioridad,reported:r.fecha_reporte,resolved:r.fecha_resolucion,closed:r.fecha_cierre,hours,sla,within,type:r.tipo_cierre,confirmation:r.confirmado_por_usuario,managed,confirmed,discrepancies,reason:managed?'Incluido A: cerrado con fechas y tipo de cierre válido':'Excluido A: no cumple regla de gestionado',reasonB:confirmed?'Incluido B: confirmación explícita':'Excluido B: sin cierre y confirmación explícita'};
@@ -99,23 +103,30 @@ export async function merkle(leaves){
   return {root:levels.at(-1)[0],proofs:leaves.map((_,i)=>{const path=[];for(let l=0;l<levels.length-1;l++){const a=levels[l];path.push({side:i%2?'left':'right',hash:a[i^1]||a[i]});i=Math.floor(i/2);}return path;})};
 }
 export async function proofValid(hash,proof,root){try{for(const step of proof){if(!['left','right'].includes(step.side))return false;hash=step.side==='left'?await parent(step.hash,hash):await parent(hash,step.hash);}return hash===root;}catch{return false;}}
-export async function buildEvidence(ticketText,catalogText,reportText,baseline){
-  const parsed=csv(ticketText),catalog=csv(catalogText,CATALOG_HEADERS),report=csv(reportText,REPORT_HEADERS);
-  if(catalog.errors.length||report.errors.length)throw new Error([...catalog.errors,...report.errors].join('\n'));
-  const checked=validate(parsed,catalog.rows);if(checked.errors.length)throw new Error(checked.errors.join('\n'));
+function parseAux(t){
+  const parsed={catalog:csv(t.catalog??'',CATALOG_HEADERS),report:csv(t.report??'',REPORT_HEADERS),bitacora:csv(t.bitacora??'',BITACORA_HEADERS),reopenings:csv(t.reopenings??'',REOPEN_HEADERS)};
+  return {parsed,errors:Object.values(parsed).flatMap(p=>p.errors)};
+}
+/** sources: {tickets,catalog,report,bitacora,reopenings} como texto. */
+export async function buildEvidence(sources,baseline){
+  for(const key of Object.keys(SOURCES))if(typeof sources?.[key]!=='string')throw new Error(`Falta ${SOURCES[key]}`);
+  const parsed=csv(sources.tickets),aux=parseAux(sources);
+  if(aux.errors.length)throw new Error(aux.errors.join('\n'));
+  const checked=validate(parsed,aux.parsed.catalog.rows);if(checked.errors.length)throw new Error(checked.errors.join('\n'));
   if(parsed.rows.length!==187)throw new Error('Se requieren exactamente 187 tickets originales');
-  const files={tickets:await sha(ticketText),catalog:await sha(catalogText),report:await sha(reportText)};
-  for(const key of Object.keys(files))if(files[key]!==baseline.files[key])throw new Error(`${key}: no coincide con los originales de la carpeta fuente verificada`);
+  const files={};for(const key of Object.keys(SOURCES))files[key]=await sha(sources[key]);
+  for(const key of Object.keys(files))if(files[key]!==baseline.files[key])throw new Error(`${SOURCES[key]}: no coincide con los originales de la carpeta fuente verificada`);
   const ids=parsed.rows.map(r=>r.ticket_id);if(JSON.stringify(ids)!==JSON.stringify(baseline.ids))throw new Error('Universo original incompleto o reordenado');
   const hashes=await Promise.all(parsed.rows.map((r,i)=>leaf(parsed,r,i))),tree=await merkle(hashes);
   const tickets=await Promise.all(parsed.rows.map(async(r,i)=>({id:r.ticket_id,index:i,hash:hashes[i],fields:Object.fromEntries(await Promise.all(parsed.headers.map(async h=>[h,await sha(JSON.stringify([h,r[h]]))]))),proof:tree.proofs[i]})));
-  return {version:1,period:PERIOD,count:ids.length,policy:POLICY,headers:parsed.headers,files,root:tree.root,tickets};
+  return {version:2,period:PERIOD,count:ids.length,policy:POLICY,headers:parsed.headers,files,root:tree.root,tickets};
 }
 export const evidenceHash=e=>sha(JSON.stringify(e));
 export async function authenticateEvidence(e,seal) {
   try {
-    if(e.version!==1||e.period!==PERIOD||e.count!==187||e.tickets.length!==e.count)throw new Error('Manifiesto incompleto');
+    if(e.version!==2||e.period!==PERIOD||e.count!==187||e.tickets.length!==e.count)throw new Error('Manifiesto incompleto');
     if(JSON.stringify(e.policy)!==JSON.stringify(POLICY))throw new Error('Reglas del manifiesto no reconocidas');
+    if(JSON.stringify(Object.keys(e.files??{}))!==JSON.stringify(Object.keys(SOURCES)))throw new Error('Manifiesto sin las huellas de todos los archivos sellados');
     if(e.root!==seal.root||await evidenceHash(e)!==seal.evidenceHash||Number(seal.count)!==187)throw new Error('Evidencia no coincide con blockchain');
     if(new Set(e.tickets.map(r=>r.id)).size!==187)throw new Error('IDs duplicados en evidencia');
     if((await merkle(e.tickets.map(r=>r.hash))).root!==e.root)throw new Error('Raíz de evidencias incorrecta');
@@ -123,7 +134,8 @@ export async function authenticateEvidence(e,seal) {
     return {ok:true};
   }catch(error){return {ok:false,error:error.message};}
 }
-export async function verifyText(text,e,seal,catalogText,reportText){
+/** aux: {catalog,report,bitacora,reopenings} como texto. */
+export async function verifyText(text,e,seal,aux){
   const auth=await authenticateEvidence(e,seal);if(!auth.ok)return {status:'INCOMPLETA',errors:[auth.error],changes:[]};
   const parsed=csv(text),changes=[],original=new Map(e.tickets.map(r=>[r.id,r])),seen=new Set();
   for(const [i,r] of parsed.rows.entries()){
@@ -133,20 +145,37 @@ export async function verifyText(text,e,seal,catalogText,reportText){
     const hash=await leaf(parsed,r,i);
     if(hash!==expected.hash){
       const fields=[];for(const h of new Set([...e.headers,...parsed.headers]))if(await sha(JSON.stringify([h,r[h]]))!==expected.fields[h])fields.push(h);
-      changes.push({id,kind:expected.index!==i?'Contenido u orden modificado':'Contenido modificado',fields});
+      changes.push({id,kind:expected.index!==i?'Contenido u orden modificado':'Contenido modificado',fields,values:Object.fromEntries(fields.map(h=>[h,r[h]??'']))});
     }
   }
   for(const r of e.tickets)if(!seen.has(r.id))changes.push({id:r.id,kind:'Ticket eliminado',fields:[]});
   const rawMatch=await sha(text)===e.files.tickets;
   const root=parsed.rows.length?(await merkle(await Promise.all(parsed.rows.map((r,i)=>leaf(parsed,r,i))))).root:null;
-  const catalog=csv(catalogText,CATALOG_HEADERS),report=csv(reportText,REPORT_HEADERS);
-  const errors=[...parsed.errors,...catalog.errors,...report.errors,...validate(parsed,catalog.rows).errors];
-  const auxiliaries=await sha(catalogText)===e.files.catalog&&await sha(reportText)===e.files.report;
+  const {parsed:a,errors:auxErrors}=parseAux(aux??{});
+  const errors=[...parsed.errors,...auxErrors,...validate(parsed,a.catalog.rows).errors];
+  const mismatched=[];for(const key of ['catalog','report','bitacora','reopenings'])if(typeof aux?.[key]!=='string'||await sha(aux[key])!==e.files[key])mismatched.push(SOURCES[key]);
+  const auxiliaries=!mismatched.length;
   if(!rawMatch||root!==seal.root||changes.length||parsed.rows.length!==187)return {status:'ROJO',changes,errors,root,rawMatch,individuals:e.tickets.length,auxiliaries};
-  if(errors.length||!auxiliaries)return {status:'INCOMPLETA',changes,errors:[...errors,...(!auxiliaries?['Catálogo o reporte publicado no coincide con el sello']:[])],root};
-  const result=calculate(parsed,catalog.rows);
-  const reportRow=report.rows.find(r=>r.periodo==='2026-07');
+  if(errors.length||!auxiliaries)return {status:'INCOMPLETA',changes,errors:[...errors,...mismatched.map(f=>`${f} no coincide con el archivo sellado`)],root};
+  const result=calculate(parsed,a.catalog.rows);
+  const reportRow=a.report.rows.find(r=>r.periodo==='2026-07');
   const published=Number(reportRow?.porcentaje_publicado);
   if(!Number.isFinite(published))return {status:'INCOMPLETA',changes:[],errors:['Reporte publicado inválido']};
-  return {status:'VERDE',changes:[],errors:[],root,individuals:187,result,published,publishedNumerator:Number(reportRow.incidentes_gestionados_publicado),publishedDenominator:Number(reportRow.incidentes_recibidos_publicado),difference:result.percentA-published};
+  const findings=computeFindings({tickets:parsed.rows,catalog:a.catalog.rows,reportRow,events:a.bitacora.rows,reopenings:a.reopenings.rows,result});
+  result.details=applyEdits(result.details,findings.edits);
+  return {status:'VERDE',changes:[],errors:[],root,individuals:187,result,findings,published,publishedNumerator:Number(reportRow.incidentes_gestionados_publicado),publishedDenominator:Number(reportRow.incidentes_recibidos_publicado),difference:result.percentA-published};
+}
+
+/** Para el ROJO: valor sellado frente al editado, si el CSV original local coincide con el sello. */
+export async function sealedValues(change,originalText,e){
+  if(!change.fields?.length||!originalText)return [];
+  const row=csv(originalText).rows.find(r=>r.ticket_id===change.id),expected=e.tickets.find(t=>t.id===change.id);
+  if(!row||!expected)return [];
+  const out=[];
+  for(const field of change.fields){
+    const sealed=row[field]??'';
+    if(await sha(JSON.stringify([field,sealed]))!==expected.fields[field])continue; // no se puede derivar con certeza
+    out.push({field,sealed,edited:change.values?.[field]??''});
+  }
+  return out;
 }

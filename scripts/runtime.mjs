@@ -4,7 +4,7 @@ import solc from 'solc';
 import {ContractFactory,JsonRpcProvider,keccak256} from 'ethers';
 import {POLICY,sha} from '../src/core.mjs';
 export const ROOT=path.resolve(import.meta.dirname,'..');
-export const INSTANCE=process.env.ATENEA_INSTANCE||'nivel1-corregido';
+export const INSTANCE=process.env.ATENEA_INSTANCE||'nivel1-v3';
 if(!/^[a-zA-Z0-9_-]{1,80}$/.test(INSTANCE))throw new Error('Nombre de instancia inválido');
 export const STATE_ROOT=path.join(ROOT,'.instances',INSTANCE);
 export const EVIDENCE_DIR=path.join(STATE_ROOT,'evidencias');
