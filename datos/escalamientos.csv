@@ -1,0 +1,113 @@
+ticket_id,desde_nivel,hacia_nivel,area_destino,motivo,fecha_escalamiento,autorizado_por
+TK-2026-04205,1,2,Seguridad,Complejidad fuera del alcance del primer nivel,2026-07-20T15:14:56-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04207,1,2,Infraestructura,Complejidad fuera del alcance del primer nivel,2026-07-01T17:32:52-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04208,1,2,Seguridad,Complejidad fuera del alcance del primer nivel,2026-07-20T21:35:27-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04209,1,2,Seguridad,Complejidad fuera del alcance del primer nivel,2026-07-13T13:20:27-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04210,1,2,Seguridad,Complejidad fuera del alcance del primer nivel,2026-07-15T11:55:42-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04213,1,2,Desarrollo,Complejidad fuera del alcance del primer nivel,2026-07-17T14:52:58-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04214,1,2,Desarrollo,Complejidad fuera del alcance del primer nivel,2026-07-28T15:55:49-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04217,1,2,Seguridad,Complejidad fuera del alcance del primer nivel,2026-07-22T18:58:07-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04219,1,2,,Complejidad fuera del alcance del primer nivel,2026-07-06T13:01:25-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04222,1,2,Seguridad,Complejidad fuera del alcance del primer nivel,2026-07-06T15:57:09-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04224,1,2,Infraestructura,Complejidad fuera del alcance del primer nivel,2026-07-13T14:23:02-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04226,1,2,Infraestructura,Complejidad fuera del alcance del primer nivel,2026-07-08T19:19:38-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04226,2,3,Proveedor externo,Sin solución en segundo nivel; se adjuntan razones y pruebas,2026-07-09T08:19:38-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04228,1,2,Seguridad,Complejidad fuera del alcance del primer nivel,2026-07-24T15:27:21-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04230,1,2,Seguridad,Complejidad fuera del alcance del primer nivel,2026-07-27T16:41:33-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04232,1,2,Redes,Complejidad fuera del alcance del primer nivel,2026-07-24T17:17:10-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04235,1,2,Infraestructura,Complejidad fuera del alcance del primer nivel,2026-07-20T13:30:19-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04240,1,2,Infraestructura,Complejidad fuera del alcance del primer nivel,2026-07-21T14:24:22-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04241,1,2,Desarrollo,Complejidad fuera del alcance del primer nivel,2026-07-29T12:05:48-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04242,1,2,Seguridad,Complejidad fuera del alcance del primer nivel,2026-07-13T19:39:52-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04243,1,2,,Complejidad fuera del alcance del primer nivel,2026-07-29T13:43:10-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04244,1,2,Infraestructura,Complejidad fuera del alcance del primer nivel,2026-07-17T17:32:29-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04244,2,3,Proveedor externo,Sin solución en segundo nivel; se adjuntan razones y pruebas,2026-07-17T22:32:29-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04247,1,2,Redes,Complejidad fuera del alcance del primer nivel,2026-07-31T15:21:23-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04248,1,2,Desarrollo,Complejidad fuera del alcance del primer nivel,2026-07-27T17:42:40-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04249,1,2,Seguridad,Complejidad fuera del alcance del primer nivel,2026-07-17T18:25:34-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04250,1,2,Infraestructura,Complejidad fuera del alcance del primer nivel,2026-07-15T13:05:28-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04251,1,2,Infraestructura,Complejidad fuera del alcance del primer nivel,2026-07-21T21:03:12-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04252,1,2,Redes,Complejidad fuera del alcance del primer nivel,2026-07-07T11:33:45-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04253,1,2,Seguridad,Complejidad fuera del alcance del primer nivel,2026-07-06T14:15:11-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04254,1,2,Infraestructura,Complejidad fuera del alcance del primer nivel,2026-07-15T17:09:30-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04255,1,2,Desarrollo,Complejidad fuera del alcance del primer nivel,2026-07-06T16:36:27-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04256,1,2,,Complejidad fuera del alcance del primer nivel,2026-07-22T12:25:14-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04259,1,2,Redes,Complejidad fuera del alcance del primer nivel,2026-07-06T12:50:44-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04260,1,2,Seguridad,Complejidad fuera del alcance del primer nivel,2026-07-15T13:07:57-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04268,1,2,Seguridad,Complejidad fuera del alcance del primer nivel,2026-07-21T21:42:26-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04269,1,2,Infraestructura,Complejidad fuera del alcance del primer nivel,2026-07-14T09:06:31-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04270,1,2,Seguridad,Complejidad fuera del alcance del primer nivel,2026-07-14T16:52:17-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04271,1,2,Desarrollo,Complejidad fuera del alcance del primer nivel,2026-07-13T11:02:00-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04272,1,2,Infraestructura,Complejidad fuera del alcance del primer nivel,2026-07-21T19:38:44-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04274,1,2,Redes,Complejidad fuera del alcance del primer nivel,2026-07-30T14:26:32-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04275,1,2,Seguridad,Complejidad fuera del alcance del primer nivel,2026-07-13T12:36:04-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04277,1,2,Redes,Complejidad fuera del alcance del primer nivel,2026-07-20T16:25:13-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04278,1,2,Infraestructura,Complejidad fuera del alcance del primer nivel,2026-07-20T15:35:39-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04282,1,2,Desarrollo,Complejidad fuera del alcance del primer nivel,2026-07-28T16:18:59-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04283,1,2,Infraestructura,Complejidad fuera del alcance del primer nivel,2026-07-14T14:25:45-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04284,1,2,Infraestructura,Complejidad fuera del alcance del primer nivel,2026-07-10T17:50:19-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04286,1,2,Desarrollo,Complejidad fuera del alcance del primer nivel,2026-07-20T17:24:12-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04287,1,2,Desarrollo,Complejidad fuera del alcance del primer nivel,2026-07-22T15:52:18-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04288,1,2,Infraestructura,Complejidad fuera del alcance del primer nivel,2026-07-09T10:03:51-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04288,2,3,Proveedor externo,Sin solución en segundo nivel; se adjuntan razones y pruebas,2026-07-10T03:03:51-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04289,1,2,Seguridad,Complejidad fuera del alcance del primer nivel,2026-07-13T15:17:57-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04291,1,2,Desarrollo,Complejidad fuera del alcance del primer nivel,2026-07-13T12:41:27-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04292,1,2,Infraestructura,Complejidad fuera del alcance del primer nivel,2026-07-14T14:35:09-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04293,1,2,Seguridad,Complejidad fuera del alcance del primer nivel,2026-07-27T14:06:08-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04296,1,2,Desarrollo,Complejidad fuera del alcance del primer nivel,2026-07-20T17:07:22-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04298,1,2,Infraestructura,Complejidad fuera del alcance del primer nivel,2026-07-17T13:44:10-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04301,1,2,Infraestructura,Complejidad fuera del alcance del primer nivel,2026-07-10T13:31:14-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04301,2,3,Proveedor externo,Sin solución en segundo nivel; se adjuntan razones y pruebas,2026-07-11T02:31:14-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04302,1,2,Desarrollo,Complejidad fuera del alcance del primer nivel,2026-07-21T10:17:22-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04303,1,2,Infraestructura,Complejidad fuera del alcance del primer nivel,2026-07-01T21:52:29-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04305,1,2,Desarrollo,Complejidad fuera del alcance del primer nivel,2026-07-20T20:05:20-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04307,1,2,Infraestructura,Complejidad fuera del alcance del primer nivel,2026-07-01T18:32:35-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04308,1,2,Redes,Complejidad fuera del alcance del primer nivel,2026-07-01T21:11:36-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04309,1,2,Infraestructura,Complejidad fuera del alcance del primer nivel,2026-07-13T19:39:08-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04310,1,2,Desarrollo,Complejidad fuera del alcance del primer nivel,2026-07-24T14:54:05-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04312,1,2,Infraestructura,Complejidad fuera del alcance del primer nivel,2026-07-03T12:09:45-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04313,1,2,Seguridad,Complejidad fuera del alcance del primer nivel,2026-07-03T16:20:21-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04314,1,2,Seguridad,Complejidad fuera del alcance del primer nivel,2026-07-01T09:16:28-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04315,1,2,Infraestructura,Complejidad fuera del alcance del primer nivel,2026-07-03T17:15:33-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04315,2,3,Proveedor externo,Sin solución en segundo nivel; se adjuntan razones y pruebas,2026-07-04T03:15:33-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04319,1,2,,Complejidad fuera del alcance del primer nivel,2026-07-27T20:33:00-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04320,1,2,Infraestructura,Complejidad fuera del alcance del primer nivel,2026-07-01T13:19:49-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04320,2,3,Proveedor externo,Sin solución en segundo nivel; se adjuntan razones y pruebas,2026-07-02T04:19:49-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04321,1,2,Infraestructura,Complejidad fuera del alcance del primer nivel,2026-07-10T17:36:52-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04323,1,2,Seguridad,Complejidad fuera del alcance del primer nivel,2026-07-20T16:13:37-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04325,1,2,Seguridad,Complejidad fuera del alcance del primer nivel,2026-07-09T14:13:16-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04326,1,2,Infraestructura,Complejidad fuera del alcance del primer nivel,2026-07-27T19:31:28-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04326,2,3,Proveedor externo,Sin solución en segundo nivel; se adjuntan razones y pruebas,2026-07-28T08:31:28-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04327,1,2,Desarrollo,Complejidad fuera del alcance del primer nivel,2026-07-07T14:40:07-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04331,1,2,Infraestructura,Complejidad fuera del alcance del primer nivel,2026-07-27T17:58:45-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04333,1,2,Seguridad,Complejidad fuera del alcance del primer nivel,2026-07-10T12:32:28-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04335,1,2,,Complejidad fuera del alcance del primer nivel,2026-07-27T16:11:01-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04336,1,2,,Complejidad fuera del alcance del primer nivel,2026-07-10T18:49:36-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04340,1,2,Infraestructura,Complejidad fuera del alcance del primer nivel,2026-07-22T17:14:16-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04341,1,2,Seguridad,Complejidad fuera del alcance del primer nivel,2026-07-17T15:17:20-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04342,1,2,Infraestructura,Complejidad fuera del alcance del primer nivel,2026-07-30T12:19:23-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04343,1,2,Desarrollo,Complejidad fuera del alcance del primer nivel,2026-07-31T18:04:47-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04345,1,2,Infraestructura,Complejidad fuera del alcance del primer nivel,2026-07-27T14:18:11-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04349,1,2,Infraestructura,Complejidad fuera del alcance del primer nivel,2026-07-06T11:51:58-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04350,1,2,Desarrollo,Complejidad fuera del alcance del primer nivel,2026-07-21T17:06:27-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04351,1,2,Seguridad,Complejidad fuera del alcance del primer nivel,2026-07-28T21:43:41-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04352,1,2,Desarrollo,Complejidad fuera del alcance del primer nivel,2026-07-02T18:06:23-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04353,1,2,Infraestructura,Complejidad fuera del alcance del primer nivel,2026-07-02T21:29:00-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04355,1,2,Seguridad,Complejidad fuera del alcance del primer nivel,2026-07-06T11:16:57-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04357,1,2,Desarrollo,Complejidad fuera del alcance del primer nivel,2026-07-13T13:38:41-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04358,1,2,Redes,Complejidad fuera del alcance del primer nivel,2026-07-06T18:20:11-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04359,1,2,Seguridad,Complejidad fuera del alcance del primer nivel,2026-07-23T18:52:39-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04360,1,2,Infraestructura,Complejidad fuera del alcance del primer nivel,2026-07-28T18:05:28-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04360,2,3,Proveedor externo,Sin solución en segundo nivel; se adjuntan razones y pruebas,2026-07-29T06:05:28-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04362,1,2,Seguridad,Complejidad fuera del alcance del primer nivel,2026-07-02T17:41:34-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04367,1,2,Infraestructura,Complejidad fuera del alcance del primer nivel,2026-07-13T11:10:00-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04367,2,3,Proveedor externo,Sin solución en segundo nivel; se adjuntan razones y pruebas,2026-07-14T01:10:00-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04371,1,2,Seguridad,Complejidad fuera del alcance del primer nivel,2026-07-20T10:13:40-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04372,1,2,,Complejidad fuera del alcance del primer nivel,2026-07-23T18:24:57-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04374,1,2,Infraestructura,Complejidad fuera del alcance del primer nivel,2026-07-09T20:46:17-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04375,1,2,Desarrollo,Complejidad fuera del alcance del primer nivel,2026-07-06T20:03:49-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04376,1,2,Desarrollo,Complejidad fuera del alcance del primer nivel,2026-07-17T16:43:14-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04377,1,2,Seguridad,Complejidad fuera del alcance del primer nivel,2026-07-08T19:58:07-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04378,1,2,,Complejidad fuera del alcance del primer nivel,2026-07-08T15:16:08-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04379,1,2,Redes,Complejidad fuera del alcance del primer nivel,2026-07-20T12:30:28-05:00,Jefe de la Unidad de Servicios Tecnológicos
+TK-2026-04385,1,2,,Complejidad fuera del alcance del primer nivel,2026-07-14T01:44:40-05:00,Jefe de la Unidad de Servicios Tecnológicos

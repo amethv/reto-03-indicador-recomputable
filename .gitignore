@@ -1,0 +1,12 @@
+node_modules/
+.tools/
+.chain/
+test-results/
+.instances/
+historico/
+.demo/
+.tools/
+output/build/
+.build/
+legacy/
+*.log

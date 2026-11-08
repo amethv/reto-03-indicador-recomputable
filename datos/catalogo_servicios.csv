@@ -1,0 +1,15 @@
+servicio_id,nombre,nivel_previsto,prioridad,sla_horas_habiles,area_nivel2
+CS-01,Cuenta de correo institucional,Nivel 1,MEDIA,24,
+CS-02,Restablecimiento de contraseña,Nivel 1,ALTA,8,
+CS-03,Equipo de cómputo no enciende,Nivel 1,ALTA,8,
+CS-04,Impresora de red sin servicio,Nivel 1,MEDIA,24,
+CS-05,Telefonía IP — extensión sin tono,Nivel 1,MEDIA,24,
+CS-06,Acceso VPN,Nivel 2,ALTA,8,Infraestructura
+CS-07,Sistema de catastro — error de aplicación,Nivel 2,CRITICA,4,Desarrollo
+CS-08,Sistema de recaudación — lentitud,Nivel 2,CRITICA,4,Desarrollo
+CS-09,Caída de enlace de datos en dependencia,Nivel 2,CRITICA,4,Redes
+CS-10,Solicitud de respaldo de base de datos,Nivel 2,BAJA,72,Infraestructura
+CS-11,Intento de acceso no autorizado,Nivel 2,CRITICA,4,Seguridad
+CS-12,Correo malicioso reportado por usuario,Nivel 2,ALTA,8,Seguridad
+CS-13,Licenciamiento de software de escritorio,Nivel 1,BAJA,72,
+CS-14,Portal de servicios ciudadanos — caída,Nivel 3,CRITICA,4,Infraestructura

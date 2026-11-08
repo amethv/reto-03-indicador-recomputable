@@ -1,0 +1,46 @@
+This version of µWS is not compatible with your Node.js build:
+
+Error: Cannot find module '../binaries/uws_win32_x64_137.node'
+Require stack:
+- C:\Users\USUARIO\Downloads\RETO_3\RETO_3\node_modules\ganache\node_modules\@trufflesuite\uws-js-unofficial\src\uws.js
+- C:\Users\USUARIO\Downloads\RETO_3\RETO_3\node_modules\ganache\dist\node\core.js
+Falling back to a NodeJS implementation; performance may be degraded.
+
+
+✔ contrato EVM real: propietario, 187, inmutabilidad, recibo y privacidad de calldata (3902.2049ms)
+✔ original: 187 IDs exactos, todas las columnas y 187 pruebas válidas (421.7476ms)
+✔ numerador, denominador y diferencia se derivan de cierres del original (12.258ms)
+✔ fecha_resolucion alterada: ROJO, ID y campo exactos, sin resultado acreditado (248.9615ms)
+✔ modificación en usuario cubierta por el hash (237.2803ms)
+✔ modificación en tecnico_asignado cubierta por el hash (228.0464ms)
+✔ modificación en cumple_sla cubierta por el hash (204.9772ms)
+✔ modificación en horas_habiles_resolucion cubierta por el hash (194.944ms)
+✔ modificación en sla_horas cubierta por el hash (217.4412ms)
+✔ modificación en prioridad cubierta por el hash (239.943ms)
+✔ modificación en tipo_cierre cubierta por el hash (214.0222ms)
+✔ modificación en confirmado_por_usuario cubierta por el hash (238.6297ms)
+✔ modificación en fecha_cierre cubierta por el hash (448.7531ms)
+✔ modificación en unidad cubierta por el hash (241.2473ms)
+✔ modificación en ticket_origen cubierta por el hash (259.6649ms)
+✔ ticket eliminado identificado (231.8704ms)
+✔ ticket insertado identificado (225.4405ms)
+✔ ID duplicado y orden de filas protegidos (578.4671ms)
+✔ celda extra, comillas incompletas y fecha imposible se rechazan (398.4413ms)
+✔ estado, cierre y confirmación inconsistentes se rechazan (23.8012ms)
+✔ no se sella una copia modificada ni un lote incompleto de 186 (33.4796ms)
+✔ manifiesto, prueba individual y raíz adulterados no autentican (31.2389ms)
+✔ catálogo y reporte modificados no producen indicador verificado (547.5712ms)
+✔ horas hábiles: jornada, fines de semana, borde SLA y fechas inválidas (1.2364ms)
+✔ manifest no contiene valores de usuarios ni técnicos (87.7291ms)
+✔ los once archivos coinciden con las huellas de la carpeta fuente (32.7838ms)
+✔ regresión de procedencia: hora original del primer ticket (16.221ms)
+✔ un feriado excluye solo su jornada y no se descuenta dos veces un fin de semana (1.8547ms)
+✔ el calendario rechaza fechas imposibles, ambiguas y duplicadas (2.1168ms)
+ℹ tests 29
+ℹ suites 0
+ℹ pass 29
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 12011.9362

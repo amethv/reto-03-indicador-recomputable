@@ -1,0 +1,3 @@
+proveedor_id,razon_social,servicio_contratado,contrato,sla_contractual_horas,penalidad_por_hora_usd,contacto
+PV-01,Soluciones Tecnológicas Meridiano S.A.,Soporte del Portal de Servicios Ciudadanos,CT-2025-0088,6,180.00,soporte@meridiano-ficticio.and
+PV-02,Datacenter Austral Cía. Ltda.,Housing y respaldo de infraestructura,CT-2024-0311,4,240.00,noc@austral-ficticio.and

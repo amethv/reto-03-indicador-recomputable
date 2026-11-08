@@ -1,0 +1,8 @@
+reapertura_id,ticket_original,ticket_generado,dias_habiles_desde_cierre,debio_conservar_numero,motivo,fecha
+RA-001,TK-2026-04335,TK-2026-04381,3,SI,La solución no fue efectiva; el equipo volvió a fallar.,2026-07-31T18:11:01-05:00
+RA-002,TK-2026-04304,TK-2026-04382,3,SI,El problema persiste tras la solución aplicada.,2026-07-28T04:16:31-05:00
+RA-003,TK-2026-04356,TK-2026-04383,3,SI,El problema persiste tras la solución aplicada.,2026-07-31T10:01:35-05:00
+RA-004,TK-2026-04221,TK-2026-04384,3,SI,La solución no fue efectiva; el equipo volvió a fallar.,2026-07-19T05:57:20-05:00
+RA-005,TK-2026-04261,TK-2026-04385,3,SI,La solución no fue efectiva; el equipo volvió a fallar.,2026-07-14T00:44:40-05:00
+RA-006,TK-2026-04234,TK-2026-04386,11,NO,Se identificó información nueva sobre la misma falla.,2026-08-11T19:42:52-05:00
+RA-007,TK-2026-04246,TK-2026-04387,11,NO,La solución no fue efectiva; el equipo volvió a fallar.,2026-08-01T21:03:26-05:00

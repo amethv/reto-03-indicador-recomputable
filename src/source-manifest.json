@@ -1,0 +1,16 @@
+{
+  "source": "Carpeta datos del paquete completo proporcionado para esta revisión",
+  "files": {
+    "asignaciones.csv": "8ba48ac21a10cab2dbdab46731068f249d955c4d1ae09d161edef4457fe4c438",
+    "bitacora_eventos.csv": "45e031a0af9111152ada7bb1f0ecfd718a75578e2182a265fec000f1329b5107",
+    "catalogo_servicios.csv": "ad088fc60f9fb27a240688564afb78ac9623780460f773c71094bb9ee6bd6942",
+    "escalamientos.csv": "a519b08eb6caec51ffcbcca5fc28d5949f0aee785a88952850f0c44972c08ece",
+    "incidentes_2026-07.json": "45f37e860c7dfbb64dd3a8e824f8ef3c8c3a0c96642d4efcc11806908d805672",
+    "indicador_mensual.csv": "bef604347fb5c8f3d59832680396a1d60d2d21866eca7cf2c54185d401519c87",
+    "proveedores.csv": "3fcef607d696072f1309d6b1de05929bd2905300eff9c43c66e6c95b2020376a",
+    "README.md": "f31be245ffc1a2f736102fc533cb343dcf9ac1f93dfc7d5b91350d072aa10802",
+    "reaperturas.csv": "331379e43d801f6fe5db7d75ab5f3d00beacfc149d339290afa467fd498ac65c",
+    "tickets.csv": "6f3a1f097e438bf5518df1193a5bf2789a985a081920605ffb7ead04fa0e88f8",
+    "tickets_proveedor.csv": "9370e390eb229fa5ceb1a7f5fe2d9f21d3a75f0f9d30a54dcb6236e36af480db"
+  }
+}

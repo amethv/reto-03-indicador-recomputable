@@ -1,0 +1,73 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import Papa from 'papaparse';
+import {csv,validate,calculate,businessHours,CATALOG_HEADERS,buildEvidence,evidenceHash,verifyText,authenticateEvidence,proofValid,sha} from '../src/core.mjs';
+const ticketText=await fs.readFile(new URL('../datos/tickets.csv',import.meta.url),'utf8');
+const catalogText=await fs.readFile(new URL('../datos/catalogo_servicios.csv',import.meta.url),'utf8');
+const reportText=await fs.readFile(new URL('../datos/indicador_mensual.csv',import.meta.url),'utf8');
+const baseline=JSON.parse(await fs.readFile(new URL('../src/originals.json',import.meta.url),'utf8'));
+const parsed=csv(ticketText),catalog=csv(catalogText,CATALOG_HEADERS).rows;
+const evidence=await buildEvidence(ticketText,catalogText,reportText,baseline);
+// Este objeto se usa SOLO en pruebas unitarias. La aceptación E2E consulta una EVM real.
+const unitAnchor={root:evidence.root,evidenceHash:await evidenceHash(evidence),count:187};
+const verify=text=>verifyText(text,evidence,unitAnchor,catalogText,reportText);
+function mutate(fn){const rows=structuredClone(parsed.rows);fn(rows);return Papa.unparse(rows,{columns:parsed.headers,newline:'\n'});}
+test('original: 187 IDs exactos, todas las columnas y 187 pruebas válidas',async()=>{
+ assert.equal(parsed.rows.length,187);assert.equal(new Set(parsed.rows.map(r=>r.ticket_id)).size,187);
+ assert.deepEqual(validate(parsed,catalog).errors,[]);assert.equal(evidence.tickets.length,187);
+ for(const t of evidence.tickets)assert.equal(await proofValid(t.hash,t.proof,evidence.root),true);
+ assert.equal((await verify(ticketText)).status,'VERDE');
+});
+test('numerador, denominador y diferencia se derivan de cierres del original',()=>{
+ const r=calculate(parsed,catalog);assert.equal(r.denominator,187);assert.equal(r.numeratorA,187);assert.equal(r.numeratorB,104);assert.equal(r.automatic,83);assert.equal(r.calendarJuly,185);
+ assert.equal(r.details.filter(r=>r.within===false).length,66);assert.deepEqual(r.details.filter(r=>r.discrepancies.length).map(r=>r.id),['TK-2026-04385','TK-2026-04386']);
+ assert.equal(r.percentA,100);assert.ok(Math.abs(r.percentB-55.61497326203209)<1e-10);assert.ok(Math.abs(r.gap-44.38502673796791)<1e-10);assert.equal(r.percentA-98.25,1.75);
+ assert.equal(r.details.filter(r=>!r.managed).length,0);assert.equal(r.details.filter(r=>!r.confirmed).length,83);
+});
+test('fecha_resolucion alterada: ROJO, ID y campo exactos, sin resultado acreditado',async()=>{
+ const id=parsed.rows[0].ticket_id;
+ const changed=mutate(rows=>rows[0].fecha_resolucion=rows[0].fecha_resolucion.replace('12:03:55','13:03:55'));
+ assert.notEqual(await sha(changed),await sha(ticketText));
+ const v=await verify(changed);assert.equal(v.status,'ROJO');assert.equal(v.result,undefined);assert.deepEqual(v.changes.map(r=>r.id),[id]);assert.deepEqual(v.changes[0].fields,['fecha_resolucion']);
+});
+for(const field of ['usuario','tecnico_asignado','cumple_sla','horas_habiles_resolucion','sla_horas','prioridad','tipo_cierre','confirmado_por_usuario','fecha_cierre','unidad','ticket_origen'])test(`modificación en ${field} cubierta por el hash`,async()=>{
+ const v=await verify(mutate(rows=>rows[0][field]+=' CAMBIO'));assert.equal(v.status,'ROJO');assert.ok(v.changes.some(r=>r.id===parsed.rows[0].ticket_id&&r.fields.includes(field)));
+});
+test('ticket eliminado identificado',async()=>{const v=await verify(mutate(rows=>rows.pop()));assert.equal(v.status,'ROJO');assert.ok(v.changes.some(r=>r.id===parsed.rows.at(-1).ticket_id&&r.kind==='Ticket eliminado'));});
+test('ticket insertado identificado',async()=>{const v=await verify(mutate(rows=>rows.push({...rows[0],ticket_id:'TK-2026-09999'})));assert.equal(v.status,'ROJO');assert.ok(v.changes.some(r=>r.id==='TK-2026-09999'));});
+test('ID duplicado y orden de filas protegidos',async()=>{const a=await verify(mutate(rows=>rows.push({...rows[0]})));assert.equal(a.status,'ROJO');assert.ok(a.errors.some(e=>e.includes('duplicado')));const b=await verify(mutate(rows=>[rows[0],rows[1]]=[rows[1],rows[0]]));assert.equal(b.status,'ROJO');});
+test('celda extra, comillas incompletas y fecha imposible se rechazan',async()=>{
+ const rows=Papa.parse(ticketText,{header:false}).data;rows[1].push('CELDA EXTRA');assert.equal((await verify(Papa.unparse(rows))).status,'ROJO');
+ assert.ok(csv('ticket_id,fecha_reporte\n"comilla sin cerrar').errors.length);
+ const invalid=csv(mutate(rows=>rows[0].fecha_resolucion='2026-02-30T12:00:00-05:00'));assert.ok(validate(invalid,catalog).errors.some(e=>e.includes('fecha_resolucion inválida')));
+});
+test('estado, cierre y confirmación inconsistentes se rechazan',()=>{
+ const a=csv(mutate(rows=>rows[0].estado='ABIERTO'));assert.ok(validate(a,catalog).errors.some(e=>e.includes('inconsistentes')));
+ const b=csv(mutate(rows=>rows.find(r=>r.tipo_cierre==='CONFIRMADO POR USUARIO').confirmado_por_usuario='NO'));assert.ok(validate(b,catalog).errors.some(e=>e.includes('sin confirmación')));
+});
+test('no se sella una copia modificada ni un lote incompleto de 186',async()=>{
+ await assert.rejects(buildEvidence(mutate(rows=>rows[0].usuario+='CAMBIO'),catalogText,reportText,baseline),/originales/);
+ await assert.rejects(buildEvidence(mutate(rows=>rows.pop()),catalogText,reportText,baseline),/187/);
+});
+test('manifiesto, prueba individual y raíz adulterados no autentican',async()=>{
+ for(const mutate of [e=>e.tickets[0].proof[0].hash='0x'+'00'.repeat(32),e=>e.tickets[0].fields.usuario='0x'+'00'.repeat(32),e=>e.root='0x'+'00'.repeat(32)]){
+  const e=structuredClone(evidence);mutate(e);assert.equal((await authenticateEvidence(e,unitAnchor)).ok,false);
+ }
+ assert.equal((await verifyText(ticketText,evidence,{...unitAnchor,root:'0x'+'00'.repeat(32)},catalogText,reportText)).status,'INCOMPLETA');
+});
+test('catálogo y reporte modificados no producen indicador verificado',async()=>{
+ assert.equal((await verifyText(ticketText,evidence,unitAnchor,catalogText.replace(',24,',',25,'),reportText)).status,'INCOMPLETA');
+ assert.equal((await verifyText(ticketText,evidence,unitAnchor,catalogText,reportText.replace('98.25','99.99'))).status,'INCOMPLETA');
+});
+test('horas hábiles: jornada, fines de semana, borde SLA y fechas inválidas',()=>{
+ assert.equal(businessHours('2026-07-03T16:00:00-05:00','2026-07-06T09:00:00-05:00'),2);
+ assert.equal(businessHours('2026-07-04T08:00:00-05:00','2026-07-05T17:00:00-05:00'),0);
+ assert.equal(businessHours('2026-07-01T06:00:00-05:00','2026-07-01T20:00:00-05:00'),9);
+ assert.equal(businessHours('2026-07-01T08:00:00-05:00','2026-07-01T12:00:00-05:00'),4);
+ assert.throws(()=>businessHours('2026-02-30T08:00:00-05:00','2026-03-01T08:00:00-05:00'));
+ assert.throws(()=>businessHours('2026-07-02T08:00:00-05:00','2026-07-01T08:00:00-05:00'));
+});
+test('manifest no contiene valores de usuarios ni técnicos',()=>{
+ const payload=JSON.stringify(evidence);for(const r of parsed.rows){assert.ok(!payload.includes(r.usuario));assert.ok(!payload.includes(r.tecnico_asignado));}
+});
