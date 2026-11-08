@@ -1,15 +1,17 @@
 {
-  "version": 1,
+  "version": 2,
   "period": 202607,
   "count": 187,
   "policy": {
-    "version": "nivel1-v2",
+    "version": "nivel1-v3",
     "period": "2026-07",
     "universe": "187 tickets del lote entregado; incluye 2 reportados en agosto",
     "managed": "estado CERRADO, resolución y cierre válidos, cierre CONFIRMADO POR USUARIO o AUTOMATICO 7 DIAS",
     "confirmed": "subconjunto gestionado con confirmado_por_usuario SI y tipo CONFIRMADO POR USUARIO",
     "denominator": "todos los IDs únicos del lote entregado",
-    "sla": "horas hábiles calculadas, no condiciona el indicador de gestión",
+    "sla": "horas hábiles calculadas, no condiciona el indicador de gestión; la bitácora corrige ediciones posteriores a la resolución",
+    "hoursTolerance": 0.02,
+    "evidenceFiles": "tickets, catálogo, reporte publicado, bitácora y reaperturas: solo sus SHA-256 entran en el compromiso",
     "timezone": "UTC-05:00",
     "hours": "lunes a viernes 08:00-17:00",
     "holidays": [],
@@ -42,7 +44,9 @@
   "files": {
     "tickets": "0x6f3a1f097e438bf5518df1193a5bf2789a985a081920605ffb7ead04fa0e88f8",
     "catalog": "0xad088fc60f9fb27a240688564afb78ac9623780460f773c71094bb9ee6bd6942",
-    "report": "0xbef604347fb5c8f3d59832680396a1d60d2d21866eca7cf2c54185d401519c87"
+    "report": "0xbef604347fb5c8f3d59832680396a1d60d2d21866eca7cf2c54185d401519c87",
+    "bitacora": "0x45e031a0af9111152ada7bb1f0ecfd718a75578e2182a265fec000f1329b5107",
+    "reopenings": "0x331379e43d801f6fe5db7d75ab5f3d00beacfc149d339290afa467fd498ac65c"
   },
   "root": "0xf58ac18028cdd1c9c4ec8afc7b85a3cf0ab065143b49cefef0956378a3ccdf34",
   "tickets": [

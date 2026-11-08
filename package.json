@@ -11,15 +11,17 @@
     "verify:source": "node scripts/verify-source.mjs",
     "manual": "node scripts/manual.mjs",
     "deploy:sepolia": "node scripts/deploy-testnet.mjs",
-    "seal:sepolia": "node scripts/seal-testnet.mjs"
+    "seal:sepolia": "node scripts/seal-testnet.mjs",
+    "slides": "node scripts/build-slides.mjs"
   },
   "dependencies": {
     "ethers": "6.17.0",
-    "papaparse": "5.5.3",
     "ganache": "7.9.2",
+    "papaparse": "5.5.3",
     "solc": "0.8.30"
   },
   "devDependencies": {
-    "@playwright/test": "1.56.1"
+    "@playwright/test": "1.56.1",
+    "pptxgenjs": "4.0.1"
   }
 }

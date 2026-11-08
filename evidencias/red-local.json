@@ -3,9 +3,9 @@
   "chainId": 31337,
   "network": "EVM local Ganache (red de desarrollo real)",
   "deploymentBlock": 1,
-  "deploymentTransaction": "0xe9250d15fcc26fc781717091ef873ee6ad03dbd60eeee4f256aa6688ed82cfcd",
-  "codeHash": "0x6ea192243244376cc4732e21121b50e34189b6ac5102435c04b25e967e409b39",
-  "rulesHash": "0x6400336aac0c6397ce5e2e81e66fd4e6b27c534a27ab301dcbab94140b049d3b",
+  "deploymentTransaction": "0x73c793fbe37a41ee3582762a7b3be7ae62e7869e95e9e14dacc10bd7d40161ce",
+  "codeHash": "0x844bb911de86d598a877a76551260964414060f2c21b0679d43688e10c449f67",
+  "rulesHash": "0x3b8651c310d3254dba501c38a781a7e3e2b28631ae97112aa20fa3ec5c12f906",
   "rpc": "http://127.0.0.1:8545",
   "local": true
 }
