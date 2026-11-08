@@ -2,6 +2,8 @@
 
 Indicador recomputable sobre los 187 tickets del paquete entregado. Valida los originales, ancla un compromiso en una EVM local y detecta cambios por ticket y campo. Alcance exclusivo: Nivel 1.
 
+Repositorio público: https://github.com/dapdigital/reto-03-indicador-recomputable
+
 ## Ejecutar
 
 Requisitos: Node.js 22 o superior, npm y un navegador moderno. La auditoría y el asistente de edición manual requieren Microsoft Edge.
@@ -105,6 +107,8 @@ npm.cmd run audit
 ```
 
 Las pruebas del contrato usan EVM en memoria; la auditoría usa Edge y cadena persistida real. Comprueba sellado, recálculo, alteración, comparación, privacidad, caída RPC, recarga, reinicio y móvil. Exporta capturas y resultados a `evidencias/` y actualiza `AUDITORIA_NIVEL_1.md`. La prueba manual se acredita solo con confirmación humana y un CSV compatible con el mismo sello.
+
+`ci/github-actions-tests.yml` es una plantilla opcional, no un workflow activo: la credencial utilizada para publicar no tiene permiso de workflows. Las 29 pruebas y la auditoría se ejecutaron localmente. Para activar CI con una credencial autorizada, copiar la plantilla a `.github/workflows/tests.yml`.
 
 Para un ensayo asistido: sellar primero la instancia normal, detenerla y ejecutar `npm.cmd run manual`. Abre el navegador y espera que la persona edite la copia cuya ruta imprime. La carga y verificación son automáticas; no se atribuye a una persona una edición realizada por el script.
 
