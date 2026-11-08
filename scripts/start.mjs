@@ -36,7 +36,8 @@ export async function startApp(){
    const relative=vendors[url.pathname]||(url.pathname==='/'?'src/index.html':decodeURIComponent(url.pathname).slice(1));
    const allowed=relative==='README.md'||/^docs\/[\w.-]+\.md$/.test(relative)||/^src\/[\w.-]+$/.test(relative)||/^contracts\/[\w.-]+$/.test(relative)||/^datos\/[\w.-]+$/.test(relative)||/^evidencias\/[\w.-]+$/.test(relative)||Object.values(vendors).includes(relative);
    if(!allowed){res.writeHead(404);res.end('No disponible');return;}
-   const file=relative.startsWith('evidencias/')?path.resolve(EVIDENCE_DIR,relative.slice(11)):path.resolve(ROOT,relative);if(!file.startsWith(ROOT+path.sep))throw new Error('Ruta no permitida');
+   // La red local vive en la instancia; la configuración pública de Sepolia, en evidencias/ del repositorio.
+   const file=relative.startsWith('evidencias/')&&!relative.includes('sepolia')?path.resolve(EVIDENCE_DIR,relative.slice(11)):path.resolve(ROOT,relative);if(!file.startsWith(ROOT+path.sep))throw new Error('Ruta no permitida');
    const data=await fs.readFile(file);res.writeHead(200,{'Content-Type':mime[path.extname(file)]||'application/octet-stream'});res.end(data);
   }catch(e){res.writeHead(e.code==='ENOENT'?404:400,{'Content-Type':'text/plain; charset=utf-8'});res.end(e.code==='ENOENT'?'No disponible':e.message);}
  });

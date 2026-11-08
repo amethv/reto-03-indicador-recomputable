@@ -3,7 +3,7 @@ import {ABI,readAnchor} from './chain.mjs';
 import {POLICY,PERIOD,SOURCES,csv,buildEvidence,verifyText,evidenceHash,authenticateEvidence,sealedValues} from './core.mjs';
 
 const $=id=>document.getElementById(id);
-let config,provider,baseline,evidence=null,prepared=null,originalTexts=null,verified=null,sealed=false,busy=false;
+let network='local',config,provider,baseline,evidence=null,prepared=null,originalTexts=null,verified=null,sealed=false,busy=false;
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt=v=>Number(v).toLocaleString('es-EC',{minimumFractionDigits:2,maximumFractionDigits:2});
 const pct=r=>`${fmt(r.percent)} %`;
@@ -37,7 +37,13 @@ async function prepare(t){
  status('sealStatus',`187/187 IDs originales presentes y únicos. Hashes individuales y pruebas preparadas. Catálogo, reporte, bitácora y reaperturas coinciden con la fuente. ${july} reportes de julio; ${candidate.count-july} fuera de julio. ${sealed?'Ya existe sello confirmado; no se reemplazará.':'Todavía no se ha enviado el sello a blockchain.'}`);
  $('commitment').textContent=`Raíz preparada: ${candidate.root}\nCompromiso de evidencia: ${await evidenceHash(candidate)}`;
 }
+function showExplorer(anchor){
+ if(!config.explorer){$('explorer').textContent='Red local: no tiene explorador público. Cambia a Sepolia para ver el ancla pública.';return;}
+ const tx=anchor?.transactionHash??config.sealTransaction;
+ $('explorer').innerHTML=`Explorador público: ${tx?`<a href="${esc(config.explorer)}/tx/${esc(tx)}" target="_blank" rel="noopener">transacción del sello</a> · `:''}<a href="${esc(config.explorer)}/address/${esc(config.address)}" target="_blank" rel="noopener">contrato ${esc(config.address)}</a>`;
+}
 function showAnchor(anchor){
+ showExplorer(anchor);
  $('privacy').textContent=`Contrato: ${anchor.address}\nRed: ${config.network}\nChain ID: ${anchor.chainId}\nTransacción: ${anchor.transactionHash}\nBloque: ${anchor.blockNumber}\nRaíz: ${anchor.root}\nCompromiso de evidencia: ${anchor.evidenceHash}\nCantidad: ${anchor.count}\nHash de reglas: ${anchor.rulesHash}`;
  $('onchain').textContent=JSON.stringify(anchor,null,2);
 }
@@ -140,10 +146,32 @@ $('evidenceFile').onchange=()=>run(async()=>{
 $('export').onclick=()=>{if(!evidence)return;const blob=new Blob([JSON.stringify(evidence,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='sello-original-2026-07.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};
 $('search').oninput=renderTable;$('filter').onchange=renderTable;$('policy').textContent=JSON.stringify(POLICY,null,2);
 
-await run(async()=>{
- config=JSON.parse(await get('/evidencias/red-local.json'));baseline=JSON.parse(await get('/src/originals.json'));
- provider=new JsonRpcProvider(config.rpc,undefined,{cacheTimeout:-1});provider.pollingInterval=100;
- $('privacy').textContent=`Contrato configurado: ${config.address}\nRed: ${config.network}\nRPC: ${config.rpc}\nDespliegue: ${config.deploymentTransaction}\nFalta consultar el sellado.`;
- const response=await fetch('/evidencias/sello-original.json');if(response.ok){const candidate=await response.json(),anchor=await readAnchor(provider,config),auth=await authenticateEvidence(candidate,anchor);if(!auth.ok)throw new Error(auth.error);evidence=candidate;sealed=true;showAnchor(anchor);status('sealStatus',`Sello existente confirmado. No se reemplazará. TX ${anchor.transactionHash}`,'green');}
-});
+const CONFIG_FILES={local:'red-local.json',sepolia:'red-sepolia.json'};
+async function useNetwork(name){
+ const response=await fetch(`/evidencias/${CONFIG_FILES[name]}`);
+ if(!response.ok){
+  $('network').value=network;
+  throw new Error(name==='sepolia'?'Sepolia pendiente: todavía no hay contrato desplegado (falta evidencias/red-sepolia.json). Ver README, sección «Ancla en Sepolia».':`Falta la configuración de la red ${name}`);
+ }
+ const next=await response.json();
+ provider?.destroy();
+ network=name;config=next;evidence=null;sealed=false;prepared=null;clearResults();controls();
+ $('configLink').href=`/evidencias/${CONFIG_FILES[name]}`;
+ provider=new JsonRpcProvider(config.rpc,undefined,{cacheTimeout:-1});provider.pollingInterval=config.local?100:4000;
+ $('privacy').textContent=`Contrato configurado: ${config.address}
+Red: ${config.network}
+RPC de lectura: ${config.rpc}
+Despliegue: ${config.deploymentTransaction}
+Falta consultar el sellado.`;
+ showExplorer(null);
+ $('networkNote').textContent=config.local?'Local: EVM de desarrollo en este equipo, sirve de respaldo sin internet. El sellado se hace desde esta página.':`Pública: ${config.network}. El navegador solo lee por un RPC público, sin wallet ni credenciales. El municipio selló con scripts/seal-testnet.mjs.`;
+ status('sealStatus','Sin sellado comprobado en esta red.');
+ const file=config.evidenceFile??'sello-original.json',stored=await fetch(`/evidencias/${file}`);
+ if(stored.ok){
+  const candidate=await stored.json(),anchor=await readAnchor(provider,config),auth=await authenticateEvidence(candidate,anchor);if(!auth.ok)throw new Error(auth.error);
+  evidence=candidate;sealed=true;showAnchor(anchor);status('sealStatus',`Sello existente confirmado en ${config.network}. No se reemplazará. TX ${anchor.transactionHash}`,'green');
+ }
+}
+$('network').onchange=()=>run(()=>useNetwork($('network').value));
+await run(async()=>{baseline=JSON.parse(await get('/src/originals.json'));await useNetwork('local');});
 window.__ateneaReady=true;

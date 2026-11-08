@@ -1,5 +1,5 @@
 {
-  "name": "reto-03-nivel-1",
+  "name": "reto-03-indicador-recomputable",
   "version": "1.0.0",
   "private": true,
   "type": "module",
@@ -9,7 +9,9 @@
     "audit": "node scripts/audit.mjs",
     "demo": "node scripts/demo.mjs",
     "verify:source": "node scripts/verify-source.mjs",
-    "manual": "node scripts/manual.mjs"
+    "manual": "node scripts/manual.mjs",
+    "deploy:sepolia": "node scripts/deploy-testnet.mjs",
+    "seal:sepolia": "node scripts/seal-testnet.mjs"
   },
   "dependencies": {
     "ethers": "6.17.0",

@@ -17,6 +17,11 @@
 <main>
 <aside class="notice"><strong>Universo del reto: los 187 tickets originales.</strong> <span id="scopeNote">El lote incluye reportes fuera de julio. Los conteos se muestran al validar los originales. Se usa el estado final del lote, no un corte calendario estricto.</span></aside>
 
+<div class="networkbar">
+  <label>Red de verificación<select id="network"><option value="local">Local (Ganache)</option><option value="sepolia">Pública (Sepolia)</option></select></label>
+  <p id="networkNote" class="small">Local: EVM de desarrollo en este equipo, sirve de respaldo sin internet. Sepolia: lectura pública sin wallet ni credenciales.</p>
+</div>
+
 <section id="s1">
   <h2>1. Sellado de los 187 tickets</h2>
   <p>Se valida cada archivo contra la huella de la carpeta fuente verificada. Cada columna de los tickets participa en el compromiso; del catálogo, el reporte publicado, la bitácora y las reaperturas solo entra su SHA-256. Una verificación posterior no puede cambiar el sello.</p>
@@ -84,10 +89,11 @@
   <p>Solo período, raíz criptográfica, compromiso de la evidencia, cantidad, marca de tiempo y hash de reglas. La cadena también publica las direcciones del contrato y del emisor, el bloque y los datos propios de una transacción EVM.</p>
   <p>Los nombres de usuarios y técnicos, las unidades, los actores de la bitácora y el contenido de los tickets permanecen fuera de la cadena. El manifiesto contiene IDs y hashes, se conserva localmente y permite localizar cambios; no se publica en una transacción.</p>
   <div id="privacy" class="mono">Pendiente de consulta real.</div>
+  <p id="explorer" class="explorer"></p>
   <button id="inspect">Consultar contrato y transacción</button>
   <details><summary>Ver calldata, evento y almacenamiento consultados</summary><pre id="onchain">Sin consulta.</pre></details>
   <p>Un hash demuestra que un archivo coincide con lo sellado; no demuestra que sus datos fueran verdaderos antes del sellado.</p>
-  <p><a href="/contracts/RegistroIndicador.sol" target="_blank" rel="noopener">Código fuente del contrato</a> · <a href="/evidencias/red-local.json" target="_blank" rel="noopener">Configuración y despliegue</a> · <a href="/docs/AUDITORIA.md" target="_blank" rel="noopener">Auditoría de aceptación</a> · <a href="/docs/HALLAZGOS.md" target="_blank" rel="noopener">Hallazgos</a></p>
+  <p><a href="/contracts/RegistroIndicador.sol" target="_blank" rel="noopener">Código fuente del contrato</a> · <a id="configLink" href="/evidencias/red-local.json" target="_blank" rel="noopener">Configuración y despliegue</a> · <a href="/docs/AUDITORIA.md" target="_blank" rel="noopener">Auditoría de aceptación</a> · <a href="/docs/HALLAZGOS.md" target="_blank" rel="noopener">Hallazgos</a></p>
 </section>
 </main>
 <footer>Datos sintéticos · Desarrollo exclusivo del Nivel 1 · Sin penalidades ni funciones de Niveles 2 y 3</footer>

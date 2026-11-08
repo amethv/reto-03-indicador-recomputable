@@ -15,7 +15,7 @@ export async function compile({write=true}={}){
  const errors=(output.errors||[]).filter(e=>e.severity==='error');if(errors.length)throw new Error(errors.map(e=>e.formattedMessage).join('\n'));
  const artifact=output.contracts['RegistroIndicador.sol'].RegistroIndicador;
  const result={abi:artifact.abi,bytecode:'0x'+artifact.evm.bytecode.object,source,compiler:solc.version()};
- if(write){await fs.mkdir(EVIDENCE_DIR,{recursive:true});await fs.writeFile(path.join(EVIDENCE_DIR,'contrato.json'),JSON.stringify(result,null,2));}return result;
+ if(write){await fs.mkdir(EVIDENCE_DIR,{recursive:true});await fs.writeFile(path.join(EVIDENCE_DIR,'contrato.json'),JSON.stringify(result,null,2));}return {...result,input};
 }
 export async function deploy(provider){
  const artifact=await compile();const signer=await provider.getSigner(0),rulesHash=await sha(JSON.stringify(POLICY));
