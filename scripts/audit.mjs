@@ -11,11 +11,11 @@ import {PERIOD,SOURCES,csv,verifyText,authenticateEvidence,sha} from '../src/cor
 import {verifySource} from './verify-source.mjs';
 const names=['Sellado de los 187 tickets','Recálculo independiente','Detección de alteraciones','Comparación de indicadores','Privacidad en blockchain'];
 const implementation=[
- 'src/core.mjs: buildEvidence, leaf, merkle, evidenceHash; contracts/RegistroJulio.sol: seal; src/chain.mjs: readAnchor; src/app.mjs: botón seal.',
+ 'src/core.mjs: buildEvidence, leaf, merkle, evidenceHash; contracts/RegistroIndicador.sol: seal; src/chain.mjs: readAnchor; src/app.mjs: botón seal.',
  'src/core.mjs: verifyText, calculate, businessHours; src/app.mjs: doVerify, renderTable.',
- 'src/core.mjs: authenticateEvidence, proofValid, verifyText; src/app.mjs: doVerify; contracts/RegistroJulio.sol: sello inmutable.',
+ 'src/core.mjs: authenticateEvidence, proofValid, verifyText; src/app.mjs: doVerify; contracts/RegistroIndicador.sol: sello inmutable.',
  'src/core.mjs: calculate; src/app.mjs: doVerify, renderTable; src/index.html: dos tarjetas principales.',
- 'contracts/RegistroJulio.sol; src/chain.mjs: readAnchor; src/app.mjs: showAnchor; src/index.html: Privacidad en blockchain.'
+ 'contracts/RegistroIndicador.sol; src/chain.mjs: readAnchor; src/app.mjs: showAnchor; src/index.html: Privacidad en blockchain.'
 ];
 const report={started:new Date().toISOString(),timezone:'America/Guayaquil',criteria:names.map((name,i)=>({criterion:i+1,name,implementation:implementation[i],status:'NO VERIFICADO',test:'No ejecutada',result:null,evidence:[],pending:[]})),supplementary:[],browserErrors:[]};
 let app,browser,step=0,anchor,evidence,originals;

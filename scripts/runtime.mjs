@@ -8,14 +8,14 @@ export const INSTANCE=process.env.ATENEA_INSTANCE||'nivel1-v3';
 if(!/^[a-zA-Z0-9_-]{1,80}$/.test(INSTANCE))throw new Error('Nombre de instancia inválido');
 export const STATE_ROOT=path.join(ROOT,'.instances',INSTANCE);
 export const EVIDENCE_DIR=path.join(STATE_ROOT,'evidencias');
-export async function compile(){
- const source=await fs.readFile(path.join(ROOT,'contracts/RegistroJulio.sol'),'utf8');
- const input={language:'Solidity',sources:{'RegistroJulio.sol':{content:source}},settings:{optimizer:{enabled:true,runs:200},evmVersion:'shanghai',outputSelection:{'*':{'*':['abi','evm.bytecode.object','evm.deployedBytecode.object']}}}};
+export async function compile({write=true}={}){
+ const source=await fs.readFile(path.join(ROOT,'contracts/RegistroIndicador.sol'),'utf8');
+ const input={language:'Solidity',sources:{'RegistroIndicador.sol':{content:source}},settings:{optimizer:{enabled:true,runs:200},evmVersion:'shanghai',outputSelection:{'*':{'*':['abi','evm.bytecode.object','evm.deployedBytecode.object']}}}};
  const output=JSON.parse(solc.compile(JSON.stringify(input)));
  const errors=(output.errors||[]).filter(e=>e.severity==='error');if(errors.length)throw new Error(errors.map(e=>e.formattedMessage).join('\n'));
- const artifact=output.contracts['RegistroJulio.sol'].RegistroJulio;
+ const artifact=output.contracts['RegistroIndicador.sol'].RegistroIndicador;
  const result={abi:artifact.abi,bytecode:'0x'+artifact.evm.bytecode.object,source,compiler:solc.version()};
- await fs.mkdir(EVIDENCE_DIR,{recursive:true});await fs.writeFile(path.join(EVIDENCE_DIR,'contrato.json'),JSON.stringify(result,null,2));return result;
+ if(write){await fs.mkdir(EVIDENCE_DIR,{recursive:true});await fs.writeFile(path.join(EVIDENCE_DIR,'contrato.json'),JSON.stringify(result,null,2));}return result;
 }
 export async function deploy(provider){
  const artifact=await compile();const signer=await provider.getSigner(0),rulesHash=await sha(JSON.stringify(POLICY));

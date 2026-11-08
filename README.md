@@ -93,7 +93,7 @@ La EVM local demuestra el mecanismo; su operador controla el entorno. Para indep
 
 ## Contrato
 
-`contracts/RegistroJulio.sol`: Solidity 0.8.30, optimizador 200, EVM Shanghai. Instancia auditada: **0xe78A0F7E598Cc8b0Bb87894B0F60dD2a88d6a8Ab**, chain ID **31337**, Ganache local. Dirección y recibos: `evidencias/red-local.json` y `evidencias/blockchain.json`. Una dirección determinista puede repetirse en distintas instancias: contrastar también instancia, raíz y transacción. No es una dirección de testnet pública.
+`contracts/RegistroIndicador.sol`: Solidity 0.8.30, optimizador 200, EVM Shanghai. Instancia auditada: **0xe78A0F7E598Cc8b0Bb87894B0F60dD2a88d6a8Ab**, chain ID **31337**, Ganache local. Dirección y recibos: `evidencias/red-local.json` y `evidencias/blockchain.json`. Una dirección determinista puede repetirse en distintas instancias: contrastar también instancia, raíz y transacción. No es una dirección de testnet pública.
 
 No usar las cuentas de desarrollo para fondos reales. Estados activos en `.instances/`, excluidos de Git.
 
