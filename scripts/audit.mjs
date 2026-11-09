@@ -5,7 +5,7 @@ import {chromium,expect} from '@playwright/test';
 import {Contract,toUtf8Bytes,hexlify} from 'ethers';
 import Papa from 'papaparse';
 import {startApp} from './start.mjs';
-import {ROOT,STATE_ROOT,EVIDENCE_DIR,INSTANCE} from './runtime.mjs';
+import {ROOT,STATE_ROOT,EVIDENCE_DIR,INSTANCE,SALT_FILES,readSalt} from './runtime.mjs';
 import {readAnchor,ABI} from '../src/chain.mjs';
 import {PERIOD,SOURCES,csv,verifyText,authenticateEvidence,sha} from '../src/core.mjs';
 import {verifySource} from './verify-source.mjs';
@@ -20,7 +20,7 @@ const implementation=[
  'contracts/RegistroIndicador.sol; src/chain.mjs: readAnchor; src/privacy.mjs: collectChainData, searchPersonalData; src/app.mjs: botón searchPersonal.'
 ];
 const report={started:new Date().toISOString(),timezone:'America/Guayaquil',criteria:names.map((name,i)=>({criterion:i+1,name,implementation:implementation[i],status:'NO VERIFICADO',test:'No ejecutada',result:null,evidence:[],pending:[]})),supplementary:[],browserErrors:[]};
-let app,browser,step=0,anchor,evidence,originals;
+let app,browser,step=0,anchor,evidence,originals,salt;
 try {
  report.sourceFiles=(await verifySource()).map(({file,actual})=>({file,sha256:actual}));
  app=await startApp();browser=await chromium.launch({channel:'msedge',headless:true});
@@ -32,13 +32,13 @@ try {
  step=1;let item=report.criteria[0];item.test='Cargar originales, pulsar sellado en navegador si aún no existe; comprobar código, recibo, evento y getSeal mediante JSON-RPC real.';
  await page.locator('#load').click();await expect(page.locator('#sealStatus')).toContainText('187/187');
  if(await page.locator('#seal').isEnabled()){await page.locator('#seal').click();await expect(page.locator('#sealStatus')).toContainText('SELLADO CONFIRMADO',{timeout:60000});item.newTransaction=true;}else{item.newTransaction=false;}
- anchor=await readAnchor(app.provider,app.config);evidence=JSON.parse(await fs.readFile(path.join(EVIDENCE_DIR,'sello-original.json'),'utf8'));
+ anchor=await readAnchor(app.provider,app.config);evidence=JSON.parse(await fs.readFile(path.join(EVIDENCE_DIR,'sello-original.json'),'utf8'));salt=await readSalt(SALT_FILES.local);assert.ok(salt,'Falta la sal del sello local');
  assert.equal((await authenticateEvidence(evidence,anchor)).ok,true);assert.equal(anchor.count,187);assert.equal(evidence.tickets.length,187);
  const baseline=JSON.parse(await fs.readFile(path.join(ROOT,'src/originals.json'),'utf8'));assert.equal(await sha(originals.tickets),baseline.files.tickets);
  item.status='APROBADO';item.result={count:187,root:anchor.root,transaction:anchor.transactionHash,block:anchor.blockNumber,address:anchor.address,chainId:anchor.chainId};item.evidence=['evidencias/red-local.json','evidencias/sello-original.json','evidencias/01-sellado.png'];await page.screenshot({path:path.join(STATE_ROOT,item.evidence[2]),fullPage:true});
  step=2;item=report.criteria[1];item.test='Verificar original en interfaz contra cadena real; comprobar titular 98,25 % contra 55,61 %, cascada 187 → 171, TK-2026-04228 vía bitácora, 5 reaperturas y filtro de discrepancias SLA.';
  await page.locator('#verify').click();await expect(page.locator('#verification')).toContainText('VERDE',{timeout:30000});
- const originalResult=await verifyText(originals.tickets,evidence,anchor,originals);assert.equal(originalResult.status,'VERDE');
+ const originalResult=await verifyText(originals.tickets,evidence,anchor,originals,salt);assert.equal(originalResult.status,'VERDE');
  assert.equal(originalResult.result.numeratorA,187);assert.equal(originalResult.result.denominator,187);assert.equal(originalResult.result.percentA,100);assert.equal(originalResult.published,98.25);
  const f=originalResult.findings;assert.equal(f.denominator.derived,171);assert.equal(f.denominator.reopened.length,7);assert.equal(f.denominator.level3.length,9);assert.deepEqual(f.edits.map(e=>e.ticket),['TK-2026-04228']);assert.equal(f.reopenings.length,5);assert.equal(f.sla.corrected.numerator,120);
  await expect(page.locator('#headline')).toHaveText('Publicado 98,25 % · Solo confirmados por el usuario 55,61 %');
@@ -53,7 +53,7 @@ try {
  const modified=Papa.unparse(rows,{columns:evidence.headers,newline:'\n'}),copy=path.join(EVIDENCE_DIR,'tickets-modificado.csv');await fs.writeFile(copy,modified);
  await page.locator('#verifyFile').setInputFiles(copy);await expect(page.locator('#percentA')).toHaveText('—');await page.locator('#verify').click();await expect(page.locator('#verification')).toContainText('ROJO',{timeout:30000});
  await expect(page.locator('#changes')).toContainText(id);await expect(page.locator('#changes')).toContainText('fecha_resolucion');await expect(page.locator('#changes > div > ul > li')).toHaveCount(1);await expect(page.locator('#changes')).toContainText('sellado');await expect(page.locator('#changes')).toContainText('El sello no cambió');await expect(page.locator('#percentB')).toHaveText('—');
- const modifiedResult=await verifyText(modified,evidence,anchor,originals);assert.equal(modifiedResult.status,'ROJO');assert.deepEqual(modifiedResult.changes.map(r=>r.id),[id]);assert.equal(modifiedResult.result,undefined);
+ const modifiedResult=await verifyText(modified,evidence,anchor,originals,salt);assert.equal(modifiedResult.status,'ROJO');assert.deepEqual(modifiedResult.changes.map(r=>r.id),[id]);assert.equal(modifiedResult.result,undefined);
  assert.equal((await readAnchor(app.provider,app.config)).transactionHash,anchor.transactionHash);assert.deepEqual(JSON.parse(await fs.readFile(path.join(EVIDENCE_DIR,'sello-original.json'),'utf8')),evidence);
  item.status='NO VERIFICADO';item.automatedStatus='APROBADO';item.result={color:'ROJO',ticket:id,fields:modifiedResult.changes[0].fields,sealedVsEdited:true,originalSealUnchanged:true,automatedBrowserUpload:true};item.evidence=['evidencias/03-alteracion.png','evidencias/tickets-modificado.csv'];item.pending=['La edición y carga fueron automatizadas sobre un archivo real. Falta ejecutar y observar la edición manual en un editor y la carga por una persona, exigida literalmente en la demostración.'];await page.screenshot({path:path.join(STATE_ROOT,item.evidence[0]),fullPage:true});
  step=4;item=report.criteria[3];item.test='Restaurar entrada al original y verificar; comprobar dos tarjetas, mismo denominador, porcentajes calculados y filtro de los 83 excluidos de B.';
@@ -89,7 +89,7 @@ try {
  try {
   const manual=JSON.parse(await fs.readFile(path.join(ROOT,'evidencias/edicion-manual.json'),'utf8'));
   const manualCSV=await fs.readFile(path.join(ROOT,'evidencias/tickets-edicion-manual.csv'),'utf8');
-  const manualResult=await verifyText(manualCSV,evidence,anchor,originals);
+  const manualResult=await verifyText(manualCSV,evidence,anchor,originals,salt);
   if(manual.humanConfirmed===true&&manual.transactionHash===anchor.transactionHash&&manual.sourceHash===await sha(originals.tickets)&&manual.modifiedHash===await sha(manualCSV)&&manualResult.status==='ROJO'&&manualResult.changes.length===1&&manualResult.changes[0].id==='TK-2026-04201'&&JSON.stringify(manualResult.changes[0].fields)===JSON.stringify(['fecha_resolucion'])){
    const criterion=report.criteria[2];criterion.status='APROBADO';criterion.pending=[];
    criterion.manualEvidence=manual;criterion.evidence.push('evidencias/edicion-manual.json','evidencias/tickets-edicion-manual.csv','evidencias/07-edicion-manual.png');

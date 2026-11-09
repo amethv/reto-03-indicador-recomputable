@@ -46,6 +46,7 @@ Si Sepolia aún no está desplegado, el selector lo dice («Sepolia pendiente»)
 - Si la instancia ya aparece sellada: detener y volver a ejecutar `npm.cmd run demo` (crea otra instancia; no borra cadenas).
 - Si falla el RPC: la interfaz no muestra indicadores acreditados (ERROR DE CONEXIÓN). Cambiar a la red local.
 - Las capturas de `evidencias/` son respaldo documental, no sustituyen la demostración en vivo.
+- Si se verifica desde otro navegador o equipo: importar en la sección 3 el manifiesto (`sello-original.json`) y la sal secreta (`.instances/nivel1-v4/secreto/sal-202607.json`). Sin la sal el resultado es INCOMPLETA, a propósito.
 
 ## Evidencia de la edición manual
 

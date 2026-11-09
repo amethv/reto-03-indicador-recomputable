@@ -96,7 +96,16 @@ const enc=new TextEncoder();
 export async function sha(data) {const bytes=typeof data==='string'?enc.encode(data):data;return '0x'+Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',bytes)),x=>x.toString(16).padStart(2,'0')).join('');}
 function bytes(hex){if(!/^0x[0-9a-f]{64}$/.test(hex))throw new Error('Hash inválido');return Uint8Array.from(hex.slice(2).match(/../g),b=>parseInt(b,16));}
 export async function parent(left,right){return sha(new Uint8Array([1,...bytes(left),...bytes(right)]));}
-export async function leaf(parsed,row,index){return sha(new Uint8Array([0,...enc.encode(JSON.stringify(['atenea-ticket-v1',index,parsed.headers.map(h=>[h,row[h]])]))]));}
+// Sal secreta por sello: sin ella, los hashes por campo del manifiesto público no se pueden
+// comparar contra una lista de nombres. La sal vive fuera de evidencias/ (ver scripts/runtime.mjs).
+export const EVIDENCE_VERSION=3;
+const hex=b=>'0x'+Array.from(b,x=>x.toString(16).padStart(2,'0')).join('');
+export function newSalt(){return hex(crypto.getRandomValues(new Uint8Array(32)));}
+export const validSalt=s=>typeof s==='string'&&/^0x[0-9a-f]{64}$/.test(s);
+function requireSalt(s){if(!validSalt(s))throw new Error('Falta la sal secreta del sello o tiene formato inválido');}
+export const saltCommitment=s=>{requireSalt(s);return sha('atenea-sal-v3:'+s);};
+export const fieldHash=(salt,id,campo,valor)=>{requireSalt(salt);return sha(JSON.stringify(['atenea-campo-v3',salt,id,campo,valor??null]));};
+export async function leaf(parsed,row,index,salt){requireSalt(salt);return sha(new Uint8Array([0,...enc.encode(JSON.stringify(['atenea-ticket-v3',salt,index,parsed.headers.map(h=>[h,row[h]])]))]));}
 export async function merkle(leaves){
   if(!leaves.length)throw new Error('Árbol vacío');
   const levels=[leaves];while(levels.at(-1).length>1){const current=levels.at(-1),next=[];for(let i=0;i<current.length;i+=2)next.push(await parent(current[i],current[i+1]||current[i]));levels.push(next);}
@@ -108,7 +117,8 @@ function parseAux(t){
   return {parsed,errors:Object.values(parsed).flatMap(p=>p.errors)};
 }
 /** sources: {tickets,catalog,report,bitacora,reopenings} como texto. */
-export async function buildEvidence(sources,baseline){
+export async function buildEvidence(sources,baseline,salt){
+  requireSalt(salt);
   for(const key of Object.keys(SOURCES))if(typeof sources?.[key]!=='string')throw new Error(`Falta ${SOURCES[key]}`);
   const parsed=csv(sources.tickets),aux=parseAux(sources);
   if(aux.errors.length)throw new Error(aux.errors.join('\n'));
@@ -117,14 +127,16 @@ export async function buildEvidence(sources,baseline){
   const files={};for(const key of Object.keys(SOURCES))files[key]=await sha(sources[key]);
   for(const key of Object.keys(files))if(files[key]!==baseline.files[key])throw new Error(`${SOURCES[key]}: no coincide con los originales de la carpeta fuente verificada`);
   const ids=parsed.rows.map(r=>r.ticket_id);if(JSON.stringify(ids)!==JSON.stringify(baseline.ids))throw new Error('Universo original incompleto o reordenado');
-  const hashes=await Promise.all(parsed.rows.map((r,i)=>leaf(parsed,r,i))),tree=await merkle(hashes);
-  const tickets=await Promise.all(parsed.rows.map(async(r,i)=>({id:r.ticket_id,index:i,hash:hashes[i],fields:Object.fromEntries(await Promise.all(parsed.headers.map(async h=>[h,await sha(JSON.stringify([h,r[h]]))]))),proof:tree.proofs[i]})));
-  return {version:2,period:PERIOD,count:ids.length,policy:POLICY,headers:parsed.headers,files,root:tree.root,tickets};
+  const hashes=await Promise.all(parsed.rows.map((r,i)=>leaf(parsed,r,i,salt))),tree=await merkle(hashes);
+  const tickets=await Promise.all(parsed.rows.map(async(r,i)=>({id:r.ticket_id,index:i,hash:hashes[i],fields:Object.fromEntries(await Promise.all(parsed.headers.map(async h=>[h,await fieldHash(salt,r.ticket_id,h,r[h])]))),proof:tree.proofs[i]})));
+  // El manifiesto lleva el compromiso de la sal, nunca la sal.
+  return {version:EVIDENCE_VERSION,period:PERIOD,count:ids.length,policy:POLICY,headers:parsed.headers,files,saltCommitment:await saltCommitment(salt),root:tree.root,tickets};
 }
 export const evidenceHash=e=>sha(JSON.stringify(e));
 export async function authenticateEvidence(e,seal) {
   try {
-    if(e.version!==2||e.period!==PERIOD||e.count!==187||e.tickets.length!==e.count)throw new Error('Manifiesto incompleto');
+    if(e.version!==EVIDENCE_VERSION||e.period!==PERIOD||e.count!==187||e.tickets.length!==e.count)throw new Error('Manifiesto incompleto');
+    if(!validSalt(e.saltCommitment))throw new Error('Manifiesto sin compromiso de sal válido');
     if(JSON.stringify(e.policy)!==JSON.stringify(POLICY))throw new Error('Reglas del manifiesto no reconocidas');
     if(JSON.stringify(Object.keys(e.files??{}))!==JSON.stringify(Object.keys(SOURCES)))throw new Error('Manifiesto sin las huellas de todos los archivos sellados');
     if(e.root!==seal.root||await evidenceHash(e)!==seal.evidenceHash||Number(seal.count)!==187)throw new Error('Evidencia no coincide con blockchain');
@@ -135,22 +147,24 @@ export async function authenticateEvidence(e,seal) {
   }catch(error){return {ok:false,error:error.message};}
 }
 /** aux: {catalog,report,bitacora,reopenings} como texto. */
-export async function verifyText(text,e,seal,aux){
+export async function verifyText(text,e,seal,aux,salt){
   const auth=await authenticateEvidence(e,seal);if(!auth.ok)return {status:'INCOMPLETA',errors:[auth.error],changes:[]};
+  if(!validSalt(salt))return {status:'INCOMPLETA',errors:['Falta la sal secreta del sello: sin ella no se pueden comprobar los tickets'],changes:[]};
+  if(await saltCommitment(salt)!==e.saltCommitment)return {status:'INCOMPLETA',errors:['La sal no corresponde al compromiso del manifiesto'],changes:[]};
   const parsed=csv(text),changes=[],original=new Map(e.tickets.map(r=>[r.id,r])),seen=new Set();
   for(const [i,r] of parsed.rows.entries()){
     const id=r.ticket_id||`FILA-${i+2}`,expected=original.get(id);
     if(seen.has(id))changes.push({id,kind:'ID duplicado',fields:[]});seen.add(id);
     if(!expected){changes.push({id,kind:'Ticket insertado o ID cambiado',fields:[]});continue;}
-    const hash=await leaf(parsed,r,i);
+    const hash=await leaf(parsed,r,i,salt);
     if(hash!==expected.hash){
-      const fields=[];for(const h of new Set([...e.headers,...parsed.headers]))if(await sha(JSON.stringify([h,r[h]]))!==expected.fields[h])fields.push(h);
+      const fields=[];for(const h of new Set([...e.headers,...parsed.headers]))if(await fieldHash(salt,id,h,r[h])!==expected.fields[h])fields.push(h);
       changes.push({id,kind:expected.index!==i?'Contenido u orden modificado':'Contenido modificado',fields,values:Object.fromEntries(fields.map(h=>[h,r[h]??'']))});
     }
   }
   for(const r of e.tickets)if(!seen.has(r.id))changes.push({id:r.id,kind:'Ticket eliminado',fields:[]});
   const rawMatch=await sha(text)===e.files.tickets;
-  const root=parsed.rows.length?(await merkle(await Promise.all(parsed.rows.map((r,i)=>leaf(parsed,r,i))))).root:null;
+  const root=parsed.rows.length?(await merkle(await Promise.all(parsed.rows.map((r,i)=>leaf(parsed,r,i,salt))))).root:null;
   const {parsed:a,errors:auxErrors}=parseAux(aux??{});
   const errors=[...parsed.errors,...auxErrors,...validate(parsed,a.catalog.rows).errors];
   const mismatched=[];for(const key of ['catalog','report','bitacora','reopenings'])if(typeof aux?.[key]!=='string'||await sha(aux[key])!==e.files[key])mismatched.push(SOURCES[key]);
@@ -167,14 +181,14 @@ export async function verifyText(text,e,seal,aux){
 }
 
 /** Para el ROJO: valor sellado frente al editado, si el CSV original local coincide con el sello. */
-export async function sealedValues(change,originalText,e){
-  if(!change.fields?.length||!originalText)return [];
+export async function sealedValues(change,originalText,e,salt){
+  if(!change.fields?.length||!originalText||!validSalt(salt))return [];
   const row=csv(originalText).rows.find(r=>r.ticket_id===change.id),expected=e.tickets.find(t=>t.id===change.id);
   if(!row||!expected)return [];
   const out=[];
   for(const field of change.fields){
     const sealed=row[field]??'';
-    if(await sha(JSON.stringify([field,sealed]))!==expected.fields[field])continue; // no se puede derivar con certeza
+    if(await fieldHash(salt,change.id,field,sealed)!==expected.fields[field])continue; // no se puede derivar con certeza
     out.push({field,sealed,edited:change.values?.[field]??''});
   }
   return out;

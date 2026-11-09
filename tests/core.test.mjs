@@ -2,7 +2,8 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import Papa from 'papaparse';
-import {csv,validate,calculate,businessHours,CATALOG_HEADERS,buildEvidence,evidenceHash,verifyText,authenticateEvidence,proofValid,sha,sealedValues} from '../src/core.mjs';
+import {csv,validate,calculate,businessHours,CATALOG_HEADERS,buildEvidence,evidenceHash,verifyText,authenticateEvidence,proofValid,sha,sealedValues,newSalt,validSalt,saltCommitment,fieldHash,EVIDENCE_VERSION,BITACORA_HEADERS} from '../src/core.mjs';
+import {personalValues} from '../src/privacy.mjs';
 const ticketText=await fs.readFile(new URL('../datos/tickets.csv',import.meta.url),'utf8');
 const catalogText=await fs.readFile(new URL('../datos/catalogo_servicios.csv',import.meta.url),'utf8');
 const reportText=await fs.readFile(new URL('../datos/indicador_mensual.csv',import.meta.url),'utf8');
@@ -12,10 +13,11 @@ const aux={catalog:catalogText,report:reportText,bitacora:bitacoraText,reopening
 const sources={tickets:ticketText,...aux};
 const baseline=JSON.parse(await fs.readFile(new URL('../src/originals.json',import.meta.url),'utf8'));
 const parsed=csv(ticketText),catalog=csv(catalogText,CATALOG_HEADERS).rows;
-const evidence=await buildEvidence(sources,baseline);
+const SALT=newSalt();
+const evidence=await buildEvidence(sources,baseline,SALT);
 // Este objeto se usa SOLO en pruebas unitarias. La aceptación E2E consulta una EVM real.
 const unitAnchor={root:evidence.root,evidenceHash:await evidenceHash(evidence),count:187};
-const verify=text=>verifyText(text,evidence,unitAnchor,aux);
+const verify=text=>verifyText(text,evidence,unitAnchor,aux,SALT);
 function mutate(fn){const rows=structuredClone(parsed.rows);fn(rows);return Papa.unparse(rows,{columns:parsed.headers,newline:'\n'});}
 test('original: 187 IDs exactos, todas las columnas y 187 pruebas válidas',async()=>{
  assert.equal(parsed.rows.length,187);assert.equal(new Set(parsed.rows.map(r=>r.ticket_id)).size,187);
@@ -51,25 +53,25 @@ test('estado, cierre y confirmación inconsistentes se rechazan',()=>{
  const b=csv(mutate(rows=>rows.find(r=>r.tipo_cierre==='CONFIRMADO POR USUARIO').confirmado_por_usuario='NO'));assert.ok(validate(b,catalog).errors.some(e=>e.includes('sin confirmación')));
 });
 test('no se sella una copia modificada ni un lote incompleto de 186',async()=>{
- await assert.rejects(buildEvidence({...sources,tickets:mutate(rows=>rows[0].usuario+='CAMBIO')},baseline),/originales/);
- await assert.rejects(buildEvidence({...sources,tickets:mutate(rows=>rows.pop())},baseline),/187/);
- await assert.rejects(buildEvidence({...sources,bitacora:bitacoraText.replace('5.80 -> 3.80','5.80 -> 5.80')},baseline),/bitacora_eventos/);
- await assert.rejects(buildEvidence({tickets:ticketText,catalog:catalogText,report:reportText},baseline),/Falta/);
+ await assert.rejects(buildEvidence({...sources,tickets:mutate(rows=>rows[0].usuario+='CAMBIO')},baseline,SALT),/originales/);
+ await assert.rejects(buildEvidence({...sources,tickets:mutate(rows=>rows.pop())},baseline,SALT),/187/);
+ await assert.rejects(buildEvidence({...sources,bitacora:bitacoraText.replace('5.80 -> 3.80','5.80 -> 5.80')},baseline,SALT),/bitacora_eventos/);
+ await assert.rejects(buildEvidence({tickets:ticketText,catalog:catalogText,report:reportText},baseline,SALT),/Falta/);
 });
 test('manifiesto, prueba individual y raíz adulterados no autentican',async()=>{
  for(const mutate of [e=>e.tickets[0].proof[0].hash='0x'+'00'.repeat(32),e=>e.tickets[0].fields.usuario='0x'+'00'.repeat(32),e=>e.root='0x'+'00'.repeat(32)]){
   const e=structuredClone(evidence);mutate(e);assert.equal((await authenticateEvidence(e,unitAnchor)).ok,false);
  }
- assert.equal((await verifyText(ticketText,evidence,{...unitAnchor,root:'0x'+'00'.repeat(32)},aux)).status,'INCOMPLETA');
+ assert.equal((await verifyText(ticketText,evidence,{...unitAnchor,root:'0x'+'00'.repeat(32)},aux,SALT)).status,'INCOMPLETA');
 });
 test('catálogo, reporte, bitácora y reaperturas modificados dan INCOMPLETA',async()=>{
- assert.equal((await verifyText(ticketText,evidence,unitAnchor,{...aux,catalog:catalogText.replace(',24,',',25,')})).status,'INCOMPLETA');
- assert.equal((await verifyText(ticketText,evidence,unitAnchor,{...aux,report:reportText.replace('98.25','99.99')})).status,'INCOMPLETA');
- const b=await verifyText(ticketText,evidence,unitAnchor,{...aux,bitacora:bitacoraText.replace('5.80 -> 3.80','3.80 -> 3.80')});
+ assert.equal((await verifyText(ticketText,evidence,unitAnchor,{...aux,catalog:catalogText.replace(',24,',',25,')},SALT)).status,'INCOMPLETA');
+ assert.equal((await verifyText(ticketText,evidence,unitAnchor,{...aux,report:reportText.replace('98.25','99.99')},SALT)).status,'INCOMPLETA');
+ const b=await verifyText(ticketText,evidence,unitAnchor,{...aux,bitacora:bitacoraText.replace('5.80 -> 3.80','3.80 -> 3.80')},SALT);
  assert.equal(b.status,'INCOMPLETA');assert.ok(b.errors.some(e=>e.includes('bitacora_eventos.csv')));
- const r=await verifyText(ticketText,evidence,unitAnchor,{...aux,reopenings:reopeningsText.replace('RA-001,TK-2026-04335,TK-2026-04381,3,SI','RA-001,TK-2026-04335,TK-2026-04381,3,NO')});
+ const r=await verifyText(ticketText,evidence,unitAnchor,{...aux,reopenings:reopeningsText.replace('RA-001,TK-2026-04335,TK-2026-04381,3,SI','RA-001,TK-2026-04335,TK-2026-04381,3,NO')},SALT);
  assert.equal(r.status,'INCOMPLETA');assert.ok(r.errors.some(e=>e.includes('reaperturas.csv')));
- assert.equal((await verifyText(ticketText,evidence,unitAnchor,{catalog:catalogText,report:reportText})).status,'INCOMPLETA');
+ assert.equal((await verifyText(ticketText,evidence,unitAnchor,{catalog:catalogText,report:reportText},SALT)).status,'INCOMPLETA');
 });
 test('verificación verde: TK-2026-04228 es la única discrepancia SLA (vía bitácora)',async()=>{
  const v=await verify(ticketText);assert.equal(v.status,'VERDE');
@@ -79,8 +81,8 @@ test('verificación verde: TK-2026-04228 es la única discrepancia SLA (vía bit
 test('rojo: valor sellado frente al editado desde el CSV original local',async()=>{
  const changed=mutate(rows=>rows[0].fecha_resolucion='2026-08-03T12:04:55-05:00');
  const v=await verify(changed);assert.equal(v.status,'ROJO');
- assert.deepEqual(await sealedValues(v.changes[0],ticketText,evidence),[{field:'fecha_resolucion',sealed:'2026-08-03T12:03:55-05:00',edited:'2026-08-03T12:04:55-05:00'}]);
- assert.deepEqual(await sealedValues(v.changes[0],changed,evidence),[],'si el CSV local no coincide con el sello no se inventa el valor');
+ assert.deepEqual(await sealedValues(v.changes[0],ticketText,evidence,SALT),[{field:'fecha_resolucion',sealed:'2026-08-03T12:03:55-05:00',edited:'2026-08-03T12:04:55-05:00'}]);
+ assert.deepEqual(await sealedValues(v.changes[0],changed,evidence,SALT),[],'si el CSV local no coincide con el sello no se inventa el valor');
 });
 test('horas hábiles: jornada, fines de semana, borde SLA y fechas inválidas',()=>{
  assert.equal(businessHours('2026-07-03T16:00:00-05:00','2026-07-06T09:00:00-05:00'),2);
@@ -92,4 +94,32 @@ test('horas hábiles: jornada, fines de semana, borde SLA y fechas inválidas',(
 });
 test('manifest no contiene valores de usuarios ni técnicos',()=>{
  const payload=JSON.stringify(evidence);for(const r of parsed.rows){assert.ok(!payload.includes(r.usuario));assert.ok(!payload.includes(r.tecnico_asignado));}
+});test('sal: sin sal, con sal distinta o mal formada la verificación es INCOMPLETA',async()=>{
+ assert.equal(evidence.version,EVIDENCE_VERSION);assert.equal(evidence.saltCommitment,await saltCommitment(SALT));
+ assert.ok(!JSON.stringify(evidence).includes(SALT.slice(2)),'el manifiesto no lleva la sal');
+ assert.ok(validSalt(SALT));assert.ok(!validSalt('0x1234'));assert.notEqual(newSalt(),SALT);
+ for(const s of [undefined,null,'',newSalt(),'0x'+'00'.repeat(32),'0x'+'zz'.repeat(32)]){
+  const v=await verifyText(ticketText,evidence,unitAnchor,aux,s);assert.equal(v.status,'INCOMPLETA');assert.match(v.errors[0],/sal/i);assert.equal(v.result,undefined);
+ }
+ await assert.rejects(buildEvidence(sources,baseline),/sal/i);
+ const e=structuredClone(evidence);delete e.saltCommitment;assert.equal((await authenticateEvidence(e,unitAnchor)).ok,false);
+});
+test('privacidad del manifiesto: adivinar nombres no coincide con ningún hash; con la sal correcta sí',async()=>{
+ const {createHash}=await import('node:crypto');
+ const h=s=>'0x'+createHash('sha256').update(s).digest('hex');
+ const events=csv(bitacoraText,BITACORA_HEADERS).rows,values=personalValues(parsed.rows,events).map(v=>v.value);
+ assert.ok(values.length>=170);assert.ok(values.includes('Elena Dávila'));
+ const published=new Set(evidence.tickets.flatMap(t=>[t.hash,...Object.values(t.fields)]));
+ const zero='0x'+'00'.repeat(32);let tried=0;
+ for(const value of values){
+  // Esquema anterior (sin sal) en todas las columnas.
+  for(const field of parsed.headers){tried++;assert.ok(!published.has(h(JSON.stringify([field,value]))),`esquema viejo: ${field}=${value}`);}
+  // Esquema nuevo con una sal en ceros, en las columnas con datos personales de cada ticket.
+  for(const t of evidence.tickets)for(const field of ['usuario','tecnico_asignado','unidad']){tried++;assert.ok(!published.has(h(JSON.stringify(['atenea-campo-v3',zero,t.id,field,value]))),`sal en ceros: ${t.id} ${field}=${value}`);}
+ }
+ assert.ok(tried>90000);
+ // Control positivo: con la sal correcta el hash de «Elena Dávila» en TK-2026-04201 sí coincide.
+ const ticket=evidence.tickets.find(t=>t.id==='TK-2026-04201');
+ assert.equal(await fieldHash(SALT,'TK-2026-04201','usuario','Elena Dávila'),ticket.fields.usuario);
+ assert.notEqual(await fieldHash(SALT,'TK-2026-04202','usuario','Elena Dávila'),ticket.fields.usuario,'el ID también entra en el hash');
 });

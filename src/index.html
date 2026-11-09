@@ -63,7 +63,8 @@
 
 <section id="s3">
   <h2>3. Verificador de alteraciones</h2>
-  <div class="inputs"><label>CSV que se va a verificar<input id="verifyFile" type="file" accept=".csv"></label><label>Importar evidencia original, si cambiaste de navegador<input id="evidenceFile" type="file" accept=".json"></label></div>
+  <div class="inputs"><label>CSV que se va a verificar<input id="verifyFile" type="file" accept=".csv"></label><label>Importar evidencia original, si cambiaste de navegador<input id="evidenceFile" type="file" accept=".json"></label><label>Importar la sal secreta del sello (sal-202607.json)<input id="saltFile" type="file" accept=".json,.txt"></label></div>
+  <p id="saltStatus" class="small">Sal secreta: pendiente.</p>
   <button id="verify">Verificar nuevamente contra blockchain</button>
   <p class="small">Para la demostración, abre una copia de datos/tickets.csv, cambia fecha_resolucion de un ticket, guarda y carga esa copia. El verificador nunca sella ni reemplaza la evidencia.</p>
   <div id="changes" aria-live="polite"></div>

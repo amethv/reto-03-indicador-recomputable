@@ -1,11 +1,11 @@
 import {Contract,JsonRpcProvider} from 'ethers';
 import {ABI,readAnchor} from './chain.mjs';
-import {POLICY,PERIOD,SOURCES,BITACORA_HEADERS,csv,businessHours,buildEvidence,verifyText,evidenceHash,authenticateEvidence,sealedValues} from './core.mjs';
+import {POLICY,PERIOD,SOURCES,BITACORA_HEADERS,csv,businessHours,buildEvidence,verifyText,evidenceHash,authenticateEvidence,sealedValues,newSalt,validSalt,saltCommitment} from './core.mjs';
 import {simulateHolidays} from './findings.mjs';
 import {personalValues,searchPersonalData,collectChainData} from './privacy.mjs';
 
 const $=id=>document.getElementById(id);
-let network='local',config,provider,baseline,evidence=null,prepared=null,originalTexts=null,verified=null,sealed=false,busy=false;
+let network='local',config,provider,baseline,evidence=null,prepared=null,preparedSalt=null,salt=null,originalTexts=null,verified=null,sealed=false,busy=false;
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt=v=>Number(v).toLocaleString('es-EC',{minimumFractionDigits:2,maximumFractionDigits:2});
 const pct=r=>`${fmt(r.percent)} %`;
@@ -33,7 +33,8 @@ async function texts(){
  originalTexts=Object.fromEntries(entries);return originalTexts;
 }
 async function prepare(t){
- clearResults();prepared=null;const candidate=await buildEvidence(t,baseline);prepared=candidate;originalTexts=t;
+ // Cada preparación genera una sal nueva; solo se conserva si ese lote se sella.
+ clearResults();prepared=null;preparedSalt=null;const s=newSalt(),candidate=await buildEvidence(t,baseline,s);prepared=candidate;preparedSalt=s;originalTexts=t;
  const july=csv(t.tickets).rows.filter(r=>r.fecha_reporte.startsWith('2026-07')).length;
  $('scopeNote').textContent=`El lote contiene ${july} reportes de julio y ${candidate.count-july} fuera de julio. Se usa su estado final, con cierres posteriores al 31 de julio. No representa un corte calendario estricto. Los originales permanecen intactos.`;
  status('sealStatus',`187/187 IDs originales presentes y únicos. Hashes individuales y pruebas preparadas. Catálogo, reporte, bitácora y reaperturas coinciden con la fuente. ${july} reportes de julio; ${candidate.count-july} fuera de julio. ${sealed?'Ya existe sello confirmado; no se reemplazará.':'Todavía no se ha enviado el sello a blockchain.'}`);
@@ -78,7 +79,7 @@ function renderFindings(result){
 async function renderChanges(result){
  const items=[];
  for(const c of result.changes){
-  const values=await sealedValues(c,originalTexts?.tickets,evidence);
+  const values=await sealedValues(c,originalTexts?.tickets,evidence,salt);
   const compare=values.length?`<ul class="compare">${values.map(v=>`<li><code>${esc(v.field)}</code> · sellado <strong>${esc(v.sealed)}</strong> → editado <strong>${esc(v.edited)}</strong></li>`).join('')}</ul>`:'';
   items.push(`<li><strong>${esc(c.id)}</strong> · ${esc(c.kind)}${c.fields.length?' · campos: '+esc(c.fields.join(', ')):''}${compare}</li>`);
  }
@@ -89,9 +90,10 @@ async function renderChanges(result){
 async function doVerify(){
  clearResults('VERIFICACIÓN INCOMPLETA · consultando blockchain y comprobando evidencias…');
  if(!evidence)throw new Error('Falta la evidencia original; importa el manifiesto del sellado confirmado.');
+ if(!salt)throw new Error('Falta la sal secreta del sello: impórtala en la sección 3 (archivo sal-202607.json).');
  const t=await texts(),file=$('verifyFile').files[0],text=file?await file.text():t.tickets;
  const anchor=await readAnchor(provider,config);showAnchor(anchor);sealed=true;
- const result=await verifyText(text,evidence,anchor,t);
+ const result=await verifyText(text,evidence,anchor,t,salt);
  if(result.status==='ROJO'){
   status('verification','ROJO · Alteración detectada. Este archivo no produce un indicador verificado.','red');
   await renderChanges({...result,anchor});return;
@@ -132,9 +134,9 @@ $('seal').onclick=()=>run(async()=>{
  status('sealStatus','Enviando transacción real; esperando recibo…');
  const tx=await contract.seal(PERIOD,prepared.root,await evidenceHash(prepared),187),receipt=await tx.wait();if(receipt.status!==1)throw new Error('Transacción fallida');
  const anchor=await readAnchor(provider,config);if(anchor.root!==prepared.root||anchor.evidenceHash!==await evidenceHash(prepared))throw new Error('Recibo no corresponde a las evidencias preparadas');
- evidence=prepared;sealed=true;showAnchor(anchor);
- const saved=await fetch('/api/evidence',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(evidence)});
- status('sealStatus',`SELLADO CONFIRMADO · 187 tickets · bloque ${receipt.blockNumber}\nTX: ${anchor.transactionHash}${saved.ok?'\nEvidencia guardada en evidencias/sello-original.json':'\nNo se pudo guardar la evidencia en disco; descárgala antes de cerrar.'}`,'green');
+ evidence=prepared;salt=preparedSalt;sealed=true;showAnchor(anchor);showSalt();
+ const saved=await fetch('/api/evidence',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({evidence,salt})});
+ status('sealStatus',`SELLADO CONFIRMADO · 187 tickets · bloque ${receipt.blockNumber}\nTX: ${anchor.transactionHash}${saved.ok?'\nEvidencia guardada en evidencias/sello-original.json; la sal secreta, aparte en la carpeta secreto/ de la instancia.':'\nNo se pudo guardar la evidencia ni la sal en disco; descárgalas antes de cerrar.'}`,'green');
 });
 $('verify').onclick=()=>run(doVerify);
 $('simulate').onclick=()=>run(async()=>{
@@ -163,7 +165,16 @@ for(const id of Object.values(FILE_INPUTS))$(id).onchange=()=>{prepared=null;cle
 $('evidenceFile').onchange=()=>run(async()=>{
  clearResults();const file=$('evidenceFile').files[0];if(!file)return;
  const candidate=JSON.parse(await file.text()),anchor=await readAnchor(provider,config),auth=await authenticateEvidence(candidate,anchor);if(!auth.ok)throw new Error(auth.error);
- evidence=candidate;sealed=true;status('sealStatus','Evidencia importada y autenticada contra blockchain. Ejecuta la verificación del CSV.');
+ evidence=candidate;sealed=true;if(salt&&await saltCommitment(salt)!==candidate.saltCommitment)salt=null;showSalt();
+ status('sealStatus','Evidencia importada y autenticada contra blockchain. Ejecuta la verificación del CSV.');
+});
+$('saltFile').onchange=()=>run(async()=>{
+ clearResults();const file=$('saltFile').files[0];if(!file)return;
+ if(!evidence)throw new Error('Primero carga o importa la evidencia del sello; la sal se comprueba contra su manifiesto.');
+ const text=(await file.text()).trim();let candidate=text;try{candidate=JSON.parse(text).salt;}catch{}
+ if(!validSalt(candidate))throw new Error('El archivo no contiene una sal válida (0x y 64 caracteres hexadecimales).');
+ if(await saltCommitment(candidate)!==evidence.saltCommitment)throw new Error('Esa sal no corresponde al manifiesto de este sello.');
+ salt=candidate;showSalt();
 });
 $('export').onclick=()=>{if(!evidence)return;const blob=new Blob([JSON.stringify(evidence,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='sello-original-2026-07.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};
 $('search').oninput=renderTable;$('filter').onchange=renderTable;$('policy').textContent=JSON.stringify(POLICY,null,2);
@@ -177,7 +188,7 @@ async function useNetwork(name){
  }
  const next=await response.json();
  provider?.destroy();
- network=name;config=next;evidence=null;sealed=false;prepared=null;clearResults();controls();
+ network=name;config=next;evidence=null;salt=null;sealed=false;prepared=null;preparedSalt=null;clearResults();controls();showSalt();
  $('configLink').href=`/evidencias/${CONFIG_FILES[name]}`;
  provider=new JsonRpcProvider(config.rpc,undefined,{cacheTimeout:-1});provider.pollingInterval=config.local?100:4000;
  $('privacy').textContent=`Contrato configurado: ${config.address}
@@ -192,7 +203,14 @@ Falta consultar el sellado.`;
  if(stored.ok){
   const candidate=await stored.json(),anchor=await readAnchor(provider,config),auth=await authenticateEvidence(candidate,anchor);if(!auth.ok)throw new Error(auth.error);
   evidence=candidate;sealed=true;showAnchor(anchor);status('sealStatus',`Sello existente confirmado en ${config.network}. No se reemplazará. TX ${anchor.transactionHash}`,'green');
+  // La sal la entrega solo el servidor local de quien selló; si no la tiene, se importa a mano.
+  const r=await fetch(`/api/sal?red=${name}`);
+  if(r.ok){const {salt:s}=await r.json();if(validSalt(s)&&await saltCommitment(s)===evidence.saltCommitment)salt=s;}
+  showSalt();
  }
+}
+function showSalt(){
+ $('saltStatus').textContent=salt?'Sal secreta: cargada y coincide con el compromiso del manifiesto.':evidence?'Sal secreta: falta. Sin ella no se pueden comprobar los tickets; impórtala aquí (sal-202607.json).':'Sal secreta: pendiente.';
 }
 $('network').onchange=()=>run(()=>useNetwork($('network').value));
 await run(async()=>{baseline=JSON.parse(await get('/src/originals.json'));await useNetwork('local');});

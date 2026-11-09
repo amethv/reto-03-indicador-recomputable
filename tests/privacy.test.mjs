@@ -4,7 +4,7 @@ import fs from 'node:fs/promises';
 import ganache from 'ganache';
 import {BrowserProvider,ContractFactory,keccak256,hexlify,toUtf8Bytes} from 'ethers';
 import {compile} from '../scripts/runtime.mjs';
-import {POLICY,PERIOD,SOURCES,csv,sha,buildEvidence,evidenceHash,BITACORA_HEADERS} from '../src/core.mjs';
+import {POLICY,PERIOD,SOURCES,csv,sha,buildEvidence,evidenceHash,BITACORA_HEADERS,newSalt} from '../src/core.mjs';
 import {readAnchor} from '../src/chain.mjs';
 import {personalValues,searchPersonalData,collectChainData} from '../src/privacy.mjs';
 
@@ -42,7 +42,7 @@ test('cadena real: 0 coincidencias en calldata, eventos, almacenamiento y byteco
     const deployed = await contract.deploymentTransaction().wait(), address = await contract.getAddress();
     const config = {chainId: 31337, address, codeHash: keccak256(await provider.getCode(address)), deploymentBlock: deployed.blockNumber, deploymentTransaction: deployed.hash};
     const baseline = JSON.parse(await fs.readFile(new URL('../src/originals.json', import.meta.url), 'utf8'));
-    const evidence = await buildEvidence(texts, baseline);
+    const evidence = await buildEvidence(texts, baseline, newSalt());
     await (await contract.seal(PERIOD, evidence.root, await evidenceHash(evidence), 187)).wait();
     const anchor = await readAnchor(provider, config);
     const chain = await collectChainData(provider, config, anchor);

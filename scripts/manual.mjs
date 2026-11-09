@@ -2,7 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import {chromium,expect} from '@playwright/test';
 import {startApp} from './start.mjs';
-import {ROOT,STATE_ROOT,EVIDENCE_DIR,INSTANCE} from './runtime.mjs';
+import {ROOT,STATE_ROOT,EVIDENCE_DIR,INSTANCE,SALT_FILES,readSalt} from './runtime.mjs';
 import {readAnchor} from '../src/chain.mjs';
 import {SOURCES,csv,verifyText,sha} from '../src/core.mjs';
 const directory=path.join(STATE_ROOT,'manual');
@@ -30,7 +30,8 @@ try{
  if(changes.length!==1||changes[0].id!=='TK-2026-04201'||changes[0].field!=='fecha_resolucion')throw new Error('Se requiere cambiar solo fecha_resolucion de TK-2026-04201');
  const evidence=JSON.parse(await fs.readFile(path.join(EVIDENCE_DIR,'sello-original.json'),'utf8'));
  const aux=Object.fromEntries(await Promise.all(Object.entries(SOURCES).map(async([k,f])=>[k,await fs.readFile(path.join(ROOT,'datos',f),'utf8')])));
- const result=await verifyText(changed,evidence,before,aux);
+ const salt=await readSalt(SALT_FILES.local);if(!salt)throw new Error('Falta la sal del sello local: sella primero con npm start.');
+ const result=await verifyText(changed,evidence,before,aux,salt);
  if(result.status!=='ROJO')throw new Error('No se detectó alteración');
  await page.locator('#verifyFile').setInputFiles(target);await page.locator('#verify').click();
  await expect(page.locator('#verification')).toContainText('ROJO');

@@ -3,9 +3,9 @@ import http from 'node:http';
 import path from 'node:path';
 import {pathToFileURL} from 'node:url';
 import ganache from 'ganache';
-import {ROOT,STATE_ROOT,EVIDENCE_DIR,INSTANCE,deploy,providerFor} from './runtime.mjs';
+import {ROOT,STATE_ROOT,EVIDENCE_DIR,INSTANCE,SALT_FILES,deploy,providerFor,writeSalt,readSalt} from './runtime.mjs';
 import {readAnchor} from '../src/chain.mjs';
-import {authenticateEvidence} from '../src/core.mjs';
+import {authenticateEvidence,validSalt,saltCommitment} from '../src/core.mjs';
 import {verifySource} from './verify-source.mjs';
 export async function startApp(){
  await verifySource();
@@ -25,12 +25,21 @@ export async function startApp(){
    if(req.method==='POST'&&url.pathname==='/api/evidence'){
     if(!['http://127.0.0.1:8080','http://localhost:8080'].includes(req.headers.origin)){res.writeHead(403);res.end();return;}
     let body='';for await(const chunk of req){body+=chunk;if(body.length>2_000_000)throw new Error('Evidencia demasiado grande');}
-    const evidence=JSON.parse(body),anchor=await readAnchor(provider,config),check=await authenticateEvidence(evidence,anchor);if(!check.ok)throw new Error(check.error);
+    const {evidence,salt}=JSON.parse(body),anchor=await readAnchor(provider,config),check=await authenticateEvidence(evidence,anchor);if(!check.ok)throw new Error(check.error);
+    if(!validSalt(salt)||await saltCommitment(salt)!==evidence.saltCommitment)throw new Error('La sal no corresponde al compromiso del manifiesto');
+    await writeSalt(SALT_FILES.local,salt);
     const file=path.join(EVIDENCE_DIR,'sello-original.json');
     try{await fs.writeFile(file,JSON.stringify(evidence,null,2),{flag:'wx'});}catch(e){if(e.code!=='EEXIST')throw e;const old=JSON.parse(await fs.readFile(file,'utf8'));if(JSON.stringify(old)!==JSON.stringify(evidence))throw new Error('No se puede reemplazar la evidencia original');}
     res.writeHead(200,{'Content-Type':'application/json'});res.end(JSON.stringify({saved:true}));return;
    }
    if(req.method!=='GET'){res.writeHead(405);res.end();return;}
+   if(url.pathname==='/api/sal'){
+    // Solo para esta misma página: sin CORS y rechazando peticiones desde otros sitios.
+    if(!['127.0.0.1:8080','localhost:8080'].includes(req.headers.host)||(req.headers['sec-fetch-site']&&req.headers['sec-fetch-site']!=='same-origin')){res.writeHead(403);res.end();return;}
+    const file=SALT_FILES[url.searchParams.get('red')];if(!file){res.writeHead(400);res.end('Red desconocida');return;}
+    const salt=await readSalt(file);if(!salt){res.writeHead(404,{'Content-Type':'text/plain; charset=utf-8'});res.end('Sin sal guardada para esta red');return;}
+    res.writeHead(200,{'Content-Type':'application/json'});res.end(JSON.stringify({salt}));return;
+   }
    const vendors={'/vendor/papaparse.mjs':null,'/vendor/papaparse.umd.js':'node_modules/papaparse/papaparse.min.js','/vendor/ethers.mjs':'node_modules/ethers/dist/ethers.min.js'};
    if(url.pathname==='/vendor/papaparse.mjs'){res.writeHead(200,{'Content-Type':mime['.mjs']});res.end("export default globalThis.Papa;");return;}
    const relative=vendors[url.pathname]||(url.pathname==='/'?'src/index.html':decodeURIComponent(url.pathname).slice(1));

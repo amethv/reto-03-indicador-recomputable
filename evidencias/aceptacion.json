@@ -1,5 +1,5 @@
 {
-  "started": "2026-11-08T03:42:30.675Z",
+  "started": "2026-11-09T01:15:46.721Z",
   "timezone": "America/Guayaquil",
   "criteria": [
     {
@@ -10,8 +10,8 @@
       "test": "Cargar originales, pulsar sellado en navegador si aún no existe; comprobar código, recibo, evento y getSeal mediante JSON-RPC real.",
       "result": {
         "count": 187,
-        "root": "0xf58ac18028cdd1c9c4ec8afc7b85a3cf0ab065143b49cefef0956378a3ccdf34",
-        "transaction": "0x8327e2166b7f14879838738f4e1a2f363585d557710eff332ea0d14de6189e7d",
+        "root": "0xb66dab96e5312406fb1afb7564254cfacd565cccc3006c5d24acb62eef9fd0d5",
+        "transaction": "0x088fa049c87e50bf67c32b98590d0ae8fe66a4d22f43a35b384609dfb3aea077",
         "block": 2,
         "address": "0xe78A0F7E598Cc8b0Bb87894B0F60dD2a88d6a8Ab",
         "chainId": 31337
@@ -139,7 +139,7 @@
           "rulesHash"
         ],
         "sealCalldataBytes": 132,
-        "transaction": "0x8327e2166b7f14879838738f4e1a2f363585d557710eff332ea0d14de6189e7d",
+        "transaction": "0x088fa049c87e50bf67c32b98590d0ae8fe66a4d22f43a35b384609dfb3aea077",
         "contract": "0xe78A0F7E598Cc8b0Bb87894B0F60dD2a88d6a8Ab",
         "network": "EVM local Ganache (red de desarrollo real)",
         "personalDataSearch": {
@@ -242,7 +242,7 @@
     }
   ],
   "completed": true,
-  "instance": "nivel1-v3",
-  "finished": "2026-11-08T03:42:40.262Z",
+  "instance": "nivel1-v4",
+  "finished": "2026-11-09T01:16:01.526Z",
   "level1Complete": false
 }

@@ -4,9 +4,9 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import {ContractFactory,Contract,keccak256} from 'ethers';
-import {ROOT,compile} from './runtime.mjs';
+import {ROOT,compile,SALT_FILES,readSalt,writeSalt} from './runtime.mjs';
 import {ABI,readAnchor} from '../src/chain.mjs';
-import {POLICY,PERIOD,SOURCES,sha,buildEvidence,evidenceHash,authenticateEvidence} from '../src/core.mjs';
+import {POLICY,PERIOD,SOURCES,sha,buildEvidence,evidenceHash,authenticateEvidence,newSalt} from '../src/core.mjs';
 
 export const SEPOLIA = Object.freeze({
   chainId: 11155111,
@@ -74,9 +74,13 @@ async function readSources() {
 }
 
 /** Sella julio de 2026 con los originales de datos/ y comprueba el ancla leyendo la cadena. */
-export async function sealPeriod({signer, config, confirmations = 2}) {
+export async function sealPeriod({signer, config, confirmations = 2, saltFile = SALT_FILES.sepolia}) {
   const baseline = JSON.parse(await fs.readFile(path.join(ROOT, 'src', 'originals.json'), 'utf8'));
-  const evidence = await buildEvidence(await readSources(), baseline);
+  // La sal se crea una sola vez y se guarda ANTES de enviar la transacción: si el envío
+  // falla o se repite, se reutiliza la misma y el compromiso no cambia.
+  let salt = await readSalt(saltFile);
+  if (!salt) { salt = newSalt(); await writeSalt(saltFile, salt); }
+  const evidence = await buildEvidence(await readSources(), baseline, salt);
   const commitment = await evidenceHash(evidence);
   const contract = new Contract(config.address, ABI, signer);
   if (await contract.rulesHash() !== await sha(JSON.stringify(POLICY))) throw new Error('El contrato desplegado usa otras reglas. Despliega de nuevo.');
@@ -99,7 +103,7 @@ export async function sealPeriod({signer, config, confirmations = 2}) {
   const auth = await authenticateEvidence(evidence, anchor);
   if (!auth.ok) throw new Error(auth.error);
   sealed.links = links(config.explorer, sealed);
-  return {config: sealed, evidence, anchor};
+  return {config: sealed, evidence, anchor, salt};
 }
 
 export async function writeJson(file, data) {
