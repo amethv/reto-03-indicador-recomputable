@@ -1,6 +1,6 @@
 # Auditoría Nivel 1 — Reto 03
 
-Ejecución UTC: 2026-11-09T02:29:54.529Z → 2026-11-09T02:30:11.940Z. Zona de presentación: America/Guayaquil.
+Ejecución UTC: 2026-11-09T02:40:25.186Z → 2026-11-09T02:40:43.547Z. Zona de presentación: America/Guayaquil.
 
 Resultado: **NIVEL 1 NO DECLARADO COMPLETO**.
 
@@ -10,7 +10,7 @@ Se leyeron ambos PDF entregados (docs/referencia/) y el README de datos/. Los or
 
 - Archivos y funciones: src/core.mjs: buildEvidence, leaf, merkle, evidenceHash; contracts/RegistroIndicador.sol: seal; src/chain.mjs: readAnchor; src/app.mjs: botón seal.
 - Prueba ejecutada: Cargar originales, pulsar sellado en navegador si aún no existe; comprobar código, recibo, evento y getSeal mediante JSON-RPC real.
-- Resultado real: {"count":187,"root":"0xb4b8ed489931eb50e343cd5bc37955244ae8065c567fd4766f161cbb7bf3cb7b","transaction":"0x308e60a12a313983cb6764eed7dd112d3c45c8f5cc0e9486f0d3cce95f875e3a","block":2,"address":"0xe78A0F7E598Cc8b0Bb87894B0F60dD2a88d6a8Ab","chainId":31337}
+- Resultado real: {"count":187,"root":"0x9277bf7192fa581c9acf0a6885d1d4925598669293057e2731e7044fb436a6c4","transaction":"0x8005337484a237e29598474695996e4d79a5e88aef1531ec0961dd13dbfb221f","block":2,"address":"0xe78A0F7E598Cc8b0Bb87894B0F60dD2a88d6a8Ab","chainId":31337}
 - Estado: **APROBADO**.
 - Evidencia disponible: evidencias/red-local.json, evidencias/sello-original.json, evidencias/01-sellado.png
 - Correcciones o validaciones pendientes: Ninguna en esta prueba automatizada; repetir ante el jurado para la demostración en vivo.
@@ -46,7 +46,7 @@ Se leyeron ambos PDF entregados (docs/referencia/) y el README de datos/. Los or
 
 - Archivos y funciones: contracts/RegistroIndicador.sol; src/chain.mjs: readAnchor; src/privacy.mjs: collectChainData, searchPersonalData; src/app.mjs: botón searchPersonal.
 - Prueba ejecutada: Consultar contrato, recibo, calldata, evento y almacenamiento reales; pulsar «Buscar datos personales en la cadena» y comprobar 0 coincidencias de todos los usuarios, técnicos, unidades y actores de la bitácora.
-- Resultado real: {"stored":["period","root","evidenceHash","count","timestamp","owner","rulesHash"],"sealCalldataBytes":132,"transaction":"0x308e60a12a313983cb6764eed7dd112d3c45c8f5cc0e9486f0d3cce95f875e3a","contract":"0xe78A0F7E598Cc8b0Bb87894B0F60dD2a88d6a8Ab","network":"EVM local Ganache (red de desarrollo real)","personalDataSearch":{"values":174,"patterns":1530,"bytes":3328,"matches":0,"sources":["calldata de la transacción de sellado","calldata del despliegue (bytecode + hash de reglas)","bytecode desplegado","evento 1: temas y datos","almacenamiento del sello (3 ranuras)"]}}
+- Resultado real: {"stored":["period","root","evidenceHash","count","timestamp","owner","rulesHash"],"sealCalldataBytes":132,"transaction":"0x8005337484a237e29598474695996e4d79a5e88aef1531ec0961dd13dbfb221f","contract":"0xe78A0F7E598Cc8b0Bb87894B0F60dD2a88d6a8Ab","network":"EVM local Ganache (red de desarrollo real)","personalDataSearch":{"values":174,"patterns":1530,"bytes":3328,"matches":0,"sources":["calldata de la transacción de sellado","calldata del despliegue (bytecode + hash de reglas)","bytecode desplegado","evento 1: temas y datos","almacenamiento del sello (3 ranuras)"]}}
 - Estado: **APROBADO**.
 - Evidencia disponible: evidencias/blockchain.json, evidencias/contrato.json, evidencias/05-privacidad.png
 - Correcciones o validaciones pendientes: Ninguna en esta prueba automatizada; repetir ante el jurado para la demostración en vivo.
@@ -58,6 +58,7 @@ Se leyeron ambos PDF entregados (docs/referencia/) y el README de datos/. Los or
 - Simulación de feriado 2026-07-24: 4 tickets cambian de estado, sin tocar el sello: APROBADO.
 - Sepolia sin desplegar: la interfaz lo indica y no inventa un ancla: APROBADO (despliegue pendiente).
 - RPC bloqueado: sin verde ni indicadores acreditados: APROBADO.
+- Proxy /rpc: rechaza evm_revert, evm_mine y transacciones fuera del contrato; deja pasar lecturas: APROBADO.
 - Recarga: se conserva la vista de la ruta (#/comparar): APROBADO.
 - Recarga: manifiesto persistido y sello original conservado: APROBADO.
 - Vista móvil 390 px: menú en panel lateral y las 7 vistas sin desbordamiento de página: APROBADO.

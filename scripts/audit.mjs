@@ -98,7 +98,18 @@ try {
  try{await fs.access(path.join(ROOT,'evidencias/red-sepolia.json'));await expect(page.locator('#sealStatus')).toContainText('Sello existente confirmado',{timeout:60000});report.supplementary.push({test:'Sepolia: sello leído en solo lectura por RPC público',status:'APROBADO'});}
  catch(e){if(e.code!=='ENOENT')throw e;await expect(page.locator('#verification')).toContainText('Sepolia pendiente');report.supplementary.push({test:'Sepolia sin desplegar: la interfaz lo indica y no inventa un ancla',status:'APROBADO (despliegue pendiente)'});}
  await page.locator('#network').selectOption('local');await expect(page.locator('#sealStatus')).toContainText('Sello existente confirmado',{timeout:30000});
- await go('verificar');await context.route('http://127.0.0.1:8545/**',route=>route.abort());await page.locator('#verify').click();await expect(page.locator('#verification')).toContainText('ERROR DE CONEXIÓN',{timeout:30000});await expect(page.locator('#percentA')).toHaveText('—');await expect(page.locator('#verification')).not.toHaveClass(/green/);report.supplementary.push({test:'RPC bloqueado: sin verde ni indicadores acreditados',status:'APROBADO'});await context.unroute('http://127.0.0.1:8545/**');
+ await go('verificar');await context.route('**/rpc',route=>route.abort());await page.locator('#verify').click();await expect(page.locator('#verification')).toContainText('ERROR DE CONEXIÓN',{timeout:30000});await expect(page.locator('#percentA')).toHaveText('—');await expect(page.locator('#verification')).not.toHaveClass(/green/);report.supplementary.push({test:'RPC bloqueado: sin verde ni indicadores acreditados',status:'APROBADO'});await context.unroute('**/rpc');
+ // El proxy /rpc solo deja pasar lecturas y transacciones al contrato configurado.
+ const rpcCheck=await page.evaluate(async address=>{
+  const call=async body=>(await fetch('/rpc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})).json();
+  const revert=await call({jsonrpc:'2.0',id:1,method:'evm_revert',params:['0x1']});
+  const deployTx=await call({jsonrpc:'2.0',id:2,method:'eth_sendTransaction',params:[{from:'0x90F8bf6A479f320ead074411a4B0e7944Ea8c9C1',data:'0x00'}]});
+  const batch=await call([{jsonrpc:'2.0',id:3,method:'eth_chainId',params:[]},{jsonrpc:'2.0',id:4,method:'evm_mine',params:[]}]);
+  const code=await call({jsonrpc:'2.0',id:5,method:'eth_getCode',params:[address,'latest']});
+  return {revert:!!revert.error,deploy:!!deployTx.error,batchRead:batch.find(r=>r.id===3)?.result,batchMine:!!batch.find(r=>r.id===4)?.error,code:code.result?.length>2};
+ },app.config.address);
+ assert.deepEqual(rpcCheck,{revert:true,deploy:true,batchRead:'0x7a69',batchMine:true,code:true});
+ report.supplementary.push({test:'Proxy /rpc: rechaza evm_revert, evm_mine y transacciones fuera del contrato; deja pasar lecturas',status:'APROBADO'});
  await go('comparar');await page.reload();await page.waitForFunction(()=>window.__ateneaReady===true);await expect(page.locator('section.view[data-route="comparar"]')).toBeVisible();await expect(page.locator('section.view:visible')).toHaveCount(1);await expect(page.locator('nav a[data-route="comparar"]')).toHaveAttribute('aria-current','page');report.supplementary.push({test:'Recarga: se conserva la vista de la ruta (#/comparar)',status:'APROBADO'});
  await expect(page.locator('#sealStatus')).toContainText('Sello existente confirmado');await expect(page.locator('#seal')).toBeDisabled();await go('verificar');await page.locator('#verify').click();await expect(page.locator('#verification')).toContainText('VERDE',{timeout:30000});report.supplementary.push({test:'Recarga: manifiesto persistido y sello original conservado',status:'APROBADO'});
  await page.setViewportSize({width:390,height:844});await expect(page.locator('#menuToggle')).toBeVisible();await expect(page.locator('#sidebar')).toBeHidden();

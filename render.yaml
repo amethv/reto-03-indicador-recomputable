@@ -1,0 +1,19 @@
+# Despliegue en Render (Blueprint). La demo corre completa en el servidor:
+# Ganache vive dentro del mismo proceso y la página lo consulta por /rpc.
+# En el plan gratis el disco no es persistente: tras un reinicio o una suspensión
+# el contrato vuelve a quedar sin sellar y se sella de nuevo desde la vista Sellar.
+services:
+  - type: web
+    name: reto-03-indicador-recomputable
+    runtime: node
+    plan: free
+    region: oregon
+    buildCommand: npm ci --omit=dev --no-audit --no-fund
+    startCommand: node scripts/start.mjs
+    healthCheckPath: /
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: "24"
+      - key: HOST
+        value: 0.0.0.0

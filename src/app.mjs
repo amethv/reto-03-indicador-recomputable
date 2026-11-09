@@ -230,9 +230,11 @@ async function useNetwork(name){
  provider?.destroy();
  network=name;config=next;evidence=null;salt=null;sealed=false;prepared=null;preparedSalt=null;lastAnchor=null;privacyMatches=null;done.clear();clearResults();controls();showSalt();
  $('configLink').href=`/evidencias/${CONFIG_FILES[name]}`;
- provider=new JsonRpcProvider(config.rpc,undefined,{cacheTimeout:-1});provider.pollingInterval=config.local?100:4000;
+ // La red local se consulta por /rpc del mismo servidor (funciona igual en el equipo y en un servicio publicado).
+ const rpcUrl=config.local?new URL('/rpc',location.href).href:config.rpc;
+ provider=new JsonRpcProvider(rpcUrl,undefined,{cacheTimeout:-1});provider.pollingInterval=config.local?100:4000;
  refreshNetwork();
- $('privacy').innerHTML=facts([['Contrato configurado',config.address],['Red',config.network],['RPC de lectura',config.rpc],['Transacción de despliegue',config.deploymentTransaction],['Sello','Falta consultar el sellado.']]);
+ $('privacy').innerHTML=facts([['Contrato configurado',config.address],['Red',config.network],['RPC de lectura',rpcUrl],['Transacción de despliegue',config.deploymentTransaction],['Sello','Falta consultar el sellado.']]);
  $('onchain').innerHTML='<p class="small">Sin consulta.</p>';
  showExplorer(null);
  $('networkNote').textContent=config.local?'Local: EVM de desarrollo en este equipo, sirve de respaldo sin internet. El sellado se hace desde esta página.':`Pública: ${config.network}. El navegador solo lee por un RPC público, sin wallet ni credenciales. El municipio selló con scripts/seal-testnet.mjs.`;

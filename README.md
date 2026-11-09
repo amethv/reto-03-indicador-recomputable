@@ -58,6 +58,10 @@ Detalle y evidencia: [docs/HALLAZGOS.md](docs/HALLAZGOS.md).
 | Sepolia (pública) | **Pendiente**: se completa en `evidencias/red-sepolia.json` al correr los scripts |
 | Ganache local (respaldo) | `0xe78A0F7E598Cc8b0Bb87894B0F60dD2a88d6a8Ab`, chain ID 31337 (determinista; ver `evidencias/red-local.json`) |
 
+## Publicado en Render
+
+`render.yaml` describe el servicio: instala sin dependencias de desarrollo y arranca `node scripts/start.mjs` con `HOST=0.0.0.0` y el `PORT` de Render. Ganache corre dentro del mismo proceso y la página lo consulta por `/rpc`, que solo deja pasar lecturas y transacciones al contrato configurado. En el plan gratis el disco no es persistente: tras un reinicio o una suspensión el contrato queda sin sellar y se sella de nuevo desde la vista Sellar. En esta modalidad la sal se entrega a quien abra la página: sirve para la demo con datos sintéticos, no para datos reales.
+
 ## Ancla en Sepolia
 
 El municipio sella con un script; el navegador solo lee por un RPC público, sin wallet ni credenciales.
