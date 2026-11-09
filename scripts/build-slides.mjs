@@ -120,11 +120,18 @@ async function buildPptx() {
     slide.addNotes(s.notes);
   }
   const file = path.join(OUT, 'Nivel-1-arquitectura-y-delimitacion.pptx');
-  await pres.writeFile({fileName: file});
   // Sin entradas de carpeta en el ZIP: algunos servicios en la nube no abren el archivo si las tiene.
+  // Se copian solo los archivos a un ZIP nuevo. (zip.remove() sobre una carpeta borra también
+  // su contenido: así quedaba antes un .pptx con solo [Content_Types].xml.)
   const JSZip = require('jszip');
-  const zip = await JSZip.loadAsync(await fs.readFile(file));
-  for (const [name, entry] of Object.entries(zip.files)) if (entry.dir) zip.remove(name);
+  const source = await JSZip.loadAsync(await pres.write({outputType: 'nodebuffer'})), zip = new JSZip();
+  for (const [name, entry] of Object.entries(source.files)) if (!entry.dir) zip.file(name, await entry.async('nodebuffer'), {createFolders: false});
+  // pptxgenjs declara en [Content_Types].xml partes que no genera (slideMaster2.xml): se quitan.
+  const types = await zip.file('[Content_Types].xml').async('string');
+  zip.file('[Content_Types].xml', types.replace(/<Override PartName="\/([^"]+)"[^>]*\/>/g, (tag, part) => zip.file(part) ? tag : ''), {createFolders: false});
+  const required = ['[Content_Types].xml', 'ppt/presentation.xml', ...SLIDES.map((_, i) => `ppt/slides/slide${i + 1}.xml`)];
+  const missing = required.filter(name => !zip.file(name));
+  if (missing.length) throw new Error(`El .pptx generado está incompleto: falta ${missing.join(', ')}`);
   await fs.writeFile(file, await zip.generateAsync({type: 'nodebuffer', compression: 'DEFLATE'}));
   return file;
 }
