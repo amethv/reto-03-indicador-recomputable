@@ -17,7 +17,7 @@ export async function startApp(){
  try{config=JSON.parse(await fs.readFile(path.join(EVIDENCE_DIR,'red-local.json'),'utf8'));}catch(e){if(e.code!=='ENOENT')throw e;}
  if(!config){config=await deploy(provider);await fs.writeFile(path.join(EVIDENCE_DIR,'red-local.json'),JSON.stringify(config,null,2));}
  if(await provider.getCode(config.address)==='0x')throw new Error('La cadena persistida no contiene el contrato configurado. No se reemplazará automáticamente.');
- const mime={'.html':'text/html; charset=utf-8','.mjs':'text/javascript; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.json':'application/json; charset=utf-8','.csv':'text/csv; charset=utf-8','.sol':'text/plain; charset=utf-8','.md':'text/plain; charset=utf-8','.pdf':'application/pdf'};
+ const mime={'.html':'text/html; charset=utf-8','.mjs':'text/javascript; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.json':'application/json; charset=utf-8','.csv':'text/csv; charset=utf-8','.sol':'text/plain; charset=utf-8','.md':'text/plain; charset=utf-8','.pdf':'application/pdf','.png':'image/png'};
  const server=http.createServer(async(req,res)=>{
   try{
    const url=new URL(req.url,'http://127.0.0.1:8080');
