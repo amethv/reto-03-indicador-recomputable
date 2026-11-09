@@ -107,7 +107,7 @@
       <button id="prepareFiles">Validar originales seleccionados</button>
     </details>
     <output id="sealStatus" class="status pending" aria-live="polite">Sin sellado comprobado.</output>
-    <div class="monowrap"><div id="commitment" class="mono"></div><button class="copy" type="button" data-ui data-copy="commitment" aria-label="Copiar raíz y compromiso"><svg class="icon"><use href="#i-copy"/></svg></button></div>
+    <div id="commitment" class="factbox"></div>
   </div>
   <a class="next" href="#/recalcular" data-next="sellar" hidden>Siguiente: Recalcular <svg class="icon"><use href="#i-arrow"/></svg></a>
 </section>
@@ -178,9 +178,9 @@
     <p id="networkNote" class="small">Local: EVM de desarrollo en este equipo, sirve de respaldo sin internet. Sepolia: lectura pública sin wallet ni credenciales.</p>
     <div class="actions"><button id="inspect">Consultar contrato y transacción</button><button id="searchPersonal">Buscar datos personales en la cadena</button></div>
     <div id="personal" aria-live="polite"></div>
-    <div class="monowrap"><div id="privacy" class="mono">Pendiente de consulta real.</div><button class="copy" type="button" data-ui data-copy="privacy" aria-label="Copiar datos del contrato y del sello"><svg class="icon"><use href="#i-copy"/></svg></button></div>
+    <div id="privacy" class="factbox"><p class="small">Pendiente de consulta real.</p></div>
     <p id="explorer" class="explorer"></p>
-    <details><summary>Ver calldata, evento y almacenamiento consultados</summary><pre id="onchain">Sin consulta.</pre></details>
+    <details><summary>Ver calldata, evento y almacenamiento consultados</summary><div id="onchain" class="factbox"><p class="small">Sin consulta.</p></div></details>
     <p>Un hash demuestra que un archivo coincide con lo sellado; no demuestra que sus datos fueran verdaderos antes del sellado.</p>
     <p><a href="/contracts/RegistroIndicador.sol" target="_blank" rel="noopener">Código fuente del contrato</a> · <a id="configLink" href="/evidencias/red-local.json" target="_blank" rel="noopener">Configuración y despliegue</a> · <a href="/docs/AUDITORIA.md" target="_blank" rel="noopener">Auditoría de aceptación</a> · <a href="/docs/HALLAZGOS.md" target="_blank" rel="noopener">Hallazgos</a></p>
   </div>

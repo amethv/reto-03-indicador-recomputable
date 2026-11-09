@@ -68,7 +68,8 @@ try {
  item.status='APROBADO';item.result={A:{numerator:187,denominator:187,percentage:100},B:{numerator:104,denominator:187,percentage:originalResult.result.percentB},gapPP:originalResult.result.gap,automatic:83};item.evidence=['evidencias/04-comparacion.png'];await expect(page.locator('[data-dot="comparar"]')).toHaveClass(/green/);await page.screenshot({path:path.join(STATE_ROOT,item.evidence[0]),fullPage:true});
  step=5;item=report.criteria[4];item.test='Consultar contrato, recibo, calldata, evento y almacenamiento reales; pulsar «Buscar datos personales en la cadena» y comprobar 0 coincidencias de todos los usuarios, técnicos, unidades y actores de la bitácora.';
  await go('privacidad');await page.locator('#inspect').click();await expect(page.locator('#onchain')).toContainText(anchor.transactionHash);
- const observed=JSON.parse(await page.locator('#onchain').textContent());assert.deepEqual(observed,anchor);
+ // La interfaz muestra el ancla como fichas; cada fila guarda su valor exacto en data-value.
+ const observed=await page.locator('#onchain [data-key]').evaluateAll(rows=>{const o={};for(const r of rows){const path=r.dataset.key.split('.');let t=o;for(const k of path.slice(0,-1))t=t[k]??={};t[path.at(-1)]=JSON.parse(r.dataset.value);}return o;});assert.deepEqual(observed,anchor);await expect(page.locator('#onchain')).toContainText('Evento Sealed');
  const contract=new Contract(app.config.address,ABI,app.provider),tx=await app.provider.getTransaction(anchor.transactionHash),decoded=contract.interface.parseTransaction({data:tx.data});assert.equal(decoded.name,'seal');assert.equal(decoded.args.length,4);assert.equal(tx.data.length,266);
  const artifact=JSON.parse(await fs.readFile(path.join(EVIDENCE_DIR,'contrato.json'),'utf8')),deployment=await app.provider.getTransaction(app.config.deploymentTransaction);
  assert.equal(deployment.data,artifact.bytecode+app.config.rulesHash.slice(2));

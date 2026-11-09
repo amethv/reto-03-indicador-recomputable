@@ -42,8 +42,21 @@ async function prepare(t){
  const july=csv(t.tickets).rows.filter(r=>r.fecha_reporte.startsWith('2026-07')).length;
  $('scopeNote').textContent=`El lote contiene ${july} reportes de julio y ${candidate.count-july} fuera de julio. Se usa su estado final, con cierres posteriores al 31 de julio. No representa un corte calendario estricto. Los originales permanecen intactos.`;
  status('sealStatus',`187/187 IDs originales presentes y únicos. Hashes individuales y pruebas preparadas. Catálogo, reporte, bitácora y reaperturas coinciden con la fuente. ${july} reportes de julio; ${candidate.count-july} fuera de julio. ${sealed?'Ya existe sello confirmado; no se reemplazará.':'Todavía no se ha enviado el sello a blockchain.'}`);
- $('commitment').textContent=`Raíz preparada: ${candidate.root}\nCompromiso de evidencia: ${await evidenceHash(candidate)}`;
+ $('commitment').innerHTML=facts([['Raíz preparada',candidate.root],['Compromiso de evidencia',await evidenceHash(candidate)]]);
 }
+// Datos «etiqueta → valor». Los hashes van en monoespaciada con su botón de copiar.
+// Con key, la fila guarda además el valor exacto (data-value) para quien quiera leerlo sin formato.
+const COPY_ICON='<svg class="icon"><use href="#i-copy"/></svg>';
+const isHash=v=>typeof v==='string'&&/^0x[0-9a-fA-F]{16,}$/.test(v);
+function facts(rows){
+ return `<dl class="facts">${rows.map(([label,value,opt={}])=>{
+  const text=String(opt.show??value??'—'),hash=isHash(text);
+  const data=opt.key?` data-key="${esc(opt.key)}" data-value="${esc(JSON.stringify(value))}"`:'';
+  const copy=hash?`<button class="copy" type="button" data-ui data-copy-value="${esc(text)}" aria-label="Copiar ${esc(label.toLowerCase())}">${COPY_ICON}</button>`:'';
+  return `<div${data}><dt>${esc(label)}</dt><dd${hash?' class="hash"':''}><span>${esc(text)}</span>${copy}</dd></div>`;
+ }).join('')}</dl>`;
+}
+const when=ts=>`${new Date(ts*1000).toLocaleString('es-EC',{timeZone:'America/Guayaquil',dateStyle:'long',timeStyle:'medium'})} (UTC-05:00)`;
 function showExplorer(anchor){
  if(!config.explorer){$('explorer').textContent='Red local: no tiene explorador público. Cambia a Sepolia para ver el ancla pública.';return;}
  const tx=anchor?.transactionHash??config.sealTransaction;
@@ -51,8 +64,15 @@ function showExplorer(anchor){
 }
 function showAnchor(anchor){
  lastAnchor=anchor;showExplorer(anchor);
- $('privacy').textContent=`Contrato: ${anchor.address}\nRed: ${config.network}\nChain ID: ${anchor.chainId}\nTransacción: ${anchor.transactionHash}\nBloque: ${anchor.blockNumber}\nRaíz: ${anchor.root}\nCompromiso de evidencia: ${anchor.evidenceHash}\nCantidad: ${anchor.count}\nHash de reglas: ${anchor.rulesHash}`;
- $('onchain').textContent=JSON.stringify(anchor,null,2);
+ $('privacy').innerHTML=facts([['Contrato',anchor.address],['Red',config.network],['Chain ID',anchor.chainId],['Transacción del sello',anchor.transactionHash],['Bloque',anchor.blockNumber],['Raíz Merkle',anchor.root],['Compromiso de evidencia',anchor.evidenceHash],['Cantidad de tickets',anchor.count],['Hash de reglas',anchor.rulesHash]]);
+ const k=(label,key,value,show)=>[label,value,{key,show}];
+ $('onchain').innerHTML=`<h3>Almacenamiento del contrato (getSeal)</h3>${facts([
+  k('Raíz Merkle','root',anchor.root),k('Compromiso de evidencia','evidenceHash',anchor.evidenceHash),k('Cantidad de tickets','count',anchor.count),
+  k('Fecha del sello','timestamp',anchor.timestamp,when(anchor.timestamp)),k('Hash de reglas','rulesHash',anchor.rulesHash)])}
+  <h3>Evento Sealed</h3>${facts([k('Período','event.period',anchor.event.period),k('Raíz Merkle','event.root',anchor.event.root),k('Compromiso de evidencia','event.evidenceHash',anchor.event.evidenceHash),k('Cantidad de tickets','event.count',anchor.event.count)])}
+  <h3>Transacción y contrato</h3>${facts([
+  k('Transacción','transactionHash',anchor.transactionHash),k('Bloque','blockNumber',anchor.blockNumber),k('Calldata enviada (función seal)','calldata',anchor.calldata),
+  k('Contrato','address',anchor.address),k('Chain ID','chainId',anchor.chainId),k('Hash del bytecode','codeHash',anchor.codeHash)])}`;
 }
 
 const idList=ids=>`<details><summary>Ver ${ids.length} IDs</summary><p class="mono">${ids.map(esc).join(' · ')}</p></details>`;
@@ -163,7 +183,7 @@ $('searchPersonal').onclick=()=>run(async()=>{
  $('personal').innerHTML=`<div class="status ${kind}">${result.matches.length} coincidencias de ${result.searched} valores buscados</div>
   <p class="small">Se buscaron ${result.searched} nombres distintos (usuarios, técnicos, unidades y actores de la bitácora) en texto UTF-8, mayúsculas, minúsculas, SHA-256 y keccak256: ${result.patterns} patrones sobre ${result.bytes} bytes leídos de ${esc(result.sources.join('; '))}.</p>
   ${result.matches.length?`<ul>${result.matches.map(m=>`<li>${esc(m.kind)} · ${esc(m.form)} · ${esc(m.source)} · byte ${m.offset}</li>`).join('')}</ul>`:''}
-  <h3>Lo que sí hay en la cadena</h3><table class="summary"><tbody>${chain.decoded.map(([k,v])=>`<tr><td>${esc(k)}</td><td class="mono-cell">${esc(v)}</td></tr>`).join('')}</tbody></table>`;
+  <h3>Lo que sí hay en la cadena</h3>${facts(chain.decoded)}`;
 });
 $('inspect').onclick=()=>run(async()=>showAnchor(await readAnchor(provider,config)));
 $('verifyFile').onchange=()=>clearResults();
@@ -212,11 +232,8 @@ async function useNetwork(name){
  $('configLink').href=`/evidencias/${CONFIG_FILES[name]}`;
  provider=new JsonRpcProvider(config.rpc,undefined,{cacheTimeout:-1});provider.pollingInterval=config.local?100:4000;
  refreshNetwork();
- $('privacy').textContent=`Contrato configurado: ${config.address}
-Red: ${config.network}
-RPC de lectura: ${config.rpc}
-Despliegue: ${config.deploymentTransaction}
-Falta consultar el sellado.`;
+ $('privacy').innerHTML=facts([['Contrato configurado',config.address],['Red',config.network],['RPC de lectura',config.rpc],['Transacción de despliegue',config.deploymentTransaction],['Sello','Falta consultar el sellado.']]);
+ $('onchain').innerHTML='<p class="small">Sin consulta.</p>';
  showExplorer(null);
  $('networkNote').textContent=config.local?'Local: EVM de desarrollo en este equipo, sirve de respaldo sin internet. El sellado se hace desde esta página.':`Pública: ${config.network}. El navegador solo lee por un RPC público, sin wallet ni credenciales. El municipio selló con scripts/seal-testnet.mjs.`;
  status('sealStatus','Sin sellado comprobado en esta red.');
@@ -299,8 +316,8 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&document.body.class
 for(const a of document.querySelectorAll('nav a'))a.addEventListener('click',closeMenu);
 
 document.addEventListener('click',async e=>{
- const button=e.target.closest('[data-copy]');if(!button)return;
- const target=$(button.dataset.copy),text=target?.dataset.full||target?.textContent||'';
+ const button=e.target.closest('[data-copy],[data-copy-value]');if(!button)return;
+ const target=button.dataset.copy?$(button.dataset.copy):null,text=button.dataset.copyValue??(target?.dataset.full||target?.textContent||'');
  if(!text||text==='—')return;
  const label=button.dataset.label??=button.getAttribute('aria-label');
  try{await navigator.clipboard.writeText(text);button.classList.add('copied');button.setAttribute('aria-label','Copiado');}

@@ -381,9 +381,6 @@ summary { cursor: pointer; font-weight: 600; }
 
 .hash { font-family: var(--mono); font-size: 13px; overflow-wrap: anywhere; }
 .hashline { display: flex; align-items: center; gap: var(--space-2); }
-.monowrap { display: flex; gap: var(--space-2); align-items: flex-start; }
-.monowrap .mono { flex: 1; min-width: 0; }
-.monowrap:has(.mono:empty) { display: none; }
 .mono, pre {
   font-family: var(--mono);
   font-size: 12px;
@@ -393,8 +390,34 @@ summary { cursor: pointer; font-weight: 600; }
 }
 .mono { background: #f3f6fa; padding: 15px; border-radius: var(--radius-sm); margin: 0; }
 .mono:empty { display: none; }
-.mono-cell { font-family: var(--mono); font-size: 12px; overflow-wrap: anywhere; }
 .explorer { font-weight: 600; }
+
+/* Datos «etiqueta → valor» (contrato, sello, calldata, compromiso). */
+.factbox { margin: var(--space-4) 0; }
+.factbox:empty { display: none; }
+.factbox h3 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--teal); margin: var(--space-5) 0 var(--space-2); }
+.factbox h3:first-child { margin-top: 0; }
+.facts {
+  margin: 0 0 var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  overflow: hidden;
+}
+.facts > div {
+  display: grid;
+  grid-template-columns: minmax(150px, 220px) minmax(0, 1fr);
+  gap: var(--space-3);
+  padding: 10px var(--space-4);
+  border-top: 1px solid var(--border);
+}
+.facts > div:first-child { border-top: 0; }
+.facts > div:nth-child(even) { background: var(--surface-soft); }
+.facts dt { font-size: 13px; font-weight: 600; color: var(--muted); }
+.facts dd { margin: 0; min-width: 0; color: var(--ink); overflow-wrap: anywhere; display: flex; align-items: flex-start; gap: var(--space-2); }
+.facts dd > span { flex: 1; min-width: 0; line-height: 1.5; }
+.facts dd.hash > span { font-family: var(--mono); font-size: 12.5px; padding-top: 2px; }
+.facts .copy { width: 28px; height: 28px; }
 
 /* ---------- Tablas ---------- */
 
@@ -490,6 +513,7 @@ tr.flip td { background: #fff7e8; font-weight: 600; }
 
 @media (max-width: 700px) {
   .cascade, .cards, .indicators { grid-template-columns: minmax(0, 1fr); }
+  .facts > div { grid-template-columns: minmax(0, 1fr); gap: 2px; }
   .viewhead h1 { font-size: 26px; }
   .card { padding: 18px; }
   .indicators .card { padding: var(--space-5); }
