@@ -66,9 +66,9 @@ El municipio sella con un script; el navegador solo lee por un RPC público, sin
 2. Pedir Sepolia ETH para esa dirección en un faucet (por ejemplo el de Google Cloud Web3 o el de Alchemy). Con 0,05 ETH sobra.
 3. Conseguir una URL de RPC de Sepolia (Alchemy, Infura u otro) y, si se quiere verificar el código en Etherscan, una API key de etherscan.io.
 4. `copy .env.example .env` y completar `SEPOLIA_RPC_URL`, `SELLADOR_PRIVATE_KEY` y, opcional, `ETHERSCAN_API_KEY`. `.env` está en `.gitignore`.
-5. `npm.cmd run deploy:sepolia` → escribe `evidencias/red-sepolia.json` con dirección, transacción y enlaces a https://sepolia.etherscan.io/.
-6. `npm.cmd run seal:sepolia` → sella julio, comprueba el ancla y escribe `evidencias/sello-sepolia.json`.
-7. `npm.cmd start` y elegir **Pública (Sepolia)** en el selector de red.
+5. `npm.cmd run deploy:sepolia` → despliega el contrato precompilado (`contracts/RegistroIndicador.json`, no hace falta solc) y escribe `evidencias/red-sepolia.json` con dirección, transacción y enlaces a https://sepolia.etherscan.io/. Si ya hay un despliegue, no hace nada (usar `--nuevo` para otro).
+6. `npm.cmd run seal:sepolia` → crea la sal secreta en `.secreto/sal-sepolia-202607.json` **antes** de enviar la transacción, sella julio, comprueba el ancla y escribe `evidencias/sello-sepolia.json`. Repetirlo no crea otro sello. `.secreto/` no se publica: respaldarla aparte, porque sin ella nadie puede comprobar los tickets de ese sello.
+7. `npm.cmd start` y elegir **Pública (Sepolia)** en el selector de red. En este equipo la sal se carga sola; en otro, se importa en la sección 3.
 
 Sin internet, la demo funciona igual en la red local.
 
