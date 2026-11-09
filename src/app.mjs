@@ -6,6 +6,9 @@ import {personalValues,searchPersonalData,collectChainData} from './privacy.mjs'
 
 const $=id=>document.getElementById(id);
 let network='local',config,provider,baseline,evidence=null,prepared=null,preparedSalt=null,salt=null,originalTexts=null,verified=null,sealed=false,busy=false;
+// Para el menú y el panel: último ancla leída, estado de la última verifyText (VERDE/ROJO),
+// coincidencias de la última búsqueda de datos personales y pasos del guion cumplidos en esta sesión.
+let lastAnchor=null,lastStatus=null,privacyMatches=null;const done=new Set();
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt=v=>Number(v).toLocaleString('es-EC',{minimumFractionDigits:2,maximumFractionDigits:2});
 const pct=r=>`${fmt(r.percent)} %`;
@@ -16,7 +19,7 @@ async function get(url){const r=await fetch(url);if(!r.ok)throw new Error(`${url
 function status(id,text,kind='pending'){$(id).className=`status ${kind}`;$(id).textContent=text;}
 
 function clearResults(message='VERIFICACIÓN INCOMPLETA · ejecuta la verificación del archivo actual.'){
- verified=null;status('verification',message);
+ verified=null;lastStatus=null;status('verification',message);
  $('percentA').textContent='—';$('percentB').textContent='—';
  $('fractionA').textContent='Pendiente de verificación';$('fractionB').textContent='Pendiente de verificación';
  $('gap').textContent='Diferencia pendiente de verificación.';
@@ -24,8 +27,9 @@ function clearResults(message='VERIFICACIÓN INCOMPLETA · ejecuta la verificaci
  $('findings').hidden=true;$('explanation').textContent='';
  $('tickets').replaceChildren();$('tableCount').textContent='';$('changes').replaceChildren();$('holidayResult').replaceChildren();$('personal').replaceChildren();
 }
-function controls(){for(const el of document.querySelectorAll('button,input,select'))el.disabled=busy;$('seal').disabled=busy||!prepared||sealed;$('export').disabled=busy||!evidence;}
-async function run(task){if(busy)return;busy=true;controls();try{await task();}catch(error){clearResults(`${error.code==='CHAIN_CONNECTION'?'ERROR DE CONEXIÓN':'VERIFICACIÓN INCOMPLETA'} · ${error.message}`);status('sealStatus',error.message,'pending');console.error(error);}finally{busy=false;controls();}}
+// Los controles de la interfaz (menú, copiar) quedan fuera del bloqueo mientras corre una acción.
+function controls(){for(const el of document.querySelectorAll('button:not([data-ui]),input,select'))el.disabled=busy;$('seal').disabled=busy||!prepared||sealed;$('export').disabled=busy||!evidence;}
+async function run(task){if(busy)return;busy=true;controls();try{await task();}catch(error){clearResults(`${error.code==='CHAIN_CONNECTION'?'ERROR DE CONEXIÓN':'VERIFICACIÓN INCOMPLETA'} · ${error.message}`);status('sealStatus',error.message,'pending');console.error(error);}finally{busy=false;controls();renderNav();refreshNetwork();}}
 
 async function texts(){
  if(originalTexts)return originalTexts;
@@ -46,7 +50,7 @@ function showExplorer(anchor){
  $('explorer').innerHTML=`Explorador público: ${tx?`<a href="${esc(config.explorer)}/tx/${esc(tx)}" target="_blank" rel="noopener">transacción del sello</a> · `:''}<a href="${esc(config.explorer)}/address/${esc(config.address)}" target="_blank" rel="noopener">contrato ${esc(config.address)}</a>`;
 }
 function showAnchor(anchor){
- showExplorer(anchor);
+ lastAnchor=anchor;showExplorer(anchor);
  $('privacy').textContent=`Contrato: ${anchor.address}\nRed: ${config.network}\nChain ID: ${anchor.chainId}\nTransacción: ${anchor.transactionHash}\nBloque: ${anchor.blockNumber}\nRaíz: ${anchor.root}\nCompromiso de evidencia: ${anchor.evidenceHash}\nCantidad: ${anchor.count}\nHash de reglas: ${anchor.rulesHash}`;
  $('onchain').textContent=JSON.stringify(anchor,null,2);
 }
@@ -90,22 +94,23 @@ async function renderChanges(result){
 async function doVerify(){
  clearResults('VERIFICACIÓN INCOMPLETA · consultando blockchain y comprobando evidencias…');
  if(!evidence)throw new Error('Falta la evidencia original; importa el manifiesto del sellado confirmado.');
- if(!salt)throw new Error('Falta la sal secreta del sello: impórtala en la sección 3 (archivo sal-202607.json).');
+ if(!salt)throw new Error('Falta la sal secreta del sello: impórtala en la vista Verificar (archivo sal-202607.json).');
  const t=await texts(),file=$('verifyFile').files[0],text=file?await file.text():t.tickets;
  const anchor=await readAnchor(provider,config);showAnchor(anchor);sealed=true;
  const result=await verifyText(text,evidence,anchor,t,salt);
  if(result.status==='ROJO'){
   status('verification','ROJO · Alteración detectada. Este archivo no produce un indicador verificado.','red');
+  lastStatus='ROJO';done.add(3);
   await renderChanges({...result,anchor});return;
  }
  if(result.status!=='VERDE'){status('verification',`VERIFICACIÓN INCOMPLETA · ${result.errors.join('; ')}`);return;}
- verified=result;status('verification',`VERDE · Integridad verificada. 187 pruebas individuales válidas; raíz, evidencia, CSV y los cuatro archivos auxiliares coinciden con el sello confirmado. TX ${anchor.transactionHash}`,'green');
+ verified=result;lastStatus='VERDE';done.add(2);if(route==='comparar')done.add(4);status('verification',`VERDE · Integridad verificada. 187 pruebas individuales válidas; raíz, evidencia, CSV y los cuatro archivos auxiliares coinciden con el sello confirmado. TX ${anchor.transactionHash}`,'green');
  renderFindings(result);
  const r=result.result;$('percentA').textContent=`${fmt(r.percentA)} %`;$('percentB').textContent=`${fmt(r.percentB)} %`;
  $('fractionA').textContent=`${r.numeratorA} gestionados / ${r.denominator} recibidos · incluye ${r.automatic} cierres automáticos`;
  $('fractionB').textContent=`${r.numeratorB} confirmados / ${r.denominator} recibidos`;
  $('gap').textContent=`Diferencia A − B: ${fmt(r.gap)} puntos porcentuales. ${r.automatic} cierres gestionados no tienen confirmación explícita del usuario.`;
- $('explanation').textContent=`Universo: ${r.denominator} IDs únicos del lote original (${r.calendarJuly} reportados en julio y ${r.denominator-r.calendarJuly} fuera de julio). Hay ${r.details.filter(t=>t.discrepancies.length).length} ticket(s) con discrepancias de SLA; se pueden filtrar en la sección 4.`;
+ $('explanation').textContent=`Universo: ${r.denominator} IDs únicos del lote original (${r.calendarJuly} reportados en julio y ${r.denominator-r.calendarJuly} fuera de julio). Hay ${r.details.filter(t=>t.discrepancies.length).length} ticket(s) con discrepancias de SLA; se pueden filtrar en la vista Comparar.`;
  renderTable();
 }
 
@@ -140,7 +145,7 @@ $('seal').onclick=()=>run(async()=>{
 });
 $('verify').onclick=()=>run(doVerify);
 $('simulate').onclick=()=>run(async()=>{
- if(!verified)throw new Error('Primero verifica el CSV original (sección 3) para simular sobre tickets verificados.');
+ if(!verified)throw new Error('Primero verifica el CSV original (vista Recalcular) para simular sobre tickets verificados.');
  const date=$('holidayDate').value;if(!/^\d{4}-\d{2}-\d{2}$/.test(date))throw new Error('Elige una fecha válida.');
  const sim=simulateHolidays(verified.result.details,[date],businessHours),base=verified.findings.sla.corrected;
  const rows=sim.changed.map(c=>`<tr${c.statusChanged?' class="flip"':''}><td>${esc(c.id)}</td><td>${fmt(c.hoursBefore)} h → ${fmt(c.hoursAfter)} h</td><td>${c.sla} h</td><td>${c.withinBefore?'Cumple':'No cumple'} → ${c.withinAfter?'Cumple':'No cumple'}</td></tr>`).join('');
@@ -154,6 +159,7 @@ $('searchPersonal').onclick=()=>run(async()=>{
  const t=await texts(),values=personalValues(csv(t.tickets).rows,csv(t.bitacora,BITACORA_HEADERS).rows);
  const chain=await collectChainData(provider,config,anchor),result=await searchPersonalData(chain.blobs,values);
  const kind=result.matches.length?'red':'green';
+ privacyMatches=result.matches.length;if(!privacyMatches)done.add(5);
  $('personal').innerHTML=`<div class="status ${kind}">${result.matches.length} coincidencias de ${result.searched} valores buscados</div>
   <p class="small">Se buscaron ${result.searched} nombres distintos (usuarios, técnicos, unidades y actores de la bitácora) en texto UTF-8, mayúsculas, minúsculas, SHA-256 y keccak256: ${result.patterns} patrones sobre ${result.bytes} bytes leídos de ${esc(result.sources.join('; '))}.</p>
   ${result.matches.length?`<ul>${result.matches.map(m=>`<li>${esc(m.kind)} · ${esc(m.form)} · ${esc(m.source)} · byte ${m.offset}</li>`).join('')}</ul>`:''}
@@ -188,9 +194,10 @@ async function useNetwork(name){
  }
  const next=await response.json();
  provider?.destroy();
- network=name;config=next;evidence=null;salt=null;sealed=false;prepared=null;preparedSalt=null;clearResults();controls();showSalt();
+ network=name;config=next;evidence=null;salt=null;sealed=false;prepared=null;preparedSalt=null;lastAnchor=null;privacyMatches=null;done.clear();clearResults();controls();showSalt();
  $('configLink').href=`/evidencias/${CONFIG_FILES[name]}`;
  provider=new JsonRpcProvider(config.rpc,undefined,{cacheTimeout:-1});provider.pollingInterval=config.local?100:4000;
+ refreshNetwork();
  $('privacy').textContent=`Contrato configurado: ${config.address}
 Red: ${config.network}
 RPC de lectura: ${config.rpc}
@@ -210,8 +217,87 @@ Falta consultar el sellado.`;
  }
 }
 function showSalt(){
- $('saltStatus').textContent=salt?'Sal secreta: cargada y coincide con el compromiso del manifiesto.':evidence?'Sal secreta: falta. Sin ella no se pueden comprobar los tickets; impórtala aquí (sal-202607.json).':'Sal secreta: pendiente.';
+ $('saltStatus').textContent=salt?'Sal secreta: cargada y coincide con el compromiso del manifiesto.':evidence?'Sal secreta: falta. Sin ella no se pueden comprobar los tickets; impórtala en la vista Verificar (sal-202607.json).':'Sal secreta: pendiente.';
 }
+// ---------- Navegación por vistas, estado del menú y tarjeta de red ----------
+// Cada vista es un <section> que se muestra u oculta: el estado en memoria se conserva.
+const ROUTES={panel:'panel',sellar:'s1',recalcular:'s2',verificar:'s3',comparar:'s4',privacidad:'s5',feriado:'holiday'};
+const TITLES={panel:'Panel',sellar:'Sellar',recalcular:'Recalcular',verificar:'Verificar',comparar:'Comparar',privacidad:'Privacidad',feriado:'Simular feriado'};
+let route=null;
+const short=h=>h?`${h.slice(0,6)}…${h.slice(-4)}`:'—';
+function routeFromHash(){const m=/^#\/([a-z]+)$/.exec(location.hash);return m&&ROUTES[m[1]]?m[1]:null;}
+function showRoute({focus=false}={}){
+ const name=routeFromHash();
+ if(!name){history.replaceState(null,'','#/panel');return showRoute({focus});}
+ for(const [r,id] of Object.entries(ROUTES))$(id).hidden=r!==name;
+ for(const a of document.querySelectorAll('nav a[data-route]'))if(a.dataset.route===name)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current');
+ // El mensaje de verificación es uno solo: se muestra en Recalcular y en Verificar.
+ const slot=$(ROUTES[name]).querySelector('[data-slot="verification"]');if(slot)slot.append($('verification'));
+ if(name==='comparar'&&lastStatus==='VERDE')done.add(4);
+ const changed=route!==name;route=name;document.title=`${TITLES[name]} · ATENEA · Indicador recomputable`;
+ closeMenu();
+ if(changed&&focus){window.scrollTo(0,0);$(ROUTES[name]).querySelector('h1').focus({preventScroll:true});}
+ renderNav();
+}
+function setDot(el,kind,label){el.className=`dot ${kind}`;el.setAttribute('aria-label',label);}
+function renderNav(){
+ const sealOk=sealed&&!!lastAnchor;
+ const result=lastStatus==='VERDE'?['green','VERDE']:lastStatus==='ROJO'?['red','ROJO']:['gray','pendiente'];
+ const dots={
+  sellar:sealOk?['green','sello confirmado']:['gray','sin sello'],
+  recalcular:result,comparar:result,
+  verificar:lastStatus==='ROJO'?['red','alteración detectada']:['gray','sin alteración detectada'],
+  privacidad:privacyMatches===null?['gray','pendiente']:privacyMatches===0?['green','0 coincidencias']:['red',`${privacyMatches} coincidencias`]
+ };
+ for(const [name,[kind,label]] of Object.entries(dots))setDot(document.querySelector(`[data-dot="${name}"]`),kind,`Estado: ${label}`);
+ // Panel
+ $('sumSeal').textContent=sealOk?'Sellado':sealed?'Sellado (sin leer)':'Sin sello';
+ $('sumSealTx').textContent=sealOk?short(lastAnchor.transactionHash):'—';$('sumSealTx').dataset.full=sealOk?lastAnchor.transactionHash:'';$('sumSealTx').title=sealOk?lastAnchor.transactionHash:'';
+ $('sumVerify').className=`pill ${result[0]}`;$('sumVerify').textContent=lastStatus??'Pendiente';
+ $('sumVerifyNote').textContent=lastStatus==='VERDE'?'Integridad verificada contra el sello.':lastStatus==='ROJO'?'El archivo verificado no coincide con lo sellado.':'Todavía no hay un resultado en esta sesión.';
+ $('sumCount').textContent=sealOk?String(lastAnchor.count):'—';
+ $('sumGap').textContent=verified?`${fmt(verified.result.gap)} pp`:'—';
+ const steps=[sealOk,done.has(2),done.has(3),done.has(4),done.has(5)];
+ for(const li of $('demoScript').children){const ok=steps[Number(li.dataset.step)-1];li.classList.toggle('done',ok);li.querySelector('.check').setAttribute('aria-label',ok?'Cumplido':'Pendiente');}
+ // Botones «Siguiente» solo cuando el paso de la vista ya se hizo.
+ const next={sellar:sealOk,recalcular:lastStatus==='VERDE',verificar:done.has(3),comparar:!!verified};
+ for(const a of document.querySelectorAll('[data-next]'))a.hidden=!next[a.dataset.next];
+}
+async function refreshNetwork(){
+ if(!config||!provider)return;
+ const p=provider,dot=$('rpcDot');
+ $('netName').textContent=config.local?'Local · Ganache':'Pública · Sepolia';
+ $('netContract').textContent=short(config.address);$('netContract').title=config.address;
+ try{const block=await p.getBlockNumber();if(p!==provider)return;$('netBlock').textContent=block.toLocaleString('es-EC');setDot(dot,'green','RPC: responde');}
+ catch{if(p!==provider)return;$('netBlock').textContent='—';setDot(dot,'red','RPC: no responde');}
+}
+setInterval(()=>{if(!document.hidden)refreshNetwork();},10000);
+
+function closeMenu(){document.body.classList.remove('menu-open');$('menuToggle').setAttribute('aria-expanded','false');}
+$('menuToggle').onclick=()=>{
+ const open=!document.body.classList.contains('menu-open');
+ document.body.classList.toggle('menu-open',open);$('menuToggle').setAttribute('aria-expanded',String(open));
+ if(open)document.querySelector('nav a[aria-current]')?.focus();
+};
+$('menuClose').onclick=()=>{closeMenu();$('menuToggle').focus();};
+$('backdrop').onclick=closeMenu;
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&document.body.classList.contains('menu-open')){closeMenu();$('menuToggle').focus();}});
+for(const a of document.querySelectorAll('nav a'))a.addEventListener('click',closeMenu);
+
+document.addEventListener('click',async e=>{
+ const button=e.target.closest('[data-copy]');if(!button)return;
+ const target=$(button.dataset.copy),text=target?.dataset.full||target?.textContent||'';
+ if(!text||text==='—')return;
+ const label=button.dataset.label??=button.getAttribute('aria-label');
+ try{await navigator.clipboard.writeText(text);button.classList.add('copied');button.setAttribute('aria-label','Copiado');}
+ catch{button.setAttribute('aria-label','No se pudo copiar');}
+ setTimeout(()=>{button.classList.remove('copied');button.setAttribute('aria-label',label);},1500);
+});
+
+$('recalc').onclick=()=>run(async()=>{$('verifyFile').value='';await doVerify();});
+addEventListener('hashchange',()=>showRoute({focus:true}));
+showRoute();
+
 $('network').onchange=()=>run(()=>useNetwork($('network').value));
 await run(async()=>{baseline=JSON.parse(await get('/src/originals.json'));await useNetwork('local');});
 window.__ateneaReady=true;

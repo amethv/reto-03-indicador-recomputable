@@ -1,5 +1,5 @@
 {
-  "started": "2026-11-09T01:32:17.423Z",
+  "started": "2026-11-09T01:56:18.249Z",
   "timezone": "America/Guayaquil",
   "criteria": [
     {
@@ -10,8 +10,8 @@
       "test": "Cargar originales, pulsar sellado en navegador si aún no existe; comprobar código, recibo, evento y getSeal mediante JSON-RPC real.",
       "result": {
         "count": 187,
-        "root": "0xb1e7f29b18589f2e34e1a7210b10a941382c8fe89a901344b9cd08945d5b39da",
-        "transaction": "0x466c1258236cf95a1799b448c2d6bd16832b3343311b7d66c9dddc62d48fbda2",
+        "root": "0x52834ca5269739f485e7476f03aac3ce4aeeb61e5f29ea51115e2a01c1d166ad",
+        "transaction": "0xd968766605ff8373f0e77db79e44c47837e66b9672d3c2ba767e7fa52b5d5eb1",
         "block": 2,
         "address": "0xe78A0F7E598Cc8b0Bb87894B0F60dD2a88d6a8Ab",
         "chainId": 31337
@@ -139,7 +139,7 @@
           "rulesHash"
         ],
         "sealCalldataBytes": 132,
-        "transaction": "0x466c1258236cf95a1799b448c2d6bd16832b3343311b7d66c9dddc62d48fbda2",
+        "transaction": "0xd968766605ff8373f0e77db79e44c47837e66b9672d3c2ba767e7fa52b5d5eb1",
         "contract": "0xe78A0F7E598Cc8b0Bb87894B0F60dD2a88d6a8Ab",
         "network": "EVM local Ganache (red de desarrollo real)",
         "personalDataSearch": {
@@ -166,6 +166,10 @@
   ],
   "supplementary": [
     {
+      "test": "Navegación: 7 rutas con una sola vista visible, aria-current, atrás y adelante, estado de sello y verificación conservado entre vistas, guion con 5 pasos cumplidos",
+      "status": "APROBADO"
+    },
+    {
       "test": "Segundo sellado rechazado por EVM",
       "status": "APROBADO"
     },
@@ -182,11 +186,15 @@
       "status": "APROBADO"
     },
     {
+      "test": "Recarga: se conserva la vista de la ruta (#/comparar)",
+      "status": "APROBADO"
+    },
+    {
       "test": "Recarga: manifiesto persistido y sello original conservado",
       "status": "APROBADO"
     },
     {
-      "test": "Vista móvil 390 px sin desbordamiento de página",
+      "test": "Vista móvil 390 px: menú en panel lateral y las 7 vistas sin desbordamiento de página",
       "status": "APROBADO"
     },
     {
@@ -242,7 +250,7 @@
     }
   ],
   "completed": true,
-  "instance": "nivel1-v4-auditoria",
-  "finished": "2026-11-09T01:32:31.452Z",
+  "instance": "nivel1-v4-menu",
+  "finished": "2026-11-09T01:56:39.816Z",
   "level1Complete": false
 }

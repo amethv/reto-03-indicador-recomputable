@@ -15,7 +15,7 @@ const app=await startApp();let browser;
 try{
  browser=await chromium.launch({channel:'msedge',headless:false});
  const page=await browser.newPage({viewport:{width:1440,height:1000}});
- await page.goto('http://127.0.0.1:8080');await page.waitForFunction(()=>window.__ateneaReady);
+ await page.goto('http://127.0.0.1:8080/#/verificar');await page.waitForFunction(()=>window.__ateneaReady);await expect(page.locator('section.view[data-route="verificar"]')).toBeVisible();
  await page.locator('#verify').click();await expect(page.locator('#verification')).toContainText('VERDE');
  const before=await readAnchor(app.provider,app.config);
  console.log('EDITAR EN UN EDITOR: '+target);

@@ -10,103 +10,194 @@
 <script type="module" src="/src/app.mjs"></script>
 </head>
 <body>
-<header>
-  <div><span class="eyebrow">RETO 03 · NIVEL 1</span><h1>El indicador recomputable</h1><p>ATENEA · Evidencia del lote entregado de julio de 2026</p></div>
-  <span class="badge">Auditoría verificable</span>
+<svg width="0" height="0" class="icons" aria-hidden="true" focusable="false">
+  <defs>
+    <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3 4.5 6v5.5c0 4.6 3.1 8.3 7.5 9.5 4.4-1.2 7.5-4.9 7.5-9.5V6L12 3Z"/><path d="m8.8 12.2 2.2 2.2 4.4-4.6"/></symbol>
+    <symbol id="i-panel" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="4.5" rx="1.5"/><rect x="13.5" y="11" width="7" height="9.5" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24"><rect x="4.5" y="10.5" width="15" height="10" rx="2"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/><path d="M12 14.5v2.5"/></symbol>
+    <symbol id="i-calc" viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 7h8"/><path d="M8.5 11.5h.01M12 11.5h.01M15.5 11.5h.01M8.5 15h.01M12 15h.01M15.5 15h.01M8.5 18h.01M12 18h.01M15.5 18h.01"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/><path d="M10.5 7.5v3.5M10.5 13.6v.01"/></symbol>
+    <symbol id="i-compare" viewBox="0 0 24 24"><path d="M5 20V10M10 20V4M14 20v-6M19 20V8"/><path d="M3 20.5h18"/></symbol>
+    <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z"/><circle cx="12" cy="12" r="3"/></symbol>
+    <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 9.5h17M8 3v4M16 3v4"/><path d="M8 13.5h.01M12 13.5h.01M16 13.5h.01M8 17h.01M12 17h.01"/></symbol>
+    <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 6.5h16M4 12h16M4 17.5h16"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></symbol>
+    <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8.5" y="8.5" width="11" height="11" rx="2"/><path d="M15.5 8.5v-2a2 2 0 0 0-2-2h-7a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h2"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m5.5 12.5 4 4 9-9.5"/></symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+  </defs>
+</svg>
+
+<header class="topbar">
+  <button id="menuToggle" class="iconbutton" type="button" data-ui aria-expanded="false" aria-controls="sidebar"><svg class="icon"><use href="#i-menu"/></svg><span>Menú</span></button>
+  <span class="topbar-title"><svg class="icon"><use href="#i-shield"/></svg>Indicador recomputable</span>
 </header>
-<main>
-<aside class="notice"><strong>Universo del reto: los 187 tickets originales.</strong> <span id="scopeNote">El lote incluye reportes fuera de julio. Los conteos se muestran al validar los originales. Se usa el estado final del lote, no un corte calendario estricto.</span></aside>
+<div id="backdrop" class="backdrop"></div>
 
-<div class="networkbar">
-  <label>Red de verificación<select id="network"><option value="local">Local (Ganache)</option><option value="sepolia">Pública (Sepolia)</option></select></label>
-  <p id="networkNote" class="small">Local: EVM de desarrollo en este equipo, sirve de respaldo sin internet. Sepolia: lectura pública sin wallet ni credenciales.</p>
-</div>
+<div class="app">
+<aside id="sidebar" class="sidebar">
+  <div class="brand">
+    <span class="brand-mark"><svg class="icon"><use href="#i-shield"/></svg></span>
+    <div><strong>Indicador recomputable</strong><span>ATENEA · julio de 2026</span></div>
+    <button id="menuClose" class="iconbutton close" type="button" data-ui aria-label="Cerrar menú"><svg class="icon"><use href="#i-close"/></svg></button>
+  </div>
 
-<section id="s1">
-  <h2>1. Sellado de los 187 tickets</h2>
-  <p>Se valida cada archivo contra la huella de la carpeta fuente verificada. Cada columna de los tickets participa en el compromiso; del catálogo, el reporte publicado, la bitácora y las reaperturas solo entra su SHA-256. Una verificación posterior no puede cambiar el sello.</p>
-  <div class="actions"><button id="load">Cargar los originales entregados</button><button id="seal" disabled>Sellar julio en blockchain</button><button id="export" disabled>Descargar evidencia original</button></div>
-  <details><summary>Seleccionar los originales a mano</summary>
-    <p class="small">Sus huellas deben coincidir con las de la carpeta fuente verificada.</p>
-    <div class="inputs">
-      <label>tickets.csv<input id="originalTickets" type="file" accept=".csv"></label>
-      <label>catalogo_servicios.csv<input id="originalCatalog" type="file" accept=".csv"></label>
-      <label>indicador_mensual.csv<input id="originalReport" type="file" accept=".csv"></label>
-      <label>bitacora_eventos.csv<input id="originalBitacora" type="file" accept=".csv"></label>
-      <label>reaperturas.csv<input id="originalReopenings" type="file" accept=".csv"></label>
-    </div>
-    <button id="prepareFiles">Validar originales seleccionados</button>
-  </details>
-  <output id="sealStatus" class="status pending" aria-live="polite">Sin sellado comprobado.</output>
-  <div id="commitment" class="mono"></div>
+  <nav aria-label="Procesos de la demostración">
+    <ul class="menu">
+      <li><a href="#/panel" data-route="panel"><svg class="icon"><use href="#i-panel"/></svg><span class="item"><strong>Panel</strong><small>Resumen del mes</small></span></a></li>
+      <li><a href="#/sellar" data-route="sellar"><svg class="icon"><use href="#i-lock"/></svg><span class="item"><strong>Sellar</strong><small>Anclar los 187 tickets</small></span><span class="dot" data-dot="sellar" role="img" aria-label="Estado: pendiente"></span></a></li>
+      <li><a href="#/recalcular" data-route="recalcular"><svg class="icon"><use href="#i-calc"/></svg><span class="item"><strong>Recalcular</strong><small>El indicador desde lo sellado</small></span><span class="dot" data-dot="recalcular" role="img" aria-label="Estado: pendiente"></span></a></li>
+      <li><a href="#/verificar" data-route="verificar"><svg class="icon"><use href="#i-search"/></svg><span class="item"><strong>Verificar</strong><small>Detectar alteraciones</small></span><span class="dot" data-dot="verificar" role="img" aria-label="Estado: pendiente"></span></a></li>
+      <li><a href="#/comparar" data-route="comparar"><svg class="icon"><use href="#i-compare"/></svg><span class="item"><strong>Comparar</strong><small>Todos vs. confirmados</small></span><span class="dot" data-dot="comparar" role="img" aria-label="Estado: pendiente"></span></a></li>
+      <li><a href="#/privacidad" data-route="privacidad"><svg class="icon"><use href="#i-eye"/></svg><span class="item"><strong>Privacidad</strong><small>Qué hay en la cadena</small></span><span class="dot" data-dot="privacidad" role="img" aria-label="Estado: pendiente"></span></a></li>
+    </ul>
+    <p class="menu-sep">Herramientas</p>
+    <ul class="menu">
+      <li><a href="#/feriado" data-route="feriado"><svg class="icon"><use href="#i-calendar"/></svg><span class="item"><strong>Simular feriado</strong><small>Sin tocar el sello</small></span></a></li>
+    </ul>
+  </nav>
+
+  <div class="netcard">
+    <label for="network">Red de verificación</label>
+    <select id="network"><option value="local">Local (Ganache)</option><option value="sepolia">Pública (Sepolia)</option></select>
+    <p class="netline"><span id="rpcDot" class="dot gray" role="img" aria-label="RPC: sin comprobar"></span><span id="netName">Conectando…</span></p>
+    <p class="netmeta">Bloque <span id="netBlock">—</span> · <span id="netContract" class="hash">—</span></p>
+    <p class="netnote">Datos sintéticos · Nivel 1</p>
+  </div>
+</aside>
+
+<main id="main">
+
+<section id="panel" class="view" data-route="panel" aria-labelledby="t-panel">
+  <header class="viewhead"><h1 id="t-panel" tabindex="-1">Panel</h1><p>Resumen del mes: qué se selló, qué dio la última verificación y cuánto se separan los dos indicadores.</p></header>
+  <p id="headline" class="headline">Publicado 98,25 % · Solo confirmados por el usuario: pendiente de verificación</p>
+  <div class="stats">
+    <article class="card stat"><h2>Estado del sello</h2><p class="stat-value" id="sumSeal">Sin sello</p><p class="hashline"><span id="sumSealTx" class="hash">—</span><button class="copy" type="button" data-ui data-copy="sumSealTx" aria-label="Copiar transacción del sello"><svg class="icon"><use href="#i-copy"/></svg></button></p></article>
+    <article class="card stat"><h2>Última verificación</h2><p class="stat-value"><span id="sumVerify" class="pill gray">Pendiente</span></p><p class="small" id="sumVerifyNote">Todavía no se verificó en esta sesión.</p></article>
+    <article class="card stat"><h2>Tickets sellados</h2><p class="stat-value" id="sumCount">—</p><p class="small">Cantidad registrada en la cadena.</p></article>
+    <article class="card stat"><h2>Brecha A − B</h2><p class="stat-value" id="sumGap">—</p><p class="small">Puntos porcentuales entre todos los cierres y los confirmados.</p></article>
+  </div>
+  <div class="card">
+    <h2>Guion de la demo</h2>
+    <ol id="demoScript" class="script">
+      <li data-step="1"><span class="check" role="img" aria-label="Pendiente"><svg class="icon"><use href="#i-check"/></svg></span><span><a href="#/sellar">Sellar los 187 tickets</a><small>Cargar los originales y anclar el compromiso en la cadena.</small></span></li>
+      <li data-step="2"><span class="check" role="img" aria-label="Pendiente"><svg class="icon"><use href="#i-check"/></svg></span><span><a href="#/recalcular">Recalcular el indicador</a><small>Desde lo sellado: cascada 187 → 171, bitácora y reaperturas.</small></span></li>
+      <li data-step="3"><span class="check" role="img" aria-label="Pendiente"><svg class="icon"><use href="#i-check"/></svg></span><span><a href="#/verificar">Detectar una alteración</a><small>Un CSV editado da ROJO con el ticket y el campo.</small></span></li>
+      <li data-step="4"><span class="check" role="img" aria-label="Pendiente"><svg class="icon"><use href="#i-check"/></svg></span><span><a href="#/comparar">Comparar A contra B</a><small>Todos los cierres frente a los confirmados por el usuario.</small></span></li>
+      <li data-step="5"><span class="check" role="img" aria-label="Pendiente"><svg class="icon"><use href="#i-check"/></svg></span><span><a href="#/privacidad">Revisar la privacidad</a><small>Buscar datos personales en la cadena: 0 coincidencias.</small></span></li>
+    </ol>
+  </div>
+  <aside class="notice"><strong>Universo del reto: los 187 tickets originales.</strong> <span id="scopeNote">El lote incluye reportes fuera de julio. Los conteos se muestran al validar los originales. Se usa el estado final del lote, no un corte calendario estricto.</span></aside>
 </section>
 
-<section id="s2">
-  <h2>2. Recálculo independiente</h2>
-  <p>Los resultados solo aparecen después de verificar el CSV, las 187 pruebas individuales, los archivos auxiliares y el compromiso registrado en blockchain.</p>
-  <output id="verification" class="status pending" aria-live="polite">VERIFICACIÓN INCOMPLETA · todavía no se consultó un sello confirmado.</output>
-  <p id="headline" class="headline">Publicado 98,25 % · Solo confirmados por el usuario: pendiente de verificación</p>
+<section id="s1" class="view" data-route="sellar" aria-labelledby="t-sellar" hidden>
+  <header class="viewhead"><h1 id="t-sellar" tabindex="-1">Sellar</h1><p>Anclar en la cadena el compromiso de los 187 tickets de julio, sin datos personales.</p></header>
+  <div class="card">
+    <p>Se valida cada archivo contra la huella de la carpeta fuente verificada. Cada columna de los tickets participa en el compromiso; del catálogo, el reporte publicado, la bitácora y las reaperturas solo entra su SHA-256. Una verificación posterior no puede cambiar el sello.</p>
+    <div class="actions"><button id="load">Cargar los originales entregados</button><button id="seal" disabled>Sellar julio en blockchain</button><button id="export" class="secondary" disabled>Descargar evidencia original</button></div>
+    <details><summary>Seleccionar los originales a mano</summary>
+      <p class="small">Sus huellas deben coincidir con las de la carpeta fuente verificada.</p>
+      <div class="inputs">
+        <label>tickets.csv<input id="originalTickets" type="file" accept=".csv"></label>
+        <label>catalogo_servicios.csv<input id="originalCatalog" type="file" accept=".csv"></label>
+        <label>indicador_mensual.csv<input id="originalReport" type="file" accept=".csv"></label>
+        <label>bitacora_eventos.csv<input id="originalBitacora" type="file" accept=".csv"></label>
+        <label>reaperturas.csv<input id="originalReopenings" type="file" accept=".csv"></label>
+      </div>
+      <button id="prepareFiles">Validar originales seleccionados</button>
+    </details>
+    <output id="sealStatus" class="status pending" aria-live="polite">Sin sellado comprobado.</output>
+    <div class="monowrap"><div id="commitment" class="mono"></div><button class="copy" type="button" data-ui data-copy="commitment" aria-label="Copiar raíz y compromiso"><svg class="icon"><use href="#i-copy"/></svg></button></div>
+  </div>
+  <a class="next" href="#/recalcular" data-next="sellar" hidden>Siguiente: Recalcular <svg class="icon"><use href="#i-arrow"/></svg></a>
+</section>
+
+<section id="s2" class="view" data-route="recalcular" aria-labelledby="t-recalcular" hidden>
+  <header class="viewhead"><h1 id="t-recalcular" tabindex="-1">Recalcular</h1><p>El indicador desde lo sellado: se recalcula en el navegador, sin pedirle el número a nadie.</p></header>
+  <div class="card">
+    <p>Los resultados solo aparecen después de verificar el CSV, las 187 pruebas individuales, los archivos auxiliares y el compromiso registrado en blockchain.</p>
+    <div class="actions"><button id="recalc" type="button">Recalcular desde lo sellado</button></div>
+    <div class="slot" data-slot="verification"><output id="verification" class="status pending" aria-live="polite">VERIFICACIÓN INCOMPLETA · todavía no se consultó un sello confirmado.</output></div>
+    <p id="explanation" class="small"></p>
+  </div>
   <div id="findings" hidden>
-    <h3>¿De dónde sale el 171 publicado?</h3>
-    <div id="cascade" class="cascade"></div>
-    <p id="managedNote" class="small"></p>
-    <h3>Cuatro formas de contar el mismo mes</h3>
-    <div class="tablewrap"><table class="summary"><thead><tr><th>Indicador</th><th>Cuenta</th><th>Resultado</th></tr></thead><tbody id="summary"></tbody></table></div>
+    <div class="card">
+      <h2>¿De dónde sale el 171 publicado?</h2>
+      <div id="cascade" class="cascade"></div>
+      <p id="managedNote" class="small"></p>
+    </div>
+    <div class="card">
+      <h2>Cuatro formas de contar el mismo mes</h2>
+      <div class="tablewrap"><table class="summary"><thead><tr><th>Indicador</th><th>Cuenta</th><th>Resultado</th></tr></thead><tbody id="summary"></tbody></table></div>
+    </div>
     <div class="cards">
-      <article class="card" id="editCard"></article>
-      <article class="card" id="reopenCard"></article>
+      <article class="card alert" id="editCard"></article>
+      <article class="card alert" id="reopenCard"></article>
     </div>
     <p class="conclusion">Cada una de estas exclusiones o ediciones mejora el número publicado.</p>
   </div>
-  <p id="explanation" class="small"></p>
+  <a class="next" href="#/verificar" data-next="recalcular" hidden>Siguiente: Verificar <svg class="icon"><use href="#i-arrow"/></svg></a>
 </section>
 
-<section id="s3">
-  <h2>3. Verificador de alteraciones</h2>
-  <div class="inputs"><label>CSV que se va a verificar<input id="verifyFile" type="file" accept=".csv"></label><label>Importar evidencia original, si cambiaste de navegador<input id="evidenceFile" type="file" accept=".json"></label><label>Importar la sal secreta del sello (sal-202607.json)<input id="saltFile" type="file" accept=".json,.txt"></label></div>
-  <p id="saltStatus" class="small">Sal secreta: pendiente.</p>
-  <button id="verify">Verificar nuevamente contra blockchain</button>
-  <p class="small">Para la demostración, abre una copia de datos/tickets.csv, cambia fecha_resolucion de un ticket, guarda y carga esa copia. El verificador nunca sella ni reemplaza la evidencia.</p>
-  <div id="changes" aria-live="polite"></div>
-</section>
-
-<section id="s4">
-  <h2>4. Comparación de indicadores</h2>
-  <div class="indicators">
-    <article><h3>A · Todos los cierres gestionados</h3><strong id="percentA" class="percent">—</strong><p id="fractionA">Pendiente de verificación</p></article>
-    <article><h3>B · Solo confirmados por el usuario</h3><strong id="percentB" class="percent">—</strong><p id="fractionB">Pendiente de verificación</p></article>
+<section id="s3" class="view" data-route="verificar" aria-labelledby="t-verificar" hidden>
+  <header class="viewhead"><h1 id="t-verificar" tabindex="-1">Verificar</h1><p>Detectar alteraciones: cualquier cambio en el CSV, por pequeño que sea, da ROJO con el ticket y el campo.</p></header>
+  <div class="card">
+    <div class="inputs"><label>CSV que se va a verificar<input id="verifyFile" type="file" accept=".csv"></label><label>Importar evidencia original, si cambiaste de navegador<input id="evidenceFile" type="file" accept=".json"></label><label>Importar la sal secreta del sello (sal-202607.json)<input id="saltFile" type="file" accept=".json,.txt"></label></div>
+    <p id="saltStatus" class="small">Sal secreta: pendiente.</p>
+    <button id="verify">Verificar nuevamente contra blockchain</button>
+    <p class="small">Para la demostración, abre una copia de datos/tickets.csv, cambia fecha_resolucion de un ticket, guarda y carga esa copia. El verificador nunca sella ni reemplaza la evidencia.</p>
+    <div class="slot" data-slot="verification"></div>
+    <div id="changes" aria-live="polite"></div>
   </div>
-  <p id="gap">Diferencia pendiente de verificación.</p>
-  <details><summary>Reglas del cálculo y límites</summary><pre id="policy"></pre><p>Un cierre automático cuenta como gestionado en A, pero no demuestra una solución confirmada. El cumplimiento de SLA se audita por separado: incumplir el plazo no elimina un cierre del indicador de gestión.</p><p>Las horas se calculan de lunes a viernes entre 08:00 y 17:00 en UTC-05:00. Las horas declaradas se comparan con una tolerancia de ±0,02 h para absorber el redondeo a dos decimales. El motor descuenta los feriados configurados en src/calendar.mjs. El caso no entrega calendario oficial: se usa el supuesto explícito de cero feriados adicionales. Cambiarlo exige una nueva instancia y un nuevo sello.</p></details>
-  <h3>Auditoría de tickets incluidos y excluidos</h3>
-  <div class="inputs"><label>Buscar ID<input id="search" type="search" placeholder="TK-2026-04201"></label><label>Filtrar conjunto<select id="filter"><option value="all">Todos</option><option value="a">Incluidos en A</option><option value="notA">Excluidos de A</option><option value="b">Incluidos en B</option><option value="notB">Excluidos de B</option><option value="sla">Con discrepancias SLA</option></select></label></div>
-  <p id="tableCount"></p>
-  <div class="tablewrap"><table><thead><tr><th>ID / integridad</th><th>Prioridad</th><th>Reporte / resolución</th><th>Horas calculadas / SLA</th><th>Cumplimiento</th><th>Cierre / confirmación</th><th>Trazabilidad A y B</th></tr></thead><tbody id="tickets"></tbody></table></div>
+  <a class="next" href="#/comparar" data-next="verificar" hidden>Siguiente: Comparar <svg class="icon"><use href="#i-arrow"/></svg></a>
 </section>
 
-<section id="holiday" class="aside">
-  <h2>Simular feriado</h2>
-  <p>El brief exige descontar feriados, pero el caso no entrega un calendario oficial: el sello usa una lista vacía como supuesto declarado (<a href="/docs/CALENDARIO.md" target="_blank" rel="noopener">docs/CALENDARIO.md</a>). Aquí puedes ver qué pasaría con una fecha concreta. Se recalcula en el navegador sobre los tickets verificados.</p>
-  <div class="inputs"><label>Fecha del feriado<input id="holidayDate" type="date" value="2026-07-24" min="2026-07-01" max="2026-08-31"></label></div>
-  <button id="simulate">Simular feriado</button>
-  <div id="holidayResult" aria-live="polite"></div>
+<section id="s4" class="view" data-route="comparar" aria-labelledby="t-comparar" hidden>
+  <header class="viewhead"><h1 id="t-comparar" tabindex="-1">Comparar</h1><p>Todos vs. confirmados: el mismo lote, el mismo denominador y dos reglas de conteo.</p></header>
+  <div class="indicators">
+    <article class="card"><h2>A · Todos los cierres gestionados</h2><strong id="percentA" class="percent">—</strong><p id="fractionA">Pendiente de verificación</p></article>
+    <article class="card"><h2>B · Solo confirmados por el usuario</h2><strong id="percentB" class="percent">—</strong><p id="fractionB">Pendiente de verificación</p></article>
+  </div>
+  <p id="gap" class="gapline">Diferencia pendiente de verificación.</p>
+  <div class="card">
+    <h2>Auditoría de tickets incluidos y excluidos</h2>
+    <div class="inputs"><label>Buscar ID<input id="search" type="search" placeholder="TK-2026-04201"></label><label>Filtrar conjunto<select id="filter"><option value="all">Todos</option><option value="a">Incluidos en A</option><option value="notA">Excluidos de A</option><option value="b">Incluidos en B</option><option value="notB">Excluidos de B</option><option value="sla">Con discrepancias SLA</option></select></label></div>
+    <p id="tableCount"></p>
+    <div class="tablewrap"><table><thead><tr><th>ID / integridad</th><th>Prioridad</th><th>Reporte / resolución</th><th>Horas calculadas / SLA</th><th>Cumplimiento</th><th>Cierre / confirmación</th><th>Trazabilidad A y B</th></tr></thead><tbody id="tickets"></tbody></table></div>
+    <details><summary>Reglas del cálculo y límites</summary><pre id="policy"></pre><p>Un cierre automático cuenta como gestionado en A, pero no demuestra una solución confirmada. El cumplimiento de SLA se audita por separado: incumplir el plazo no elimina un cierre del indicador de gestión.</p><p>Las horas se calculan de lunes a viernes entre 08:00 y 17:00 en UTC-05:00. Las horas declaradas se comparan con una tolerancia de ±0,02 h para absorber el redondeo a dos decimales. El motor descuenta los feriados configurados en src/calendar.mjs. El caso no entrega calendario oficial: se usa el supuesto explícito de cero feriados adicionales. Cambiarlo exige una nueva instancia y un nuevo sello.</p></details>
+  </div>
+  <a class="next" href="#/privacidad" data-next="comparar" hidden>Siguiente: Privacidad <svg class="icon"><use href="#i-arrow"/></svg></a>
 </section>
 
-<section id="s5">
-  <h2>5. Privacidad en blockchain</h2>
-  <h3>¿Qué almacenamos en blockchain?</h3>
-  <p>Solo período, raíz criptográfica, compromiso de la evidencia, cantidad, marca de tiempo y hash de reglas. La cadena también publica las direcciones del contrato y del emisor, el bloque y los datos propios de una transacción EVM.</p>
-  <p>Los nombres de usuarios y técnicos, las unidades, los actores de la bitácora y el contenido de los tickets permanecen fuera de la cadena. El manifiesto contiene IDs y hashes, se conserva localmente y permite localizar cambios; no se publica en una transacción.</p>
-  <div id="privacy" class="mono">Pendiente de consulta real.</div>
-  <p id="explorer" class="explorer"></p>
-  <button id="inspect">Consultar contrato y transacción</button>
-  <button id="searchPersonal">Buscar datos personales en la cadena</button>
-  <div id="personal" aria-live="polite"></div>
-  <details><summary>Ver calldata, evento y almacenamiento consultados</summary><pre id="onchain">Sin consulta.</pre></details>
-  <p>Un hash demuestra que un archivo coincide con lo sellado; no demuestra que sus datos fueran verdaderos antes del sellado.</p>
-  <p><a href="/contracts/RegistroIndicador.sol" target="_blank" rel="noopener">Código fuente del contrato</a> · <a id="configLink" href="/evidencias/red-local.json" target="_blank" rel="noopener">Configuración y despliegue</a> · <a href="/docs/AUDITORIA.md" target="_blank" rel="noopener">Auditoría de aceptación</a> · <a href="/docs/HALLAZGOS.md" target="_blank" rel="noopener">Hallazgos</a></p>
+<section id="s5" class="view" data-route="privacidad" aria-labelledby="t-privacidad" hidden>
+  <header class="viewhead"><h1 id="t-privacidad" tabindex="-1">Privacidad</h1><p>Qué hay en la cadena: solo período, raíz, compromiso, cantidad, fecha y hash de reglas.</p></header>
+  <div class="card">
+    <h2>¿Qué almacenamos en blockchain?</h2>
+    <p>Solo período, raíz criptográfica, compromiso de la evidencia, cantidad, marca de tiempo y hash de reglas. La cadena también publica las direcciones del contrato y del emisor, el bloque y los datos propios de una transacción EVM.</p>
+    <p>Los nombres de usuarios y técnicos, las unidades, los actores de la bitácora y el contenido de los tickets permanecen fuera de la cadena. El manifiesto contiene IDs y hashes con sal secreta, se conserva localmente y permite localizar cambios; no se publica en una transacción.</p>
+    <p id="networkNote" class="small">Local: EVM de desarrollo en este equipo, sirve de respaldo sin internet. Sepolia: lectura pública sin wallet ni credenciales.</p>
+    <div class="actions"><button id="inspect">Consultar contrato y transacción</button><button id="searchPersonal">Buscar datos personales en la cadena</button></div>
+    <div id="personal" aria-live="polite"></div>
+    <div class="monowrap"><div id="privacy" class="mono">Pendiente de consulta real.</div><button class="copy" type="button" data-ui data-copy="privacy" aria-label="Copiar datos del contrato y del sello"><svg class="icon"><use href="#i-copy"/></svg></button></div>
+    <p id="explorer" class="explorer"></p>
+    <details><summary>Ver calldata, evento y almacenamiento consultados</summary><pre id="onchain">Sin consulta.</pre></details>
+    <p>Un hash demuestra que un archivo coincide con lo sellado; no demuestra que sus datos fueran verdaderos antes del sellado.</p>
+    <p><a href="/contracts/RegistroIndicador.sol" target="_blank" rel="noopener">Código fuente del contrato</a> · <a id="configLink" href="/evidencias/red-local.json" target="_blank" rel="noopener">Configuración y despliegue</a> · <a href="/docs/AUDITORIA.md" target="_blank" rel="noopener">Auditoría de aceptación</a> · <a href="/docs/HALLAZGOS.md" target="_blank" rel="noopener">Hallazgos</a></p>
+  </div>
 </section>
+
+<section id="holiday" class="view" data-route="feriado" aria-labelledby="t-feriado" hidden>
+  <header class="viewhead"><h1 id="t-feriado" tabindex="-1">Simular feriado</h1><p>Sin tocar el sello: el efecto de una fecha concreta sobre los tickets ya verificados.</p></header>
+  <div class="card">
+    <p>El brief exige descontar feriados, pero el caso no entrega un calendario oficial: el sello usa una lista vacía como supuesto declarado (<a href="/docs/CALENDARIO.md" target="_blank" rel="noopener">docs/CALENDARIO.md</a>). Aquí puedes ver qué pasaría con una fecha concreta. Se recalcula en el navegador sobre los tickets verificados.</p>
+    <div class="inputs"><label>Fecha del feriado<input id="holidayDate" type="date" value="2026-07-24" min="2026-07-01" max="2026-08-31"></label></div>
+    <button id="simulate">Simular feriado</button>
+    <div id="holidayResult" aria-live="polite"></div>
+  </div>
+</section>
+
+<footer class="footer">Datos sintéticos · Desarrollo exclusivo del Nivel 1 · Sin penalidades ni funciones de Niveles 2 y 3</footer>
 </main>
-<footer>Datos sintéticos · Desarrollo exclusivo del Nivel 1 · Sin penalidades ni funciones de Niveles 2 y 3</footer>
+</div>
 </body>
 </html>

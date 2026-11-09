@@ -12,16 +12,23 @@ Hilo conductor: julio de 2026. Los cinco criterios del brief, en su orden.
 
 ## Guion
 
-| Tiempo | Criterio | Acción visible | Mensaje |
-|---|---|---|---|
-| 0:00–0:45 | 1 · Sellar | «Cargar los originales entregados» → 187/187. «Sellar julio en blockchain» → TX confirmada. | Anclamos los 187 tickets con sus tiempos y su SLA. En cadena solo van hashes, conteos y período. |
-| 0:45–2:00 | 2 · Recalcular | «Verificar nuevamente contra blockchain» → VERDE. Mostrar el titular, la cascada, la tarjeta de TK-2026-04228 y la de reaperturas. | **Publicado 98,25 %; solo confirmados por el usuario 55,61 %.** El 171 publicado sale de 187 − 7 reaperturas − 9 casos del proveedor. TK-2026-04228 se resolvió en 5,80 h y alguien lo editó a 3,80 h dos días después: solo la bitácora lo revela. Cinco reaperturas debieron conservar su número. Cada exclusión o edición mejora el número publicado. |
-| 2:00–3:00 | 3 · Alterar | En la copia del CSV cambiar `fecha_resolucion` de TK-2026-04201 de `2026-08-03T12:03:55-05:00` a `2026-08-03T12:04:55-05:00`. Guardar, cargarla en la sección 3 y verificar. | ROJO con el ticket y el campo, el valor sellado frente al editado, y el sello no cambió. Un minuto de diferencia basta. |
-| 3:00–3:45 | 4 · A contra B | Volver a verificar sin archivo (original) y bajar a la sección 4. Filtrar «Excluidos de B». | 100 % contando todos los cierres; 55,61 % contando solo los confirmados. Los 83 cierres automáticos (44 %) explican 44,39 puntos. |
-| 3:45–4:40 | 5 · Privacidad | Cambiar el selector a «Pública (Sepolia)» → abrir el enlace al explorador. Pulsar «Buscar datos personales en la cadena». | Cualquiera lo verifica sin wallet. **0 coincidencias de 174 valores buscados**: usuarios, técnicos, unidades y actores, en texto y como hash. Lo único en cadena es período, raíz, compromiso, cantidad, fecha y hash de reglas. |
-| 4:40–5:00 | Cierre | Lámina 2. | La cadena solo donde el emisor es el medido: el indicador público. Lo interno, con logs firmados. |
+La demo sigue el menú lateral de arriba hacia abajo: **Panel → Sellar → Recalcular → Verificar → Comparar → Privacidad**. Cada vista tiene su ruta (`#/panel`, `#/sellar`, …), así que recargar no pierde el lugar. El punto a la derecha de cada ítem cambia de gris a verde (o a rojo) cuando ese paso se cumple. El Panel marca el guion con un check.
 
-Si Sepolia aún no está desplegado, el selector lo dice («Sepolia pendiente»): en ese caso hacer el paso 5 en la red local y mostrar `scripts/seal-testnet.mjs`.
+| Tiempo | Vista (criterio) | Acción visible | Mensaje |
+|---|---|---|---|
+| 0:00–0:15 | Panel | Mostrar el titular, las cuatro tarjetas en pendiente y el guion sin checks. | Esto es lo que vamos a demostrar en cinco minutos. |
+| 0:15–0:50 | Sellar (1) | «Cargar los originales entregados» → 187/187. «Sellar julio en blockchain» → TX confirmada. El punto de Sellar se pone verde. «Siguiente: Recalcular →». | Anclamos los 187 tickets con sus tiempos y su SLA. En cadena solo van hashes, conteos y período. |
+| 0:50–2:00 | Recalcular (2) | «Recalcular desde lo sellado» → VERDE. Mostrar la cascada, la tabla de cuatro indicadores, la tarjeta de TK-2026-04228 y la de reaperturas. | **Publicado 98,25 %; solo confirmados por el usuario 55,61 %.** El 171 publicado sale de 187 − 7 reaperturas − 9 casos del proveedor. TK-2026-04228 se resolvió en 5,80 h y alguien lo editó a 3,80 h dos días después: solo la bitácora lo revela. Cinco reaperturas debieron conservar su número. Cada exclusión o edición mejora el número publicado. |
+| 2:00–3:00 | Verificar (3) | En la copia del CSV cambiar `fecha_resolucion` de TK-2026-04201 de `2026-08-03T12:03:55-05:00` a `2026-08-03T12:04:55-05:00`. Guardar, elegirla en «CSV que se va a verificar» y pulsar «Verificar nuevamente contra blockchain». Los puntos de Verificar, Recalcular y Comparar se ponen rojos. | ROJO con el ticket y el campo, el valor sellado frente al editado, y el sello no cambió. Un minuto de diferencia basta. |
+| 3:00–3:45 | Comparar (4) | Volver a Recalcular y pulsar «Recalcular desde lo sellado»: descarta la copia y verifica el original (VERDE). Ir a Comparar. Filtrar «Excluidos de B». | 100 % contando todos los cierres; 55,61 % contando solo los confirmados. Los 83 cierres automáticos (44 %) explican 44,39 puntos. |
+| 3:45–4:40 | Privacidad (5) | Cambiar el selector de la tarjeta de red (abajo en el menú) a «Pública (Sepolia)» → abrir el enlace al explorador. Pulsar «Buscar datos personales en la cadena». | Cualquiera lo verifica sin wallet. **0 coincidencias de 174 valores buscados**: usuarios, técnicos, unidades y actores, en texto y como hash. Lo único en cadena es período, raíz, compromiso, cantidad, fecha y hash de reglas. |
+| 4:40–5:00 | Panel y cierre | Volver al Panel: los cinco pasos con check y la brecha de 44,39 pp. Lámina 2. | La cadena solo donde el emisor es el medido: el indicador público. Lo interno, con logs firmados. |
+
+Si Sepolia aún no está desplegado, el selector lo dice («Sepolia pendiente»): en ese caso hacer el paso de Privacidad en la red local y mostrar `scripts/seal-testnet.mjs`. Al cambiar de red se reinicia el estado de la sesión (puntos y guion), porque cada red tiene su propio sello.
+
+«Simular feriado», bajo «Herramientas», queda fuera del cronómetro: sirve para la pregunta sobre feriados.
+
+En pantallas de menos de 900 px el menú se abre con el botón «Menú» de la barra superior.
 
 ## Preguntas del jurado
 
@@ -46,7 +53,7 @@ Si Sepolia aún no está desplegado, el selector lo dice («Sepolia pendiente»)
 - Si la instancia ya aparece sellada: detener y volver a ejecutar `npm.cmd run demo` (crea otra instancia; no borra cadenas).
 - Si falla el RPC: la interfaz no muestra indicadores acreditados (ERROR DE CONEXIÓN). Cambiar a la red local.
 - Las capturas de `evidencias/` son respaldo documental, no sustituyen la demostración en vivo.
-- Si se verifica desde otro navegador o equipo: importar en la sección 3 el manifiesto (`sello-original.json`) y la sal secreta (`.instances/nivel1-v4/secreto/sal-202607.json`). Sin la sal el resultado es INCOMPLETA, a propósito.
+- Si se verifica desde otro navegador o equipo: importar en la vista Verificar el manifiesto (`sello-original.json`) y la sal secreta (`.instances/nivel1-v4/secreto/sal-202607.json`). Sin la sal el resultado es INCOMPLETA, a propósito.
 
 ## Evidencia de la edición manual
 

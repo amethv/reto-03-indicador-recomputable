@@ -20,7 +20,7 @@ npm.cmd start
 
 **Instalación liviana para la demo**: `npm.cmd ci --omit=dev --no-audit --no-fund` y luego `npm.cmd start`. Instala solo Ganache, ethers y Papaparse (198 MB contra 228 MB) y sirve para correr, sellar y verificar. Deja fuera Playwright, pptxgenjs y solc, que solo hacen falta para `test`, `audit`, `manual`, `slides` y `compile`. El contrato ya viene compilado en `contracts/RegistroIndicador.json`.
 
-Abrir http://127.0.0.1:8080 (no abrir `src/index.html` con `file://`). En Windows también sirve doble clic en `INICIAR_APP.cmd`. La primera ejecución despliega el contrato en una EVM local (Ganache, chain ID 31337) sin sellar: pulsar **Cargar los originales entregados** y **Sellar julio en blockchain**. El estado vive en `.instances/nivel1-v4/`.
+Abrir http://127.0.0.1:8080 (no abrir `src/index.html` con `file://`). En Windows también sirve doble clic en `INICIAR_APP.cmd`. La primera ejecución despliega el contrato en una EVM local (Ganache, chain ID 31337) sin sellar: en el menú lateral, ir a **Sellar** y pulsar **Cargar los originales entregados** y **Sellar julio en blockchain**. Cada proceso tiene su vista y su ruta (`#/panel`, `#/sellar`, `#/recalcular`, `#/verificar`, `#/comparar`, `#/privacidad`, `#/feriado`). El estado vive en `.instances/nivel1-v4/`.
 
 Para una demostración desde cero (contrato sin sellar en una instancia nueva): `npm.cmd run demo` o `INICIAR_DEMO.cmd`. Guion en [docs/DEMO.md](docs/DEMO.md).
 
@@ -68,7 +68,7 @@ El municipio sella con un script; el navegador solo lee por un RPC público, sin
 4. `copy .env.example .env` y completar `SEPOLIA_RPC_URL`, `SELLADOR_PRIVATE_KEY` y, opcional, `ETHERSCAN_API_KEY`. `.env` está en `.gitignore`.
 5. `npm.cmd run deploy:sepolia` → despliega el contrato precompilado (`contracts/RegistroIndicador.json`, no hace falta solc) y escribe `evidencias/red-sepolia.json` con dirección, transacción y enlaces a https://sepolia.etherscan.io/. Si ya hay un despliegue, no hace nada (usar `--nuevo` para otro).
 6. `npm.cmd run seal:sepolia` → crea la sal secreta en `.secreto/sal-sepolia-202607.json` **antes** de enviar la transacción, sella julio, comprueba el ancla y escribe `evidencias/sello-sepolia.json`. Repetirlo no crea otro sello. `.secreto/` no se publica: respaldarla aparte, porque sin ella nadie puede comprobar los tickets de ese sello.
-7. `npm.cmd start` y elegir **Pública (Sepolia)** en el selector de red. En este equipo la sal se carga sola; en otro, se importa en la sección 3.
+7. `npm.cmd start` y elegir **Pública (Sepolia)** en el selector de red. En este equipo la sal se carga sola; en otro, se importa en la vista Verificar.
 
 Sin internet, la demo funciona igual en la red local.
 
@@ -76,7 +76,7 @@ Sin internet, la demo funciona igual en la red local.
 
 - **En cadena**, solo el indicador público: quien emite el número es el mismo que se mide con él. Van período, raíz Merkle, compromiso, cantidad, fecha y hash de reglas.
 - **Fuera de cadena**: asignaciones, escalamientos, la bitácora y el contenido de los tickets. La operación interna se resuelve mejor con logs firmados. La bitácora y las reaperturas entran al sello solo por su SHA-256.
-- **Sal secreta del manifiesto**: `evidencias/sello-original.json` es público y guarda un hash por ticket y por campo. Sin sal, bastaría una lista de nombres para saber quién reportó cada ticket. Por eso cada sello usa una sal aleatoria de 32 bytes: entra en cada hash junto con el ID del ticket, y el manifiesto solo lleva su compromiso (`saltCommitment`). La sal nunca va en `evidencias/` ni en la cadena. En la red local vive en `.instances/<instancia>/secreto/sal-202607.json`; en Sepolia, en `.secreto/sal-sepolia-202607.json`. Las dos rutas están en `.gitignore`. Quien verifica necesita la sal: el servidor local se la entrega a su propia página, o se importa en la sección 3.
+- **Sal secreta del manifiesto**: `evidencias/sello-original.json` es público y guarda un hash por ticket y por campo. Sin sal, bastaría una lista de nombres para saber quién reportó cada ticket. Por eso cada sello usa una sal aleatoria de 32 bytes: entra en cada hash junto con el ID del ticket, y el manifiesto solo lleva su compromiso (`saltCommitment`). La sal nunca va en `evidencias/` ni en la cadena. En la red local vive en `.instances/<instancia>/secreto/sal-202607.json`; en Sepolia, en `.secreto/sal-sepolia-202607.json`. Las dos rutas están en `.gitignore`. Quien verifica necesita la sal: el servidor local se la entrega a su propia página, o se importa en la vista Verificar.
 - **Lo que la cadena no hace**: no prueba que los datos fueran verdaderos antes de sellarlos ni mejora los tiempos de respuesta. La frontera futura es el reloj compartido con el proveedor de Nivel 3, que no se implementa.
 
 Láminas: [presentacion/](presentacion/).
