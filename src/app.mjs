@@ -183,7 +183,21 @@ $('saltFile').onchange=()=>run(async()=>{
  salt=candidate;showSalt();
 });
 $('export').onclick=()=>{if(!evidence)return;const blob=new Blob([JSON.stringify(evidence,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='sello-original-2026-07.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};
-$('search').oninput=renderTable;$('filter').onchange=renderTable;$('policy').textContent=JSON.stringify(POLICY,null,2);
+$('search').oninput=renderTable;$('filter').onchange=renderTable;renderPolicy();
+
+// Reglas del cálculo (POLICY) en fichas legibles, agrupadas por tema. Su hash es el que guarda el contrato.
+function renderPolicy(){
+ const fmtValue=(key,value)=>key==='hoursTolerance'?`±${String(value).replace('.',',')} h`:key==='holidays'?(value.length?value.join(', '):'Ninguno (lista vacía)'):String(value);
+ const groups=[
+  ['Qué se cuenta',[['period','Período'],['universe','Universo'],['denominator','Denominador'],['managed','Gestionado (A)'],['confirmed','Confirmado por el usuario (B)'],['cutoff','Corte']]],
+  ['Horas y SLA',[['timezone','Zona horaria'],['hours','Horario hábil'],['sla','SLA'],['hoursTolerance','Tolerancia de horas'],['holidays','Feriados'],['calendarVersion','Calendario'],['holidayNote','Nota sobre feriados']]],
+  ['Sellado',[['version','Versión de las reglas'],['evidenceFiles','Archivos en el compromiso']]]
+ ];
+ const known=new Set(groups.flatMap(([,items])=>items.map(([k])=>k)));
+ const extra=Object.keys(POLICY).filter(k=>!known.has(k)).map(k=>[k,k]);
+ if(extra.length)groups.push(['Otras',extra]);
+ $('policy').innerHTML=groups.map(([title,items])=>`<section class="rules-group"><h3>${esc(title)}</h3><dl>${items.map(([k,label])=>`<div><dt>${esc(label)}</dt><dd>${esc(fmtValue(k,POLICY[k]))}</dd></div>`).join('')}</dl></section>`).join('');
+}
 
 const CONFIG_FILES={local:'red-local.json',sepolia:'red-sepolia.json'};
 async function useNetwork(name){
