@@ -1,6 +1,5 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import solc from 'solc';
 import {ContractFactory,JsonRpcProvider,keccak256} from 'ethers';
 import {POLICY,sha,validSalt,saltCommitment} from '../src/core.mjs';
 export const ROOT=path.resolve(import.meta.dirname,'..');
@@ -25,17 +24,29 @@ export async function readSalt(file){
  if(!validSalt(data.salt))throw new Error(`Sal con formato inválido en ${file}`);
  return data.salt;
 }
-export async function compile({write=true}={}){
- const source=await fs.readFile(path.join(ROOT,'contracts/RegistroIndicador.sol'),'utf8');
+export const SOURCE_PATH=path.join(ROOT,'contracts','RegistroIndicador.sol');
+export const ARTIFACT_PATH=path.join(ROOT,'contracts','RegistroIndicador.json');
+/** Compila con solc (solo desarrollo: npm run compile y las pruebas). */
+export async function compile(){
+ const {default:solc}=await import('solc');
+ const source=await fs.readFile(SOURCE_PATH,'utf8');
  const input={language:'Solidity',sources:{'RegistroIndicador.sol':{content:source}},settings:{optimizer:{enabled:true,runs:200},evmVersion:'shanghai',outputSelection:{'*':{'*':['abi','evm.bytecode.object','evm.deployedBytecode.object']}}}};
  const output=JSON.parse(solc.compile(JSON.stringify(input)));
  const errors=(output.errors||[]).filter(e=>e.severity==='error');if(errors.length)throw new Error(errors.map(e=>e.formattedMessage).join('\n'));
  const artifact=output.contracts['RegistroIndicador.sol'].RegistroIndicador;
- const result={abi:artifact.abi,bytecode:'0x'+artifact.evm.bytecode.object,source,compiler:solc.version()};
- if(write){await fs.mkdir(EVIDENCE_DIR,{recursive:true});await fs.writeFile(path.join(EVIDENCE_DIR,'contrato.json'),JSON.stringify(result,null,2));}return {...result,input};
+ return {contractName:'RegistroIndicador',compiler:solc.version(),abi:artifact.abi,bytecode:'0x'+artifact.evm.bytecode.object,deployedBytecode:'0x'+artifact.evm.deployedBytecode.object,input};
+}
+/** Lee el contrato precompilado (contracts/RegistroIndicador.json) y comprueba que corresponda al .sol actual. */
+export async function loadArtifact(){
+ let artifact;try{artifact=JSON.parse(await fs.readFile(ARTIFACT_PATH,'utf8'));}catch(e){if(e.code==='ENOENT')throw new Error('Falta contracts/RegistroIndicador.json. Ejecuta npm run compile.');throw e;}
+ if(artifact.input?.sources?.['RegistroIndicador.sol']?.content!==await fs.readFile(SOURCE_PATH,'utf8'))throw new Error('contracts/RegistroIndicador.json no corresponde al .sol actual. Ejecuta npm run compile.');
+ return artifact;
 }
 export async function deploy(provider){
- const artifact=await compile();const signer=await provider.getSigner(0),rulesHash=await sha(JSON.stringify(POLICY));
+ const artifact=await loadArtifact();const signer=await provider.getSigner(0),rulesHash=await sha(JSON.stringify(POLICY));
+ // Copia del contrato desplegado para la auditoría (abi, bytecode, fuente y compilador).
+ await fs.mkdir(EVIDENCE_DIR,{recursive:true});
+ await fs.writeFile(path.join(EVIDENCE_DIR,'contrato.json'),JSON.stringify({abi:artifact.abi,bytecode:artifact.bytecode,source:artifact.input.sources['RegistroIndicador.sol'].content,compiler:artifact.compiler},null,2));
  const contract=await new ContractFactory(artifact.abi,artifact.bytecode,signer).deploy(rulesHash);await contract.waitForDeployment();
  const receipt=await contract.deploymentTransaction().wait();if(receipt.status!==1)throw new Error('Falló despliegue');
  const address=await contract.getAddress(),code=await provider.getCode(address);

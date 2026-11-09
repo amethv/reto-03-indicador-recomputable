@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import ganache from 'ganache';
 import {BrowserProvider,ContractFactory,keccak256,hexlify,toUtf8Bytes} from 'ethers';
-import {compile} from '../scripts/runtime.mjs';
+import {loadArtifact} from '../scripts/runtime.mjs';
 import {POLICY,PERIOD,SOURCES,csv,sha,buildEvidence,evidenceHash,BITACORA_HEADERS,newSalt} from '../src/core.mjs';
 import {readAnchor} from '../src/chain.mjs';
 import {personalValues,searchPersonalData,collectChainData} from '../src/privacy.mjs';
@@ -37,7 +37,7 @@ test('cadena real: 0 coincidencias en calldata, eventos, almacenamiento y byteco
   const engine = ganache.provider({wallet: {deterministic: true}, chain: {chainId: 31337, hardfork: 'shanghai'}, logging: {quiet: true}});
   const provider = new BrowserProvider(engine, undefined, {cacheTimeout: -1}); provider.pollingInterval = 50;
   try {
-    const artifact = await compile({write: false}), signer = await provider.getSigner(0);
+    const artifact = await loadArtifact(), signer = await provider.getSigner(0);
     const contract = await new ContractFactory(artifact.abi, artifact.bytecode, signer).deploy(await sha(JSON.stringify(POLICY)));
     const deployed = await contract.deploymentTransaction().wait(), address = await contract.getAddress();
     const config = {chainId: 31337, address, codeHash: keccak256(await provider.getCode(address)), deploymentBlock: deployed.blockNumber, deploymentTransaction: deployed.hash};

@@ -18,13 +18,17 @@ npm.cmd ci --no-audit --no-fund
 npm.cmd start
 ```
 
+**Instalación liviana para la demo**: `npm.cmd ci --omit=dev --no-audit --no-fund` y luego `npm.cmd start`. Instala solo Ganache, ethers y Papaparse (198 MB contra 228 MB) y sirve para correr, sellar y verificar. Deja fuera Playwright, pptxgenjs y solc, que solo hacen falta para `test`, `audit`, `manual`, `slides` y `compile`. El contrato ya viene compilado en `contracts/RegistroIndicador.json`.
+
 Abrir http://127.0.0.1:8080 (no abrir `src/index.html` con `file://`). En Windows también sirve doble clic en `INICIAR_APP.cmd`. La primera ejecución despliega el contrato en una EVM local (Ganache, chain ID 31337) sin sellar: pulsar **Cargar los originales entregados** y **Sellar julio en blockchain**. El estado vive en `.instances/nivel1-v4/`.
 
 Para una demostración desde cero (contrato sin sellar en una instancia nueva): `npm.cmd run demo` o `INICIAR_DEMO.cmd`. Guion en [docs/DEMO.md](docs/DEMO.md).
 
 | Comando | Qué hace |
 |---|---|
-| `npm.cmd test` | 47 pruebas: núcleo, hallazgos, contrato, privacidad, Sepolia ensayado en Ganache |
+| `npm.cmd test` | 50 pruebas: núcleo, sal, hallazgos, contrato, privacidad, Sepolia ensayado en Ganache |
+| `npm.cmd run test:evidencia` | Las mismas pruebas, guardadas en `evidencias/pruebas-unitarias.txt` sin rutas personales |
+| `npm.cmd run compile` | Recompila el contrato y regenera `contracts/RegistroIndicador.json` (abi, bytecode, compilador e input estándar) |
 | `npm.cmd run verify:source` | Compara los 11 archivos de `datos/` con sus SHA-256 |
 | `npm.cmd run audit` | Los cinco criterios en Edge sobre la cadena real; escribe `docs/AUDITORIA.md` y `evidencias/` |
 | `npm.cmd run slides` | Regenera las láminas de `presentacion/` |
@@ -47,7 +51,7 @@ Detalle y evidencia: [docs/HALLAZGOS.md](docs/HALLAZGOS.md).
 
 ## Contrato desplegado
 
-`contracts/RegistroIndicador.sol` (Solidity 0.8.30, optimizador 200, EVM Shanghai). Acepta cualquier período AAAAMM, un sello por período, inmutable, solo del sellador. La regla de 187 tickets para julio vive en el verificador.
+`contracts/RegistroIndicador.sol` (Solidity 0.8.30, optimizador 200, EVM Shanghai). Acepta cualquier período AAAAMM, un sello por período, inmutable, solo del sellador. La regla de 187 tickets para julio vive en el verificador. Va precompilado en `contracts/RegistroIndicador.json`; una prueba recompila y comprueba que el bytecode no cambió.
 
 | Red | Dirección |
 |---|---|
@@ -80,7 +84,7 @@ Láminas: [presentacion/](presentacion/).
 ## Estructura
 
 ```
-contracts/   contrato RegistroIndicador
+contracts/   contrato RegistroIndicador (.sol y precompilado .json)
 src/         núcleo (core, findings, privacy, chain), interfaz y estilos
 scripts/     servidor, auditoría, demo, Sepolia y láminas
 tests/       pruebas con node:test

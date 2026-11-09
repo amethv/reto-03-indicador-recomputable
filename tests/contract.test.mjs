@@ -2,14 +2,14 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import ganache from 'ganache';
 import {BrowserProvider,ContractFactory,keccak256} from 'ethers';
-import {compile} from '../scripts/runtime.mjs';
+import {compile,loadArtifact} from '../scripts/runtime.mjs';
 import {POLICY,sha} from '../src/core.mjs';
 import {readAnchor} from '../src/chain.mjs';
 
 async function setup(){
  const engine=ganache.provider({wallet:{deterministic:true},chain:{chainId:31337,hardfork:'shanghai'},logging:{quiet:true}});
  const provider=new BrowserProvider(engine,undefined,{cacheTimeout:-1});provider.pollingInterval=50;
- const artifact=await compile({write:false}),signer=await provider.getSigner(0);
+ const artifact=await loadArtifact(),signer=await provider.getSigner(0);
  const contract=await new ContractFactory(artifact.abi,artifact.bytecode,signer).deploy(await sha(JSON.stringify(POLICY)));await contract.waitForDeployment();
  const deployed=await contract.deploymentTransaction().wait(),address=await contract.getAddress();
  const config={chainId:31337,address,codeHash:keccak256(await provider.getCode(address)),deploymentBlock:deployed.blockNumber};
@@ -76,4 +76,10 @@ test('verificador: exige 187 tickets para julio aunque el contrato acepte otra c
   await (await contract.seal(202607,root,evidence,186)).wait();
   await assert.rejects(readAnchor(provider,config),/187/);
  }finally{await close();}
+});
+test('contrato precompilado: recompilar da el mismo bytecode, abi e input estándar',async()=>{
+ const saved=await loadArtifact(),fresh=await compile();
+ assert.equal(fresh.bytecode,saved.bytecode);assert.equal(fresh.deployedBytecode,saved.deployedBytecode);
+ assert.deepEqual(fresh.abi,saved.abi);assert.deepEqual(fresh.input,saved.input);assert.equal(fresh.compiler,saved.compiler);
+ assert.match(saved.compiler,/^0\.8\.30\+commit\./);assert.equal(saved.input.settings.evmVersion,'shanghai');
 });

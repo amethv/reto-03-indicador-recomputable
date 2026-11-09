@@ -5,7 +5,9 @@
   "type": "module",
   "scripts": {
     "start": "node scripts/start.mjs",
+    "compile": "node scripts/compile.mjs",
     "test": "node --test --test-concurrency=1 tests/*.test.mjs",
+    "test:evidencia": "node scripts/test-report.mjs",
     "audit": "node scripts/audit.mjs",
     "demo": "node scripts/demo.mjs",
     "verify:source": "node scripts/verify-source.mjs",
@@ -17,11 +19,11 @@
   "dependencies": {
     "ethers": "6.17.0",
     "ganache": "7.9.2",
-    "papaparse": "5.5.3",
-    "solc": "0.8.30"
+    "papaparse": "5.5.3"
   },
   "devDependencies": {
     "@playwright/test": "1.56.1",
-    "pptxgenjs": "4.0.1"
+    "pptxgenjs": "4.0.1",
+    "solc": "0.8.30"
   }
 }

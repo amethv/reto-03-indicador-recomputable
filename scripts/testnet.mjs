@@ -4,7 +4,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import {ContractFactory,Contract,keccak256} from 'ethers';
-import {ROOT,compile,SALT_FILES,readSalt,writeSalt} from './runtime.mjs';
+import {ROOT,loadArtifact,SALT_FILES,readSalt,writeSalt} from './runtime.mjs';
 import {ABI,readAnchor} from '../src/chain.mjs';
 import {POLICY,PERIOD,SOURCES,sha,buildEvidence,evidenceHash,authenticateEvidence,newSalt} from '../src/core.mjs';
 
@@ -51,7 +51,7 @@ const links = (explorer, config) => explorer ? {
 
 /** Despliega RegistroIndicador y devuelve la configuración pública (sin secretos). */
 export async function deployContract({signer, publicRpc, network = SEPOLIA.name, explorer = SEPOLIA.explorer, confirmations = 2}) {
-  const artifact = await compile({write: false});
+  const artifact = await loadArtifact();
   const rulesHash = await sha(JSON.stringify(POLICY));
   const contract = await new ContractFactory(artifact.abi, artifact.bytecode, signer).deploy(rulesHash);
   const receipt = await contract.deploymentTransaction().wait(confirmations);
