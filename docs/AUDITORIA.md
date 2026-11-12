@@ -1,8 +1,8 @@
 # Auditoría Nivel 1 — Reto 03
 
-Ejecución UTC: 2026-11-12T05:44:18.176Z → 2026-11-12T05:45:07.457Z. Zona de presentación: America/Guayaquil.
+Ejecución UTC: 2026-11-12T21:15:21.410Z → 2026-11-12T21:16:21.137Z. Zona de presentación: America/Guayaquil.
 
-Resultado: **NIVEL 1 NO DECLARADO COMPLETO**.
+Resultado: **NIVEL 1 COMPLETO**.
 
 Se leyeron ambos PDF entregados (docs/referencia/) y el README de datos/. Los originales se comparan por SHA-256 con src/source-manifest.json; ejecutar npm run verify:source para repetir el contraste. Se usan los 187 tickets del lote, con advertencia de 185 reportados en julio y 2 en agosto. Se usa estado final del lote, no un corte al 31 de julio.
 
@@ -27,11 +27,11 @@ Se leyeron ambos PDF entregados (docs/referencia/) y el README de datos/. Los or
 ## 3. Detección de alteraciones
 
 - Archivos y funciones: src/core.mjs: authenticateEvidence, proofValid, verifyText, sealedValues; src/app.mjs: doVerify, renderChanges; contracts/RegistroIndicador.sol: sello inmutable.
-- Prueba ejecutada: Guardar una copia del CSV con fecha_resolucion alterada de un solo ticket; subir mediante selector de archivo real y verificar en navegador; comprobar ROJO, ID exacto, campo y ausencia de indicadores acreditados.
+- Prueba ejecutada: Guardar una copia del CSV con fecha_resolucion alterada de un solo ticket; subir mediante selector de archivo real y verificar en navegador; comprobar ROJO, ID exacto, campo y ausencia de indicadores acreditados. Además: edición manual confirmada por el usuario, observada en sesión separada y autenticada nuevamente contra el mismo sello.
 - Resultado real: {"color":"ROJO","ticket":"TK-2026-04201","fields":["fecha_resolucion"],"sealedVsEdited":true,"originalSealUnchanged":true,"automatedBrowserUpload":true}
-- Estado: **NO VERIFICADO**. Prueba automática: APROBADO.
-- Evidencia disponible: evidencias/03-alteracion.png, evidencias/tickets-modificado.csv
-- Correcciones o validaciones pendientes: La edición y carga fueron automatizadas sobre un archivo real. Falta ejecutar y observar la edición manual en un editor y la carga por una persona, exigida literalmente en la demostración.
+- Estado: **APROBADO**. Prueba automática: APROBADO.
+- Evidencia disponible: evidencias/03-alteracion.png, evidencias/tickets-modificado.csv, evidencias/edicion-manual.json, evidencias/tickets-edicion-manual.csv, evidencias/07-edicion-manual.png
+- Correcciones o validaciones pendientes: Ninguna en esta prueba automatizada; repetir ante el jurado para la demostración en vivo.
 
 ## 4. Comparación de indicadores
 
@@ -66,7 +66,7 @@ Se leyeron ambos PDF entregados (docs/referencia/) y el README de datos/. Los or
 
 ## Límites y pendientes
 
-- La edición manual sigue pendiente; una prueba automática no acredita ese paso.
+- Edición manual realizada y confirmada por el usuario; CSV y transacción autenticados nuevamente. Las pruebas automáticas y la edición manual se ejecutaron en sesiones distintas. El guion completo debe ensayarse por el expositor.
 - Las pruebas unitarias se ejecutan con npm test; sus resultados se conservan por separado en evidencias/pruebas-unitarias.txt. No se confunden los anclajes de pruebas unitarias con el sello real de aceptación.
 - La EVM local (Ganache) es el respaldo sin internet; no es una red pública. Ganache conserva bloques y estado por instancia en .instances/. Es necesario npm start para consultar las evidencias por RPC; el JSON y las capturas por sí solos no reemplazan esa consulta.
 - El motor descuenta feriados configurados. Se usa lista vacía como supuesto explícito porque no se entregó calendario oficial. Ver docs/CALENDARIO.md. El panel «Simular feriado» muestra el efecto sin sellar.
