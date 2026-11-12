@@ -58,13 +58,14 @@ function facts(rows){
 }
 const when=ts=>`${new Date(ts*1000).toLocaleString('es-EC',{timeZone:'America/Guayaquil',dateStyle:'long',timeStyle:'medium'})} (UTC-05:00)`;
 function showExplorer(anchor){
- if(!config.explorer){$('explorer').textContent='Red local: no tiene explorador público. Cambia a Sepolia para ver el ancla pública.';return;}
+ if(!config.explorer){$('explorer').textContent='';return;}
  const tx=anchor?.transactionHash??config.sealTransaction;
  $('explorer').innerHTML=`Explorador público: ${tx?`<a href="${esc(config.explorer)}/tx/${esc(tx)}" target="_blank" rel="noopener">transacción del sello</a> · `:''}<a href="${esc(config.explorer)}/address/${esc(config.address)}" target="_blank" rel="noopener">contrato ${esc(config.address)}</a>`;
 }
 function showAnchor(anchor){
  lastAnchor=anchor;showExplorer(anchor);
- $('privacy').innerHTML=facts([['Contrato',anchor.address],['Red',config.network],['Chain ID',anchor.chainId],['Transacción del sello',anchor.transactionHash],['Bloque',anchor.blockNumber],['Raíz Merkle',anchor.root],['Compromiso de evidencia',anchor.evidenceHash],['Cantidad de tickets',anchor.count],['Hash de reglas',anchor.rulesHash]]);
+ // Solo la transacción: lo que el sello guarda se lista una vez, en «Lo que sí hay en la cadena» y en el detalle técnico.
+ $('privacy').innerHTML=facts([['Contrato',anchor.address],['Red',config.network],['Chain ID',anchor.chainId],['Transacción del sello',anchor.transactionHash],['Bloque',anchor.blockNumber]]);
  const k=(label,key,value,show)=>[label,value,{key,show}];
  $('onchain').innerHTML=`<h3>Almacenamiento del contrato (getSeal)</h3>${facts([
   k('Raíz Merkle','root',anchor.root),k('Compromiso de evidencia','evidenceHash',anchor.evidenceHash),k('Cantidad de tickets','count',anchor.count),
@@ -96,7 +97,8 @@ function renderFindings(result){
   ['Dentro de SLA (corregido por bitácora)',`${s.withinSLA.numerator}/${s.withinSLA.denominator}`,pct(s.withinSLA),`Declarado en el CSV: ${f.sla.declared.numerator}/${f.sla.declared.denominator} = ${pct(f.sla.declared)}.`]];
  $('summary').innerHTML=rows.map(([a,b,c,n])=>`<tr><td><strong>${esc(a)}</strong><br><span class="small">${esc(n)}</span></td><td>${esc(b)}</td><td class="num">${esc(c)}</td></tr>`).join('');
  $('editCard').innerHTML=`<h3>Fecha editada después de resolver</h3>`+f.edits.map(e=>`
-  <p class="big">${esc(e.ticket)} · ${fmt(e.hoursBefore)} h → ${fmt(e.hoursAfter)} h · cumplía ${siNo(e.slaBefore)} → ${siNo(e.slaAfter)}</p>
+  <p class="big">Ticket ${esc(e.ticket)}: tuvo una edición en su tiempo de respuesta ante incidente</p>
+  <p>Tiempo registrado: <strong>${fmt(e.hoursBefore)} h → ${fmt(e.hoursAfter)} h</strong>.${e.slaBefore!==e.slaAfter?` Con ese cambio pasó de ${siNo(e.slaBefore)==='SÍ'?'cumplir':'incumplir'} a ${siNo(e.slaAfter)==='SÍ'?'cumplir':'incumplir'} el SLA de ${e.slaHours} h.`:''}</p>
   <p>${esc(e.service)} ${esc(e.serviceName??'')} · ${esc(e.priority)} · SLA ${e.slaHours} h. Resuelto ${esc(e.resolvedAt)}; editado ${esc(e.editedAt)} por un rol «${esc(e.role)}» (evento ${esc(e.event)}).</p>
   <p>El CSV ya trae ${fmt(e.csvHours)} h: solo se detecta cruzando con la bitácora. Horas reales ${fmt(e.hoursBefore)} h: <strong>${e.realWithin?'cumplió':'incumplió'} el SLA</strong>.</p>`).join('');
  $('reopenCard').innerHTML=`<h3>Reaperturas con número nuevo</h3><p>Según la actividad 9 del manual, dentro de 7 días laborables la reapertura conserva el número. Estas ${f.reopenings.length} generaron uno nuevo: el original queda «resuelto» y el nuevo engorda el conteo.</p>
@@ -136,6 +138,8 @@ async function doVerify(){
  $('gap').innerHTML=`Diferencia A − B: <strong>${esc(fmt(r.gap))} puntos porcentuales</strong>. <strong>${r.automatic}</strong> cierres gestionados no tienen confirmación explícita del usuario.`;
  $('explanation').textContent=`Universo: ${r.denominator} IDs únicos del lote original (${r.calendarJuly} reportados en julio y ${r.denominator-r.calendarJuly} fuera de julio). Hay ${r.details.filter(t=>t.discrepancies.length).length} ticket(s) con discrepancias de SLA; se pueden filtrar en la vista Comparar.`;
  renderTable();
+ // Lista desplegable de IDs para «Buscar ticket» en Comparar.
+ $('ticketIds').innerHTML=r.details.map(t=>`<option value="${esc(t.id)}"></option>`).join('');
 }
 
 function renderTable(){
@@ -187,9 +191,9 @@ $('searchPersonal').onclick=()=>run(async()=>{
  // Veredicto del criterio 5 con las palabras del jurado. El contenido de ticket se juzga por lo que la cadena guarda (chain.decoded).
  const found=k=>result.matches.filter(m=>m.kind===k).length,searched=k=>values.filter(v=>v.kind===k).length;
  const verdict=`<div class="verdict"><p class="verdict-label">En la cadena</p><ul class="verdict-list"><li><strong>${found('usuario')}</strong> nombres de usuario</li><li><strong>${found('tecnico_asignado')}</strong> nombres de técnico</li><li><strong>0</strong> contenido de ticket</li></ul>
-  <p class="verdict-sub">Se buscaron <strong>${searched('usuario')}</strong> usuarios y <strong>${searched('tecnico_asignado')}</strong> técnicos. La cadena solo guarda ${chain.decoded.length} datos: ${esc(chain.decoded.map(([k])=>k.toLowerCase()).join(', '))}.</p></div>`;
+  <p class="verdict-sub">Se buscaron <strong>${searched('usuario')}</strong> usuarios y <strong>${searched('tecnico_asignado')}</strong> técnicos.</p></div>`;
  $('personal').innerHTML=`${verdict}<div class="status ${kind}">${result.matches.length} coincidencias de ${result.searched} valores buscados</div>
-  <p class="small">Se buscaron ${result.searched} nombres distintos (usuarios, técnicos, unidades y actores de la bitácora) en texto UTF-8, mayúsculas, minúsculas, SHA-256 y keccak256: ${result.patterns} patrones sobre ${result.bytes} bytes leídos de ${esc(result.sources.join('; '))}.</p>
+  <p class="small">Nombres de usuarios, técnicos, unidades y actores de la bitácora, buscados como texto y como hash en todo lo que el sello dejó en la cadena (${result.bytes} bytes).</p>
   ${result.matches.length?`<ul>${result.matches.map(m=>`<li>${esc(m.kind)} · ${esc(m.form)} · ${esc(m.source)} · byte ${m.offset}</li>`).join('')}</ul>`:''}
   <h3>Lo que sí hay en la cadena</h3>${facts(chain.decoded)}`;
 });

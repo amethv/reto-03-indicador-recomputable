@@ -156,7 +156,6 @@
       <div class="inputs"><label>Importar evidencia original (respaldo del sellado)<input id="evidenceFile" type="file" accept=".json"></label><label>Importar la sal secreta del sello (sal-202607.json)<input id="saltFile" type="file" accept=".json,.txt"></label></div>
     </details>
     <button id="verify">Verificar nuevamente contra blockchain</button>
-    <p class="small">Para la demostración, abre una copia de datos/tickets.csv, cambia fecha_resolucion de un ticket, guarda y carga esa copia. El verificador nunca sella ni reemplaza la evidencia.</p>
     <div class="slot" data-slot="verification"></div>
     <div id="changes" aria-live="polite"></div>
   </div>
@@ -172,7 +171,7 @@
   <p id="gap" class="gapline">Diferencia pendiente de verificación.</p>
   <div class="card">
     <h2>Auditoría de tickets incluidos y excluidos</h2>
-    <div class="inputs"><label>Buscar ID<input id="search" type="search" placeholder="TK-2026-04201"></label><label>Filtrar conjunto<select id="filter"><option value="all">Todos</option><option value="a">Incluidos en A</option><option value="notA">Excluidos de A</option><option value="b">Incluidos en B</option><option value="notB">Excluidos de B</option><option value="sla">Con discrepancias SLA</option></select></label></div>
+    <div class="inputs"><label>Buscar ticket<input id="search" type="search" list="ticketIds" placeholder="Escribe o elige un ID, p. ej. TK-2026-04201"></label><datalist id="ticketIds"></datalist><label>Mostrar<select id="filter"><option value="all">Todos los tickets</option><option value="a">Los que cuentan en A (todos los cierres)</option><option value="notA">Los que no cuentan en A</option><option value="b">Los que cuentan en B (confirmados por el usuario)</option><option value="notB">Los que no cuentan en B (sin confirmación del usuario)</option><option value="sla">Los que tienen diferencias en el SLA</option></select></label></div>
     <p id="tableCount"></p>
     <div class="tablewrap"><table><thead><tr><th>ID / integridad</th><th>Prioridad</th><th>Reporte / resolución</th><th>Horas calculadas / SLA</th><th>Cumplimiento</th><th>Cierre / confirmación</th><th>Trazabilidad A y B</th></tr></thead><tbody id="tickets"></tbody></table></div>
     <details><summary>Reglas del cálculo y límites</summary><div id="policy" class="rules"></div><p>Un cierre automático cuenta como gestionado en A, pero no demuestra una solución confirmada. El cumplimiento de SLA se audita por separado: incumplir el plazo no elimina un cierre del indicador de gestión.</p><p>Las horas se calculan de lunes a viernes entre 08:00 y 17:00 en UTC-05:00. Las horas declaradas se comparan con una tolerancia de ±0,02 h para absorber el redondeo a dos decimales. El motor descuenta los feriados configurados en src/calendar.mjs. El caso no entrega calendario oficial: se usa el supuesto explícito de cero feriados adicionales. Cambiarlo exige una nueva instancia y un nuevo sello.</p></details>
@@ -181,11 +180,10 @@
 </section>
 
 <section id="s5" class="view" data-route="privacidad" aria-labelledby="t-privacidad" hidden>
-  <header class="viewhead"><h1 id="t-privacidad" tabindex="-1">Privacidad</h1><p>Qué hay en la cadena: solo período, raíz, compromiso, cantidad, fecha y hash de reglas.</p></header>
+  <header class="viewhead"><h1 id="t-privacidad" tabindex="-1">Privacidad</h1><p>Qué guarda la cadena y qué queda fuera de ella.</p></header>
   <div class="card">
     <h2>¿Qué almacenamos en blockchain?</h2>
-    <p>Solo período, raíz criptográfica, compromiso de la evidencia, cantidad, marca de tiempo y hash de reglas. La cadena también publica las direcciones del contrato y del emisor, el bloque y los datos propios de una transacción EVM.</p>
-    <p>Los nombres de usuarios y técnicos, las unidades, los actores de la bitácora y el contenido de los tickets permanecen fuera de la cadena. El manifiesto contiene IDs y hashes con sal secreta, se conserva localmente y permite localizar cambios; no se publica en una transacción.</p>
+    <p>Solo los datos técnicos del sello. Los nombres de usuarios y técnicos, las unidades y el contenido de los tickets quedan fuera de la cadena.</p>
     <p id="networkNote" class="small">Local: EVM de desarrollo en este equipo, sirve de respaldo sin internet. Sepolia: lectura pública sin wallet ni credenciales.</p>
     <div class="actions"><button id="inspect" class="secondary">Consultar contrato y transacción</button><button id="searchPersonal">Buscar datos personales en la cadena</button></div>
     <div id="personal" aria-live="polite"></div>
