@@ -311,6 +311,7 @@ function renderNav(){
  // Botones «Siguiente» solo cuando el paso de la vista ya se hizo.
  const next={sellar:sealOk,recalcular:lastStatus==='VERDE',verificar:done.has(3),comparar:!!verified};
  for(const a of document.querySelectorAll('[data-next]'))a.hidden=!next[a.dataset.next];
+ $('compareStart').hidden=!!verified;
 }
 async function refreshNetwork(){
  if(!config||!provider)return;
@@ -344,6 +345,8 @@ document.addEventListener('click',async e=>{
 });
 
 $('recalc').onclick=()=>run(async()=>{$('verifyFile').value='';await doVerify();});
+// Mismo recálculo desde Comparar: evita volver a la vista Recalcular después del ROJO.
+$('recalcCompare').onclick=$('recalc').onclick;
 addEventListener('hashchange',()=>showRoute({focus:true}));
 showRoute();
 

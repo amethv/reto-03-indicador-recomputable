@@ -470,6 +470,10 @@ th { text-align: left; background: #eee6fb; position: sticky; top: 0; }
 td, th { padding: 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
 td { line-height: 1.6; }
 table.summary td.num { font-family: var(--font-display); font-size: 18px; font-weight: 700; white-space: nowrap; }
+/* Comparar vacío: un aviso y el botón para recalcular ahí mismo. */
+.compare-start { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-3); border-left: 6px solid var(--action); }
+.compare-start p { margin: 0; font-weight: 600; color: var(--ink); }
+
 /* Columna «Cuenta en B»: un visto si el ticket cuenta en B, una raya si no. */
 td.inb { text-align: center; vertical-align: middle; font-size: 18px; font-weight: 700; color: var(--muted); }
 td.inb .icon { width: 26px; height: 26px; stroke-width: 2.6; color: var(--ink); }
