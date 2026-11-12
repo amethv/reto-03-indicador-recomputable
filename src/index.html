@@ -47,11 +47,11 @@
   <nav aria-label="Procesos de la demostración">
     <ul class="menu">
       <li><a href="#/panel" data-route="panel"><svg class="icon"><use href="#i-panel"/></svg><span class="item"><strong>Panel</strong><small>Resumen del mes</small></span></a></li>
-      <li><a href="#/sellar" data-route="sellar"><svg class="icon"><use href="#i-lock"/></svg><span class="item"><strong>Sellar</strong><small>Anclar los 187 tickets</small></span><span class="dot" data-dot="sellar" role="img" aria-label="Estado: pendiente"></span></a></li>
-      <li><a href="#/recalcular" data-route="recalcular"><svg class="icon"><use href="#i-calc"/></svg><span class="item"><strong>Recalcular</strong><small>El indicador desde lo sellado</small></span><span class="dot" data-dot="recalcular" role="img" aria-label="Estado: pendiente"></span></a></li>
-      <li><a href="#/verificar" data-route="verificar"><svg class="icon"><use href="#i-search"/></svg><span class="item"><strong>Verificar</strong><small>Detectar alteraciones</small></span><span class="dot" data-dot="verificar" role="img" aria-label="Estado: pendiente"></span></a></li>
-      <li><a href="#/comparar" data-route="comparar"><svg class="icon"><use href="#i-compare"/></svg><span class="item"><strong>Comparar</strong><small>Todos vs. confirmados</small></span><span class="dot" data-dot="comparar" role="img" aria-label="Estado: pendiente"></span></a></li>
-      <li><a href="#/privacidad" data-route="privacidad"><svg class="icon"><use href="#i-eye"/></svg><span class="item"><strong>Privacidad</strong><small>Qué hay en la cadena</small></span><span class="dot" data-dot="privacidad" role="img" aria-label="Estado: pendiente"></span></a></li>
+      <li><a href="#/sellar" data-route="sellar"><span class="menu-ico"><svg class="icon"><use href="#i-lock"/></svg><span class="menu-num" aria-hidden="true">1</span></span><span class="item"><strong>Sellar</strong><small>Anclar los 187 tickets</small></span><span class="dot" data-dot="sellar" role="img" aria-label="Estado: pendiente"></span></a></li>
+      <li><a href="#/recalcular" data-route="recalcular"><span class="menu-ico"><svg class="icon"><use href="#i-calc"/></svg><span class="menu-num" aria-hidden="true">2</span></span><span class="item"><strong>Recalcular</strong><small>El indicador desde lo sellado</small></span><span class="dot" data-dot="recalcular" role="img" aria-label="Estado: pendiente"></span></a></li>
+      <li><a href="#/verificar" data-route="verificar"><span class="menu-ico"><svg class="icon"><use href="#i-search"/></svg><span class="menu-num" aria-hidden="true">3</span></span><span class="item"><strong>Verificar</strong><small>Detectar alteraciones</small></span><span class="dot" data-dot="verificar" role="img" aria-label="Estado: pendiente"></span></a></li>
+      <li><a href="#/comparar" data-route="comparar"><span class="menu-ico"><svg class="icon"><use href="#i-compare"/></svg><span class="menu-num" aria-hidden="true">4</span></span><span class="item"><strong>Comparar</strong><small>Todos vs. confirmados</small></span><span class="dot" data-dot="comparar" role="img" aria-label="Estado: pendiente"></span></a></li>
+      <li><a href="#/privacidad" data-route="privacidad"><span class="menu-ico"><svg class="icon"><use href="#i-eye"/></svg><span class="menu-num" aria-hidden="true">5</span></span><span class="item"><strong>Privacidad</strong><small>Qué hay en la cadena</small></span><span class="dot" data-dot="privacidad" role="img" aria-label="Estado: pendiente"></span></a></li>
     </ul>
     <p class="menu-sep">Herramientas</p>
     <ul class="menu">
@@ -75,18 +75,18 @@
   <p id="headline" class="headline"><span class="hl-side"><span class="hl-label">Publicado</span> <strong class="hl-num">98,25 %</strong></span><span class="hl-vs"> · </span><span class="hl-side hl-b"><span class="hl-label">Solo confirmados por el usuario:</span> <strong class="hl-num hl-pending">pendiente de verificación</strong></span></p>
   <div class="stats">
     <article class="card stat"><h2>Estado del sello</h2><p class="stat-value" id="sumSeal">Sin sello</p><p class="hashline"><span id="sumSealTx" class="hash">—</span><button class="copy" type="button" data-ui data-copy="sumSealTx" aria-label="Copiar transacción del sello"><svg class="icon"><use href="#i-copy"/></svg></button></p></article>
-    <article class="card stat"><h2>Última verificación</h2><p class="stat-value"><span id="sumVerify" class="pill gray">Pendiente</span></p><p class="small" id="sumVerifyNote">Todavía no se verificó en esta sesión.</p></article>
+    <article class="card stat"><h2>Última verificación</h2><p class="stat-value"><span id="sumVerify" class="pill gray">Pendiente</span></p><p class="small" id="sumVerifyNote">Pulsa «Recalcular desde lo sellado» en el paso 2.</p></article>
     <article class="card stat"><h2>Tickets sellados</h2><p class="stat-value" id="sumCount">—</p><p class="small">Cantidad registrada en la cadena.</p></article>
     <article class="card stat"><h2>Brecha A − B</h2><p class="stat-value" id="sumGap">—</p><p class="small">Puntos porcentuales entre todos los cierres y los confirmados.</p></article>
   </div>
   <div class="card">
     <h2>Guion de la demo</h2>
     <ol id="demoScript" class="script">
-      <li data-step="1"><span class="check" role="img" aria-label="Pendiente"><svg class="icon"><use href="#i-check"/></svg></span><span><a href="#/sellar">Sellar los 187 tickets</a><small>Cargar los originales y anclar el compromiso en la cadena.</small></span></li>
-      <li data-step="2"><span class="check" role="img" aria-label="Pendiente"><svg class="icon"><use href="#i-check"/></svg></span><span><a href="#/recalcular">Recalcular el indicador</a><small>Desde lo sellado: cascada 187 → 171, bitácora y reaperturas.</small></span></li>
-      <li data-step="3"><span class="check" role="img" aria-label="Pendiente"><svg class="icon"><use href="#i-check"/></svg></span><span><a href="#/verificar">Detectar una alteración</a><small>Un CSV editado da ROJO con el ticket y el campo.</small></span></li>
-      <li data-step="4"><span class="check" role="img" aria-label="Pendiente"><svg class="icon"><use href="#i-check"/></svg></span><span><a href="#/comparar">Comparar A contra B</a><small>Todos los cierres frente a los confirmados por el usuario.</small></span></li>
-      <li data-step="5"><span class="check" role="img" aria-label="Pendiente"><svg class="icon"><use href="#i-check"/></svg></span><span><a href="#/privacidad">Revisar la privacidad</a><small>Buscar datos personales en la cadena: 0 coincidencias.</small></span></li>
+      <li data-step="1"><span class="check" role="img" aria-label="Pendiente"><svg class="icon"><use href="#i-check"/></svg></span><span><a href="#/sellar">Sellar julio</a><small>Los <strong>187</strong> tickets quedan anclados en la blockchain.</small></span></li>
+      <li data-step="2"><span class="check" role="img" aria-label="Pendiente"><svg class="icon"><use href="#i-check"/></svg></span><span><a href="#/recalcular">Recalcular</a><small>Desde lo sellado: <strong>no da 98,25 %</strong>.</small></span></li>
+      <li data-step="3"><span class="check" role="img" aria-label="Pendiente"><svg class="icon"><use href="#i-check"/></svg></span><span><a href="#/verificar">Detectar una alteración</a><small>Un CSV editado a mano da <strong>ROJO</strong> y señala el ticket.</small></span></li>
+      <li data-step="4"><span class="check" role="img" aria-label="Pendiente"><svg class="icon"><use href="#i-check"/></svg></span><span><a href="#/comparar">Comparar</a><small>Todos los cierres frente a solo los confirmados.</small></span></li>
+      <li data-step="5"><span class="check" role="img" aria-label="Pendiente"><svg class="icon"><use href="#i-check"/></svg></span><span><a href="#/privacidad">Privacidad</a><small>Ningún nombre ni contenido de ticket en la cadena.</small></span></li>
     </ol>
   </div>
   <aside class="notice"><strong>Universo del reto: los 187 tickets originales.</strong> <span id="scopeNote">El lote incluye reportes fuera de julio. Los conteos se muestran al validar los originales. Se usa el estado final del lote, no un corte calendario estricto.</span></aside>
@@ -96,7 +96,7 @@
   <header class="viewhead"><h1 id="t-sellar" tabindex="-1">Sellar</h1><p>Anclar en la cadena el compromiso de los 187 tickets de julio, sin datos personales.</p></header>
   <div class="card">
     <p>Se valida cada archivo contra la huella de la carpeta fuente verificada. Cada columna de los tickets participa en el compromiso; del catálogo, el reporte publicado, la bitácora y las reaperturas solo entra su SHA-256. Una verificación posterior no puede cambiar el sello.</p>
-    <div class="actions"><button id="load">Cargar los originales entregados</button><button id="seal" disabled>Sellar julio en blockchain</button><button id="export" class="secondary" disabled>Descargar evidencia original</button></div>
+    <div class="actions"><button id="load">Cargar los originales entregados</button><button id="seal" disabled>Sellar julio en blockchain</button></div>
     <details><summary>Seleccionar los originales a mano</summary>
       <p class="small">Sus huellas deben coincidir con las de la carpeta fuente verificada.</p>
       <div class="inputs">
@@ -110,6 +110,10 @@
     </details>
     <output id="sealStatus" class="status pending" aria-live="polite">Sin sellado comprobado.</output>
     <div id="commitment" class="factbox"></div>
+    <details><summary>Respaldo del sello</summary>
+      <p class="small">Copia del manifiesto con la huella de los 187 tickets. La app ya la guarda sola en este equipo; solo hace falta para verificar desde otro equipo.</p>
+      <button id="export" class="secondary" disabled>Descargar respaldo del sellado</button>
+    </details>
   </div>
   <a class="next" href="#/recalcular" data-next="sellar" hidden>Siguiente: Recalcular <svg class="icon"><use href="#i-arrow"/></svg></a>
 </section>
@@ -123,6 +127,7 @@
     <p id="explanation" class="small"></p>
   </div>
   <div id="findings" hidden>
+    <div id="recalcVerdict" class="verdict" aria-live="polite"></div>
     <div class="card">
       <h2>¿De dónde sale el 171 publicado?</h2>
       <div id="cascade" class="cascade"></div>
@@ -144,8 +149,12 @@
 <section id="s3" class="view" data-route="verificar" aria-labelledby="t-verificar" hidden>
   <header class="viewhead"><h1 id="t-verificar" tabindex="-1">Verificar</h1><p>Detectar alteraciones: cualquier cambio en el CSV, por pequeño que sea, da ROJO con el ticket y el campo.</p></header>
   <div class="card">
-    <div class="inputs"><label>CSV que se va a verificar<input id="verifyFile" type="file" accept=".csv"></label><label>Importar evidencia original, si cambiaste de navegador<input id="evidenceFile" type="file" accept=".json"></label><label>Importar la sal secreta del sello (sal-202607.json)<input id="saltFile" type="file" accept=".json,.txt"></label></div>
+    <div class="inputs"><label>CSV que se va a verificar<input id="verifyFile" type="file" accept=".csv"></label></div>
     <p id="saltStatus" class="small">Sal secreta: pendiente.</p>
+    <details><summary>Verificar desde otro equipo</summary>
+      <p class="small">En el equipo donde se selló, la evidencia y la sal se cargan solas. En otro equipo o navegador, impórtalas aquí.</p>
+      <div class="inputs"><label>Importar evidencia original (respaldo del sellado)<input id="evidenceFile" type="file" accept=".json"></label><label>Importar la sal secreta del sello (sal-202607.json)<input id="saltFile" type="file" accept=".json,.txt"></label></div>
+    </details>
     <button id="verify">Verificar nuevamente contra blockchain</button>
     <p class="small">Para la demostración, abre una copia de datos/tickets.csv, cambia fecha_resolucion de un ticket, guarda y carga esa copia. El verificador nunca sella ni reemplaza la evidencia.</p>
     <div class="slot" data-slot="verification"></div>
@@ -178,7 +187,7 @@
     <p>Solo período, raíz criptográfica, compromiso de la evidencia, cantidad, marca de tiempo y hash de reglas. La cadena también publica las direcciones del contrato y del emisor, el bloque y los datos propios de una transacción EVM.</p>
     <p>Los nombres de usuarios y técnicos, las unidades, los actores de la bitácora y el contenido de los tickets permanecen fuera de la cadena. El manifiesto contiene IDs y hashes con sal secreta, se conserva localmente y permite localizar cambios; no se publica en una transacción.</p>
     <p id="networkNote" class="small">Local: EVM de desarrollo en este equipo, sirve de respaldo sin internet. Sepolia: lectura pública sin wallet ni credenciales.</p>
-    <div class="actions"><button id="inspect">Consultar contrato y transacción</button><button id="searchPersonal">Buscar datos personales en la cadena</button></div>
+    <div class="actions"><button id="inspect" class="secondary">Consultar contrato y transacción</button><button id="searchPersonal">Buscar datos personales en la cadena</button></div>
     <div id="personal" aria-live="polite"></div>
     <div id="privacy" class="factbox"><p class="small">Pendiente de consulta real.</p></div>
     <p id="explorer" class="explorer"></p>

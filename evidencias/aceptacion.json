@@ -1,5 +1,5 @@
 {
-  "started": "2026-11-12T02:16:36.564Z",
+  "started": "2026-11-12T04:08:32.936Z",
   "timezone": "America/Guayaquil",
   "criteria": [
     {
@@ -22,7 +22,7 @@
         "evidencias/01-sellado.png"
       ],
       "pending": [],
-      "newTransaction": true
+      "newTransaction": false
     },
     {
       "criterion": 2,
@@ -255,6 +255,6 @@
   ],
   "completed": true,
   "instance": "nivel1-v5-auditoria",
-  "finished": "2026-11-12T02:17:28.429Z",
+  "finished": "2026-11-12T04:09:54.331Z",
   "level1Complete": false
 }

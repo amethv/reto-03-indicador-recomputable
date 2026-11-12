@@ -155,7 +155,25 @@ main {
   border-color: rgba(255, 138, 61, 0.6);
   color: #fff;
 }
-.menu a[aria-current="page"] > .icon { color: var(--mint); }
+.menu a[aria-current="page"] .icon { color: var(--mint); }
+/* Íconos del menú más grandes que el texto, con el número del paso de la demo. */
+.menu .icon { width: 28px; height: 28px; stroke-width: 1.7; }
+.menu-ico { position: relative; display: inline-grid; flex: none; margin-left: 8px; }
+.menu a > .icon { margin-left: 8px; }
+.menu-num {
+  position: absolute;
+  top: -9px;
+  left: -14px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: var(--action);
+  color: var(--on-action);
+  font: 700 11px/18px var(--font-display);
+  text-align: center;
+  box-shadow: 0 0 0 2px var(--navy);
+}
 .menu .item { flex: 1; min-width: 0; }
 .menu .item strong { display: block; font-size: 14px; }
 .menu .item small { display: block; font-size: 12px; color: var(--ice); margin-top: 1px; }
@@ -482,7 +500,34 @@ tr.flip td { background: var(--cream); font-weight: 600; }
 .indicators .card { border-top: 5px solid var(--accent); margin: 0; padding: var(--space-6); }
 .indicators .card:last-child { border-top-color: var(--navy); }
 .percent { display: block; font-family: var(--font-display); font-size: clamp(44px, 6vw, 68px); line-height: 1.1; color: var(--ink); margin: var(--space-3) 0; }
-.gapline { font-size: 16px; font-weight: 600; color: var(--navy); margin: var(--space-4) 0 var(--space-5); }
+/* La brecha A − B es el hallazgo: recuadro crema con la cifra destacada. */
+.gapline { font-size: 17px; font-weight: 600; line-height: 1.6; color: var(--navy); margin: var(--space-4) 0 var(--space-5); padding: var(--space-4) var(--space-5); border-radius: var(--radius); border-left: 6px solid var(--action); background: var(--cream); }
+.gapline::before { content: "El hallazgo"; display: block; margin-bottom: var(--space-1); font-size: 12px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--ink); }
+.gapline strong { font-family: var(--font-display); font-size: 22px; font-weight: 700; color: var(--ink); }
+.indicators p strong { font-size: 17px; color: var(--ink); }
+
+/* Veredicto grande de cada criterio (Recalcular y Privacidad). */
+.verdict {
+  margin: 0 0 var(--space-5);
+  padding: var(--space-5);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  border-left: 6px solid var(--action);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+.verdict:empty { display: none; }
+.verdict p { margin: 0 0 var(--space-2); }
+.verdict p:last-child { margin-bottom: 0; }
+.verdict-main { font-family: var(--font-display); font-size: clamp(20px, 2.6vw, 28px); font-weight: 700; line-height: 1.3; color: var(--ink); }
+.verdict-main strong { font-size: 1.15em; color: var(--ink); }
+.verdict-sub { font-size: 17px; color: var(--text); }
+.verdict-sub strong { font-family: var(--font-display); font-size: 20px; color: var(--ink); }
+.verdict-label { font-size: 13px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--ink); }
+.verdict-list { list-style: none; margin: 0 0 var(--space-3); padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(180px, 100%), 1fr)); gap: var(--space-3); line-height: 1.3; }
+.verdict-list li { display: flex; align-items: baseline; gap: var(--space-2); padding: var(--space-3) var(--space-4); border-radius: var(--radius); background: var(--surface-soft); border: 1px solid var(--border); color: var(--text); font-weight: 600; }
+.verdict-list strong { font-family: var(--font-display); font-size: 34px; line-height: 1; color: var(--ink); }
+.script small strong { color: var(--ink); }
 
 /* Reglas del cálculo: una ficha por tema, con etiqueta y valor. */
 .rules { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr)); gap: var(--space-4); margin: var(--space-4) 0; }

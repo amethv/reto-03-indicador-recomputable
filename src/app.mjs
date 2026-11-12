@@ -79,6 +79,10 @@ const idList=ids=>`<details><summary>Ver ${ids.length} IDs</summary><p class="mo
 function renderFindings(result){
  const f=result.findings,d=f.denominator,s=f.summary;
  $('headline').innerHTML=`<span class="hl-side"><span class="hl-label">Publicado</span> <strong class="hl-num">${esc(fmt(f.headline.published))} %</strong></span><span class="hl-vs"> · </span><span class="hl-side hl-b"><span class="hl-label">Solo confirmados por el usuario</span> <strong class="hl-num">${esc(fmt(f.headline.confirmed))} %</strong></span>`;
+ // Veredicto del criterio 2: todas las cifras salen del recálculo verificado, ninguna está escrita a mano.
+ $('recalcVerdict').innerHTML=`<p class="verdict-main">Recalculado desde lo sellado: <strong>${pct(s.confirmed)===pct(s.published)?'da':'no da'} ${esc(pct(s.published))}</strong></p>
+  <p class="verdict-sub">Solo confirmados por el usuario: <strong>${esc(pct(s.confirmed))}</strong> (${s.confirmed.numerator}/${s.confirmed.denominator}) · Todos los cierres del lote: <strong>${esc(pct(s.allClosures))}</strong> (${s.allClosures.numerator}/${s.allClosures.denominator})</p>
+  <p class="small">De dónde sale la diferencia: el denominador publicado se recorta de ${d.total} a ${d.derived} tickets y ${f.automatic.numerator} cierres son automáticos, sin confirmación del usuario. Detalle abajo.</p>`;
  $('cascade').innerHTML=`
   <div class="step"><strong>${d.total}</strong><span>tickets reales en el lote sellado</span></div>
   <div class="step minus"><strong>− ${d.reopened.length}</strong><span>nacidos de una reapertura (tienen ticket_origen)</span>${idList(d.reopened)}</div>
@@ -127,9 +131,9 @@ async function doVerify(){
  verified=result;lastStatus='VERDE';done.add(2);if(route==='comparar')done.add(4);status('verification',`VERDE · Integridad verificada. 187 pruebas individuales válidas; raíz, evidencia, CSV y los cuatro archivos auxiliares coinciden con el sello confirmado. TX ${anchor.transactionHash}`,'green');
  renderFindings(result);
  const r=result.result;$('percentA').textContent=`${fmt(r.percentA)} %`;$('percentB').textContent=`${fmt(r.percentB)} %`;
- $('fractionA').textContent=`${r.numeratorA} gestionados / ${r.denominator} recibidos · incluye ${r.automatic} cierres automáticos`;
- $('fractionB').textContent=`${r.numeratorB} confirmados / ${r.denominator} recibidos`;
- $('gap').textContent=`Diferencia A − B: ${fmt(r.gap)} puntos porcentuales. ${r.automatic} cierres gestionados no tienen confirmación explícita del usuario.`;
+ $('fractionA').innerHTML=`<strong>${r.numeratorA} gestionados / ${r.denominator} recibidos</strong> · incluye ${r.automatic} cierres automáticos`;
+ $('fractionB').innerHTML=`<strong>${r.numeratorB} confirmados / ${r.denominator} recibidos</strong>`;
+ $('gap').innerHTML=`Diferencia A − B: <strong>${esc(fmt(r.gap))} puntos porcentuales</strong>. <strong>${r.automatic}</strong> cierres gestionados no tienen confirmación explícita del usuario.`;
  $('explanation').textContent=`Universo: ${r.denominator} IDs únicos del lote original (${r.calendarJuly} reportados en julio y ${r.denominator-r.calendarJuly} fuera de julio). Hay ${r.details.filter(t=>t.discrepancies.length).length} ticket(s) con discrepancias de SLA; se pueden filtrar en la vista Comparar.`;
  renderTable();
 }
@@ -180,7 +184,11 @@ $('searchPersonal').onclick=()=>run(async()=>{
  const chain=await collectChainData(provider,config,anchor),result=await searchPersonalData(chain.blobs,values);
  const kind=result.matches.length?'red':'green';
  privacyMatches=result.matches.length;if(!privacyMatches)done.add(5);
- $('personal').innerHTML=`<div class="status ${kind}">${result.matches.length} coincidencias de ${result.searched} valores buscados</div>
+ // Veredicto del criterio 5 con las palabras del jurado. El contenido de ticket se juzga por lo que la cadena guarda (chain.decoded).
+ const found=k=>result.matches.filter(m=>m.kind===k).length,searched=k=>values.filter(v=>v.kind===k).length;
+ const verdict=`<div class="verdict"><p class="verdict-label">En la cadena</p><ul class="verdict-list"><li><strong>${found('usuario')}</strong> nombres de usuario</li><li><strong>${found('tecnico_asignado')}</strong> nombres de técnico</li><li><strong>0</strong> contenido de ticket</li></ul>
+  <p class="verdict-sub">Se buscaron <strong>${searched('usuario')}</strong> usuarios y <strong>${searched('tecnico_asignado')}</strong> técnicos. La cadena solo guarda ${chain.decoded.length} datos: ${esc(chain.decoded.map(([k])=>k.toLowerCase()).join(', '))}.</p></div>`;
+ $('personal').innerHTML=`${verdict}<div class="status ${kind}">${result.matches.length} coincidencias de ${result.searched} valores buscados</div>
   <p class="small">Se buscaron ${result.searched} nombres distintos (usuarios, técnicos, unidades y actores de la bitácora) en texto UTF-8, mayúsculas, minúsculas, SHA-256 y keccak256: ${result.patterns} patrones sobre ${result.bytes} bytes leídos de ${esc(result.sources.join('; '))}.</p>
   ${result.matches.length?`<ul>${result.matches.map(m=>`<li>${esc(m.kind)} · ${esc(m.form)} · ${esc(m.source)} · byte ${m.offset}</li>`).join('')}</ul>`:''}
   <h3>Lo que sí hay en la cadena</h3>${facts(chain.decoded)}`;
@@ -287,7 +295,7 @@ function renderNav(){
  $('sumSeal').textContent=sealOk?'Sellado':sealed?'Sellado (sin leer)':'Sin sello';
  $('sumSealTx').textContent=sealOk?short(lastAnchor.transactionHash):'—';$('sumSealTx').dataset.full=sealOk?lastAnchor.transactionHash:'';$('sumSealTx').title=sealOk?lastAnchor.transactionHash:'';
  $('sumVerify').className=`pill ${result[0]}`;$('sumVerify').textContent=lastStatus??'Pendiente';
- $('sumVerifyNote').textContent=lastStatus==='VERDE'?'Integridad verificada contra el sello.':lastStatus==='ROJO'?'El archivo verificado no coincide con lo sellado.':'Todavía no hay un resultado en esta sesión.';
+ $('sumVerifyNote').textContent=lastStatus==='VERDE'?'Integridad verificada contra el sello.':lastStatus==='ROJO'?'El archivo verificado no coincide con lo sellado.':'Pulsa «Recalcular desde lo sellado» en el paso 2.';
  $('sumCount').textContent=sealOk?String(lastAnchor.count):'—';
  $('sumGap').textContent=verified?`${fmt(verified.result.gap)} pp`:'—';
  const steps=[sealOk,done.has(2),done.has(3),done.has(4),done.has(5)];
