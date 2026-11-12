@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node scripts/start.mjs",
     "compile": "node scripts/compile.mjs",
+    "compile:reloj": "node scripts/compile-reloj.mjs",
     "test": "node --test --test-concurrency=1 tests/*.test.mjs",
     "test:evidencia": "node scripts/test-report.mjs",
     "audit": "node scripts/audit.mjs",

@@ -9,6 +9,7 @@ import {ROOT,STATE_ROOT,EVIDENCE_DIR,INSTANCE,SALT_FILES,deploy,providerFor,writ
 import {readAnchor} from '../src/chain.mjs';
 import {authenticateEvidence,validSalt,saltCommitment} from '../src/core.mjs';
 import {verifySource} from './verify-source.mjs';
+import {ensureReloj} from './reloj.mjs';
 // En el equipo: 127.0.0.1:8080. En un servicio como Render: HOST=0.0.0.0 y el PORT que asigne la plataforma.
 const PORT=Number(process.env.PORT)||8080,HOST=process.env.HOST||'127.0.0.1';
 // Hosts que pueden usar la API (defensa ante DNS rebinding). Render publica su dominio en RENDER_EXTERNAL_HOSTNAME.
@@ -23,21 +24,26 @@ const LONG_CACHE='public, max-age=31536000, immutable';
 const COMPRESSIBLE=new Set(['.js','.mjs','.css','.html','.json','.csv']);
 const gzip=promisify(zlib.gzip);
 const acceptsGzip=req=>(req.headers['accept-encoding']||'').split(',').some(part=>{const [name,...params]=part.split(';');return name.trim().toLowerCase()==='gzip'&&!params.some(p=>/^\s*q=0(\.0+)?\s*$/.test(p));});
-function rpcAllowed(call,contract){
+// contracts: el del Nivel 1 y RelojProveedor (Nivel 2). Ninguna otra dirección recibe transacciones.
+function rpcAllowed(call,contracts){
  if(!call||typeof call.method!=='string')return false;
  if(READ_METHODS.has(call.method))return true;
- return call.method==='eth_sendTransaction'&&typeof call.params?.[0]?.to==='string'&&call.params[0].to.toLowerCase()===contract.toLowerCase();
+ return call.method==='eth_sendTransaction'&&typeof call.params?.[0]?.to==='string'&&contracts.some(c=>call.params[0].to.toLowerCase()===c.toLowerCase());
 }
 export async function startApp(){
  await verifySource();
  await fs.mkdir(path.join(STATE_ROOT,'.chain'),{recursive:true});
- const chain=ganache.server({chain:{chainId:31337,networkId:31337,hardfork:'shanghai'},wallet:{deterministic:true,totalAccounts:2},database:{dbPath:path.join(STATE_ROOT,'.chain')},logging:{quiet:true}});
+ // Cuentas: 0 municipio y sellador del Nivel 1; 1 PV-01; 2 PV-02 (Nivel 2). En una cadena persistida
+ // creada con 2 cuentas, la tercera no tiene saldo: ensureReloj la fondea desde la cuenta 0.
+ const chain=ganache.server({chain:{chainId:31337,networkId:31337,hardfork:'shanghai'},wallet:{deterministic:true,totalAccounts:3},database:{dbPath:path.join(STATE_ROOT,'.chain')},logging:{quiet:true}});
  await chain.listen(8545,'127.0.0.1');
  const provider=providerFor('http://127.0.0.1:8545');
  let config;
  try{config=JSON.parse(await fs.readFile(path.join(EVIDENCE_DIR,'red-local.json'),'utf8'));}catch(e){if(e.code!=='ENOENT')throw e;}
  if(!config){config=await deploy(provider);await fs.writeFile(path.join(EVIDENCE_DIR,'red-local.json'),JSON.stringify(config,null,2));}
  if(await provider.getCode(config.address)==='0x')throw new Error('La cadena persistida no contiene el contrato configurado. No se reemplazará automáticamente.');
+ // Nivel 2: después del contrato del Nivel 1, para no alterar su dirección en una instancia nueva.
+ const reloj=await ensureReloj(provider),contracts=[config.address,reloj.address];
  const mime={'.html':'text/html; charset=utf-8','.mjs':'text/javascript; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.json':'application/json; charset=utf-8','.csv':'text/csv; charset=utf-8','.sol':'text/plain; charset=utf-8','.md':'text/plain; charset=utf-8','.pdf':'application/pdf','.png':'image/png','.woff2':'font/woff2'};
  // Vendor se lee y se comprime una sola vez; se guarda en memoria mientras corre el servidor.
  const vendorCache=new Map();
@@ -51,14 +57,14 @@ export async function startApp(){
     const payload=JSON.parse(body),calls=Array.isArray(payload)?payload:[payload];
     if(!calls.length||calls.length>50)throw new Error('Lote RPC inválido');
     const refused=c=>({jsonrpc:'2.0',id:c?.id??null,error:{code:-32601,message:`Método no permitido en esta demo: ${c?.method}`}});
-    const allowedCalls=calls.filter(c=>rpcAllowed(c,config.address));
+    const allowedCalls=calls.filter(c=>rpcAllowed(c,contracts));
     let answers=[];
     if(allowedCalls.length){
      const upstream=await fetch('http://127.0.0.1:8545',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(allowedCalls)});
      answers=await upstream.json();if(!Array.isArray(answers))answers=[answers];
     }
     const byId=new Map(answers.map(a=>[JSON.stringify(a.id),a]));
-    const results=calls.map(c=>rpcAllowed(c,config.address)?byId.get(JSON.stringify(c.id))??refused(c):refused(c));
+    const results=calls.map(c=>rpcAllowed(c,contracts)?byId.get(JSON.stringify(c.id))??refused(c):refused(c));
     res.writeHead(200,{'Content-Type':'application/json'});res.end(JSON.stringify(Array.isArray(payload)?results:results[0]));return;
    }
    if(req.method==='POST'&&url.pathname==='/api/evidence'){
@@ -102,8 +108,8 @@ export async function startApp(){
   }catch(e){res.writeHead(e.code==='ENOENT'?404:400,{'Content-Type':'text/plain; charset=utf-8'});res.end(e.code==='ENOENT'?'No disponible':e.message);}
  });
  await new Promise((resolve,reject)=>{server.once('error',reject);server.listen(PORT,HOST,resolve);});
- console.log(`Instancia: ${INSTANCE}`);console.log(`Aplicación: http://${HOST==='0.0.0.0'?'127.0.0.1':HOST}:${PORT}`);console.log(`Blockchain: ${config.rpc} | contrato ${config.address}`);
- return {config,provider,close:async()=>{provider.destroy();await new Promise(resolve=>server.close(resolve));await chain.close();}};
+ console.log(`Instancia: ${INSTANCE}`);console.log(`Aplicación: http://${HOST==='0.0.0.0'?'127.0.0.1':HOST}:${PORT}`);console.log(`Blockchain: ${config.rpc} | contrato ${config.address}`);console.log(`Nivel 2: RelojProveedor ${reloj.address}`);
+ return {config,reloj,provider,close:async()=>{provider.destroy();await new Promise(resolve=>server.close(resolve));await chain.close();}};
 }
 if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href){
  const app=await startApp();for(const signal of ['SIGINT','SIGTERM'])process.on(signal,async()=>{await app.close();process.exit(0);});

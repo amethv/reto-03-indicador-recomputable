@@ -1,0 +1,25 @@
+{
+  "contract": "RelojProveedor",
+  "address": "0x254dffcd3277C0b1660F6d42EFbB754edaBAbC2B",
+  "chainId": 31337,
+  "deploymentBlock": 4,
+  "deploymentTransaction": "0x9a8e2eea0342210b61fad791271b5c338f278e8b8a1dec8e68e6a720ef2c63a4",
+  "codeHash": "0xe0a9026b3387bfbc11f58f14cdb7abd7f0c6227e85962bed4cda6c08abc5d4f0",
+  "municipio": "0x90F8bf6A479f320ead074411a4B0e7944Ea8c9C1",
+  "proveedores": [
+    {
+      "id": "PV-01",
+      "cuenta": "0xFFcf8FDEE72ac11b5c542428B35EEF5769C409f0",
+      "slaSegundos": 21600,
+      "tarifaCentavosPorHora": 18000
+    },
+    {
+      "id": "PV-02",
+      "cuenta": "0x22d491Bde2303f2f43325b2108D26f1eAbA1e32b",
+      "slaSegundos": 14400,
+      "tarifaCentavosPorHora": 24000
+    }
+  ],
+  "supuesto": "SLA contractual en horas corridas, no hábiles",
+  "local": true
+}
