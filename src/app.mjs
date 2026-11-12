@@ -148,7 +148,7 @@ function renderTable(){
  $('tableCount').textContent=`${rows.length} tickets visibles de ${verified.result.denominator} verificados.`;
  $('tickets').innerHTML=rows.map(r=>{
   const edit=r.logEdit?`<br><strong>Bitácora ${esc(r.logEdit.event)}:</strong> ${fmt(r.logEdit.hoursBefore)} h → ${fmt(r.logEdit.hoursAfter)} h; real: ${r.logEdit.realWithin?'cumple':'no cumple'}`:'';
-  return `<tr><td>${esc(r.id)}<br>Verificado</td><td>${esc(r.priority)}</td><td>${esc(r.reported)}<br>${esc(r.resolved)}</td><td>${r.hours===null?'—':fmt(r.hours)} h / ${r.sla} h<br>Declaradas: ${fmt(r.declaredHours)} h / ${r.declaredSLA} h</td><td>${r.within===null?'Pendiente':r.within?'Cumple':'No cumple'}<br>Declarado: ${esc(r.declaredWithin)}${r.discrepancies.length?'<br>Discrepancias: '+esc(r.discrepancies.join(', ')):''}${edit}</td><td>${esc(r.type)}<br>Confirmación: ${esc(r.confirmation)}</td><td>${esc(r.reason)}<br>${esc(r.reasonB)}</td></tr>`;
+  return `<tr><td>${esc(r.id)}<br>Verificado</td><td>${esc(r.priority)}</td><td>${esc(r.reported)}<br>${esc(r.resolved)}</td><td>${r.hours===null?'—':fmt(r.hours)} h / ${r.sla} h<br>Declaradas: ${fmt(r.declaredHours)} h / ${r.declaredSLA} h</td><td>${r.within===null?'Pendiente':r.within?'Cumple':'No cumple'}<br>Declarado: ${esc(r.declaredWithin)}${r.discrepancies.length?'<br>Discrepancias: '+esc(r.discrepancies.join(', ')):''}${edit}</td><td>${esc(r.type)}<br>Confirmación: ${esc(r.confirmation)}</td><td class="inb" title="${esc(r.reasonB)}">${r.confirmed?'<svg class="icon" role="img" aria-label="Sí cuenta en B"><use href="#i-check"/></svg>':'<span role="img" aria-label="No cuenta en B">—</span>'}</td></tr>`;
  }).join('');
 }
 
@@ -194,10 +194,14 @@ $('searchPersonal').onclick=()=>run(async()=>{
   <p class="verdict-sub">Se buscaron <strong>${searched('usuario')}</strong> usuarios y <strong>${searched('tecnico_asignado')}</strong> técnicos.</p></div>`;
  $('personal').innerHTML=`${verdict}<div class="status ${kind}">${result.matches.length} coincidencias de ${result.searched} valores buscados</div>
   <p class="small">Nombres de usuarios, técnicos, unidades y actores de la bitácora, buscados como texto y como hash en todo lo que el sello dejó en la cadena (${result.bytes} bytes).</p>
-  ${result.matches.length?`<ul>${result.matches.map(m=>`<li>${esc(m.kind)} · ${esc(m.form)} · ${esc(m.source)} · byte ${m.offset}</li>`).join('')}</ul>`:''}
-  <h3>Lo que sí hay en la cadena</h3>${facts(chain.decoded)}`;
+  ${result.matches.length?`<ul>${result.matches.map(m=>`<li>${esc(m.kind)} · ${esc(m.form)} · ${esc(m.source)} · byte ${m.offset}</li>`).join('')}</ul>`:''}`;
 });
-$('inspect').onclick=()=>run(async()=>showAnchor(await readAnchor(provider,config)));
+// «Consultar contrato y transacción»: lee la cadena y muestra la transacción y lo que guarda, con la hora de la consulta.
+$('inspect').onclick=()=>run(async()=>{
+ const anchor=await readAnchor(provider,config);showAnchor(anchor);
+ const chain=await collectChainData(provider,config,anchor);
+ $('chainData').innerHTML=`<h3>Lo que sí hay en la cadena</h3>${facts(chain.decoded)}<p class="small">Leído de la blockchain a las ${esc(new Date().toLocaleTimeString('es-EC',{timeZone:'America/Guayaquil'}))} · transacción en el bloque ${esc(anchor.blockNumber)}.</p>`;
+});
 $('verifyFile').onchange=()=>clearResults();
 for(const id of Object.values(FILE_INPUTS))$(id).onchange=()=>{prepared=null;clearResults();controls();};
 $('evidenceFile').onchange=()=>run(async()=>{
@@ -247,7 +251,7 @@ async function useNetwork(name){
  provider=new JsonRpcProvider(rpcUrl,undefined,{cacheTimeout:-1});provider.pollingInterval=config.local?100:4000;
  refreshNetwork();
  $('privacy').innerHTML=facts([['Contrato configurado',config.address],['Red',config.network],['RPC de lectura',rpcUrl],['Transacción de despliegue',config.deploymentTransaction],['Sello','Falta consultar el sellado.']]);
- $('onchain').innerHTML='<p class="small">Sin consulta.</p>';
+ $('onchain').innerHTML='<p class="small">Sin consulta.</p>';$('chainData').replaceChildren();
  showExplorer(null);
  $('networkNote').textContent=config.local?'Local: EVM de desarrollo en este equipo, sirve de respaldo sin internet. El sellado se hace desde esta página.':`Pública: ${config.network}. El navegador solo lee por un RPC público, sin wallet ni credenciales. El municipio selló con scripts/seal-testnet.mjs.`;
  status('sealStatus','Sin sellado comprobado en esta red.');
