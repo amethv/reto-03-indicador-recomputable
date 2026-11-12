@@ -3,8 +3,9 @@ import path from 'node:path';
 import {ContractFactory,JsonRpcProvider,keccak256} from 'ethers';
 import {POLICY,sha,validSalt,saltCommitment} from '../src/core.mjs';
 export const ROOT=path.resolve(import.meta.dirname,'..');
-// nivel1-v4: el sello v3 anterior es inmutable y usaba el manifiesto sin sal.
-export const INSTANCE=process.env.ATENEA_INSTANCE||'nivel1-v4';
+// nivel2-v1: instancia por defecto desde el Nivel 2 (contrato del Nivel 1 + RelojProveedor).
+// nivel1-v4 queda intacta con su sello del Nivel 1; se abre con ATENEA_INSTANCE=nivel1-v4.
+export const INSTANCE=process.env.ATENEA_INSTANCE||'nivel2-v1';
 if(!/^[a-zA-Z0-9_-]{1,80}$/.test(INSTANCE))throw new Error('Nombre de instancia inválido');
 export const STATE_ROOT=path.join(ROOT,'.instances',INSTANCE);
 export const EVIDENCE_DIR=path.join(STATE_ROOT,'evidencias');
