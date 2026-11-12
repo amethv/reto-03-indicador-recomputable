@@ -23,7 +23,7 @@ function clearResults(message='VERIFICACIÓN INCOMPLETA · ejecuta la verificaci
  $('percentA').textContent='—';$('percentB').textContent='—';
  $('fractionA').textContent='Pendiente de verificación';$('fractionB').textContent='Pendiente de verificación';
  $('gap').textContent='Diferencia pendiente de verificación.';
- $('headline').textContent='Publicado 98,25 % · Solo confirmados por el usuario: pendiente de verificación';
+ $('headline').innerHTML='<span class="hl-side"><span class="hl-label">Publicado</span> <strong class="hl-num">98,25 %</strong></span><span class="hl-vs"> · </span><span class="hl-side hl-b"><span class="hl-label">Solo confirmados por el usuario:</span> <strong class="hl-num hl-pending">pendiente de verificación</strong></span>';
  $('findings').hidden=true;$('explanation').textContent='';
  $('tickets').replaceChildren();$('tableCount').textContent='';$('changes').replaceChildren();$('holidayResult').replaceChildren();$('personal').replaceChildren();
 }
@@ -78,7 +78,7 @@ function showAnchor(anchor){
 const idList=ids=>`<details><summary>Ver ${ids.length} IDs</summary><p class="mono">${ids.map(esc).join(' · ')}</p></details>`;
 function renderFindings(result){
  const f=result.findings,d=f.denominator,s=f.summary;
- $('headline').textContent=`Publicado ${fmt(f.headline.published)} % · Solo confirmados por el usuario ${fmt(f.headline.confirmed)} %`;
+ $('headline').innerHTML=`<span class="hl-side"><span class="hl-label">Publicado</span> <strong class="hl-num">${esc(fmt(f.headline.published))} %</strong></span><span class="hl-vs"> · </span><span class="hl-side hl-b"><span class="hl-label">Solo confirmados por el usuario</span> <strong class="hl-num">${esc(fmt(f.headline.confirmed))} %</strong></span>`;
  $('cascade').innerHTML=`
   <div class="step"><strong>${d.total}</strong><span>tickets reales en el lote sellado</span></div>
   <div class="step minus"><strong>− ${d.reopened.length}</strong><span>nacidos de una reapertura (tienen ticket_origen)</span>${idList(d.reopened)}</div>

@@ -1,24 +1,36 @@
 /* ATENEA · Indicador recomputable · Nivel 1
-   Una sola página con menú lateral y una vista por proceso. Sin fuentes ni recursos externos. */
+   Una sola página con menú lateral y una vista por proceso. Sin recursos externos:
+   las fuentes (Montserrat e Inter, subconjunto latin) están autoalojadas en src/. */
+
+@font-face { font-family: "Montserrat"; font-style: normal; font-weight: 600; font-display: swap; src: url("/src/montserrat-latin-600-normal.woff2") format("woff2"); }
+@font-face { font-family: "Montserrat"; font-style: normal; font-weight: 700; font-display: swap; src: url("/src/montserrat-latin-700-normal.woff2") format("woff2"); }
+@font-face { font-family: "Inter"; font-style: normal; font-weight: 400; font-display: swap; src: url("/src/inter-latin-400-normal.woff2") format("woff2"); }
+@font-face { font-family: "Inter"; font-style: normal; font-weight: 500; font-display: swap; src: url("/src/inter-latin-500-normal.woff2") format("woff2"); }
+@font-face { font-family: "Inter"; font-style: normal; font-weight: 600; font-display: swap; src: url("/src/inter-latin-600-normal.woff2") format("woff2"); }
 
 :root {
-  /* Colores */
-  --navy: #102c49;
-  --navy-deep: #0b2138;
-  --navy-line: #24425f;
-  --ink: #142c47;
-  --text: #425a70;
-  --muted: #6a8195;
-  --teal: #126f75;
-  --teal-dark: #0e555a;
-  --accent: #1d9690;
-  --mint: #70e5d6;
-  --ice: #b9d0e4;
-  --bg: #eef3f7;
+  /* Colores. Los nombres se conservan; los valores siguen la identidad morado/naranja.
+     Contraste del texto comprobado ≥ 4.5:1 sobre blanco, lavanda y crema. */
+  --navy: #4b1d7a;          /* morado oscuro: menú y títulos */
+  --navy-deep: #3b1563;
+  --navy-line: #643199;
+  --ink: #4b1d7a;           /* texto principal */
+  --text: #574a6e;          /* texto de párrafo */
+  --muted: #6a5e82;
+  --teal: #6a35d8;          /* morado legible para enlaces, íconos y subtítulos */
+  --teal-dark: #5526b8;
+  --accent: #8a4dff;        /* morado de acento */
+  --mint: #ff8a3d;          /* resalte sobre el menú oscuro */
+  --ice: #dccbfa;
+  --bg: #f5f0ff;            /* lavanda */
   --surface: #ffffff;
-  --surface-soft: #f6f9fb;
-  --border: #d9e3ed;
-  --border-strong: #b9cbd9;
+  --surface-soft: #faf7ff;
+  --border: #e6dcf7;
+  --border-strong: #cbb8ec;
+  --action: #ff8a3d;        /* naranja: acción principal */
+  --action-hover: #ffa366;
+  --on-action: #4b1d7a;     /* el blanco sobre naranja no llega a 4.5:1 */
+  --cream: #ffe2c7;         /* avisos */
   --green: #185f32;
   --green-dot: #2fa35a;
   --green-bg: #e9f8ed;
@@ -31,8 +43,8 @@
   --amber-ink: #795014;
   --amber-bg: #fff4dc;
   --amber-line: #e7cb92;
-  --gray-dot: #8ea3b5;
-  --gray-bg: #eef2f6;
+  --gray-dot: #9d90b5;
+  --gray-bg: #f0ebf8;
 
   /* Espacios, radios y sombras */
   --space-1: 4px;
@@ -44,11 +56,12 @@
   --radius-sm: 6px;
   --radius: 10px;
   --radius-lg: 14px;
-  --shadow: 0 4px 16px rgba(16, 44, 73, 0.05);
+  --shadow: 0 4px 16px rgba(75, 29, 122, 0.07);
   --sidebar-width: 290px;
 
-  /* Tipografía del sistema */
-  --font: system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  /* Tipografía: Inter para el texto, Montserrat para títulos y cifras. */
+  --font: "Inter", system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-display: "Montserrat", "Inter", system-ui, "Segoe UI", Arial, sans-serif;
   --mono: Consolas, "Cascadia Mono", "SFMono-Regular", Menlo, monospace;
 
   font-family: var(--font);
@@ -111,7 +124,7 @@ main {
 }
 
 .brand { display: flex; align-items: center; gap: var(--space-3); padding: 0 var(--space-2); }
-.brand strong { display: block; font-size: 16px; }
+.brand strong { display: block; font-family: var(--font-display); font-size: 16px; }
 .brand span { display: block; font-size: 12px; color: var(--ice); margin-top: 2px; }
 /* Logo: imagen con fondo claro, presentada como una ficha redondeada. */
 .brand-mark {
@@ -121,7 +134,7 @@ main {
   height: 48px;
   border-radius: 12px;
   background: #f7f7f7;
-  box-shadow: 0 0 0 2px rgba(112, 229, 214, 0.35);
+  box-shadow: 0 0 0 2px rgba(255, 138, 61, 0.45);
 }
 .logo-small { display: block; flex: none; width: 28px; height: 28px; border-radius: 7px; background: #f7f7f7; }
 
@@ -133,13 +146,13 @@ main {
   padding: 10px var(--space-3);
   border: 1px solid transparent;
   border-radius: var(--radius);
-  color: #dbe7f1;
+  color: #ede4ff;
   text-decoration: none;
 }
 .menu a:hover { background: rgba(255, 255, 255, 0.06); color: #fff; }
 .menu a[aria-current="page"] {
   background: rgba(255, 255, 255, 0.12);
-  border-color: rgba(112, 229, 214, 0.55);
+  border-color: rgba(255, 138, 61, 0.6);
   color: #fff;
 }
 .menu a[aria-current="page"] > .icon { color: var(--mint); }
@@ -178,15 +191,15 @@ main {
 }
 .netcard label { display: block; color: var(--ice); font-size: 12px; margin-bottom: var(--space-2); min-width: 0; }
 .netcard select { margin: 0 0 var(--space-3); background: #fff; }
-.netcard p { margin: var(--space-1) 0; color: #dbe7f1; line-height: 1.5; }
+.netcard p { margin: var(--space-1) 0; color: #ede4ff; line-height: 1.5; }
 .netline { display: flex; align-items: center; gap: var(--space-2); font-weight: 600; }
 .netmeta { color: var(--ice); overflow-wrap: anywhere; }
-.netnote { color: var(--muted) !important; font-size: 12px; margin-top: var(--space-2) !important; }
+.netnote { color: var(--ice) !important; font-size: 12px; margin-top: var(--space-2) !important; }
 
 /* ---------- Vistas ---------- */
 
 .viewhead { margin-bottom: var(--space-5); }
-.viewhead h1 { font-size: 30px; margin: 0 0 var(--space-2); color: var(--navy); }
+.viewhead h1 { font-family: var(--font-display); font-size: 30px; margin: 0 0 var(--space-2); color: var(--navy); }
 .viewhead h1:focus { outline: none; }
 .viewhead p { margin: 0; font-size: 16px; color: var(--text); }
 
@@ -203,10 +216,10 @@ main {
 .card > :last-child { margin-bottom: 0; }
 .card.alert { border-color: var(--red-line); border-top: 4px solid var(--red); background: #fffafa; }
 
-h2 { font-size: 19px; margin: 0 0 var(--space-3); color: var(--navy); }
+h2 { font-family: var(--font-display); font-size: 19px; margin: 0 0 var(--space-3); color: var(--navy); }
 h3 { font-size: 16px; margin: var(--space-4) 0 var(--space-2); }
 p { line-height: 1.65; color: var(--text); }
-a { color: #0b6973; }
+a { color: var(--teal); }
 ul { line-height: 1.8; }
 .small { font-size: 13px; }
 code { font-family: var(--mono); }
@@ -223,6 +236,16 @@ code { font-family: var(--mono); }
   border: 1px solid var(--border);
   border-left: 6px solid var(--accent);
 }
+/* Panel: dos cifras grandes enfrentadas. El texto del elemento sigue siendo
+   «Publicado 98,25 % · Solo confirmados por el usuario 55,61 %» (lo comprueba la auditoría). */
+.headline { display: flex; flex-wrap: wrap; align-items: stretch; gap: var(--space-4) var(--space-5); }
+.hl-side { flex: 1 1 220px; display: flex; flex-direction: column; justify-content: flex-end; gap: var(--space-2); min-width: 0; }
+.hl-label { font-family: var(--font); font-size: 13px; font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase; color: var(--text); }
+.hl-num { font-family: var(--font-display); font-size: clamp(40px, 6vw, 64px); font-weight: 700; line-height: 1; color: var(--ink); white-space: nowrap; }
+.hl-b .hl-num { color: var(--accent); }
+.hl-num.hl-pending { font-size: clamp(20px, 2.4vw, 26px); font-weight: 600; color: var(--muted); white-space: normal; }
+.hl-vs { flex: none; align-self: center; font-size: 0; color: var(--muted); }
+.hl-vs::before { content: "frente a"; font-family: var(--font); font-size: 13px; font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase; padding: 6px 12px; border-radius: 999px; background: var(--cream); color: var(--ink); }
 
 .stats {
   display: grid;
@@ -232,7 +255,7 @@ code { font-family: var(--mono); }
 }
 .stats .card { margin: 0; }
 .stat h2 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted); }
-.stat .stat-value { font-size: 26px; font-weight: 700; color: var(--navy); margin: 0 0 var(--space-2); }
+.stat .stat-value { font-family: var(--font-display); font-size: 26px; font-weight: 700; color: var(--navy); margin: 0 0 var(--space-2); }
 .stat p { margin: 0; }
 
 .script { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-2); counter-reset: paso; }
@@ -267,7 +290,8 @@ code { font-family: var(--mono); }
   padding: var(--space-4) var(--space-5);
   border-left: 4px solid var(--amber);
   border-radius: var(--radius);
-  background: #fff7e8;
+  background: var(--cream);
+  color: var(--ink);
   line-height: 1.7;
 }
 
@@ -290,8 +314,8 @@ code { font-family: var(--mono); }
 
 .actions { display: flex; flex-wrap: wrap; gap: var(--space-3); margin: var(--space-3) 0; }
 button {
-  background: var(--teal);
-  color: #fff;
+  background: var(--action);
+  color: var(--on-action);
   border: 0;
   border-radius: var(--radius-sm);
   padding: 12px 17px;
@@ -300,11 +324,11 @@ button {
   cursor: pointer;
   margin: var(--space-1) 0;
 }
-button:hover { background: var(--teal-dark); }
-button:disabled { background: #9cafbb; cursor: not-allowed; }
+button:hover { background: var(--action-hover); }
+button:disabled { background: #e4dcf0; color: #5e5375; cursor: not-allowed; }
 button.secondary { background: #fff; color: var(--teal); border: 1px solid var(--teal); }
 button.secondary:hover { background: var(--surface-soft); }
-button.secondary:disabled { color: #9cafbb; border-color: #c7d3dc; background: #fff; }
+button.secondary:disabled { color: #5e5375; border-color: var(--border-strong); background: #fff; }
 
 .iconbutton {
   display: inline-flex;
@@ -313,6 +337,7 @@ button.secondary:disabled { color: #9cafbb; border-color: #c7d3dc; background: #
   margin: 0;
   padding: 8px 12px;
   background: rgba(255, 255, 255, 0.1);
+  color: #fff;
   border: 1px solid rgba(255, 255, 255, 0.2);
 }
 .iconbutton:hover { background: rgba(255, 255, 255, 0.18); }
@@ -334,7 +359,7 @@ button.secondary:disabled { color: #9cafbb; border-color: #c7d3dc; background: #
 .copy.copied { background: var(--green-bg); color: var(--green); border-color: var(--green-line); }
 
 .inputs { display: flex; flex-wrap: wrap; gap: 18px; margin: 14px 0; }
-label { flex: 1; min-width: min(240px, 100%); display: block; color: #314d67; font-size: 13px; }
+label { flex: 1; min-width: min(240px, 100%); display: block; color: var(--text); font-size: 13px; }
 input, select {
   display: block;
   width: 100%;
@@ -347,7 +372,7 @@ input, select {
   color: var(--ink);
 }
 
-details { margin: var(--space-5) 0; padding: 14px; background: #f4f7fa; border-radius: var(--radius); }
+details { margin: var(--space-5) 0; padding: 14px; background: #f7f2ff; border-radius: var(--radius); }
 summary { cursor: pointer; font-weight: 600; }
 
 /* ---------- Estados ---------- */
@@ -388,7 +413,7 @@ summary { cursor: pointer; font-weight: 600; }
   overflow-wrap: anywhere;
   line-height: 1.8;
 }
-.mono { background: #f3f6fa; padding: 15px; border-radius: var(--radius-sm); margin: 0; }
+.mono { background: #f4effc; padding: 15px; border-radius: var(--radius-sm); margin: 0; }
 .mono:empty { display: none; }
 .explorer { font-weight: 600; }
 
@@ -423,21 +448,21 @@ summary { cursor: pointer; font-weight: 600; }
 
 .tablewrap { overflow: auto; max-height: 560px; border: 1px solid var(--border); border-radius: var(--radius); }
 table { width: 100%; border-collapse: collapse; font-size: 12px; }
-th { text-align: left; background: #eaf1f7; position: sticky; top: 0; }
-td, th { padding: 12px; border-bottom: 1px solid #dfe7ed; vertical-align: top; }
+th { text-align: left; background: #eee6fb; position: sticky; top: 0; }
+td, th { padding: 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
 td { line-height: 1.6; }
-table.summary td.num { font-size: 18px; font-weight: 700; white-space: nowrap; }
-tr.flip td { background: #fff7e8; font-weight: 600; }
+table.summary td.num { font-family: var(--font-display); font-size: 18px; font-weight: 700; white-space: nowrap; }
+tr.flip td { background: var(--cream); font-weight: 600; }
 
 /* ---------- Recalcular ---------- */
 
 .cascade { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-3); margin: var(--space-3) 0; }
 .step { border: 1px solid var(--border); border-radius: var(--radius); padding: var(--space-4); background: var(--surface-soft); min-width: 0; }
-.step strong { display: block; font-size: 30px; color: #103c57; }
+.step strong { display: block; font-family: var(--font-display); font-size: 30px; color: var(--ink); }
 .step span { font-size: 13px; color: var(--text); }
 .step details { margin: 10px 0 0; padding: var(--space-2); background: #fff; }
 .step.minus { border-top: 4px solid var(--amber); }
-.step.total { border-top: 4px solid var(--accent); background: #f2fbfa; }
+.step.total { border-top: 4px solid var(--accent); background: #f6f0ff; }
 
 .cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-5); }
 .big { font-size: 19px; font-weight: 700; color: var(--red); }
@@ -456,7 +481,7 @@ tr.flip td { background: #fff7e8; font-weight: 600; }
 .indicators { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-5); }
 .indicators .card { border-top: 5px solid var(--accent); margin: 0; padding: var(--space-6); }
 .indicators .card:last-child { border-top-color: var(--navy); }
-.percent { display: block; font-size: clamp(44px, 6vw, 68px); line-height: 1.1; color: #103c57; margin: var(--space-3) 0; }
+.percent { display: block; font-family: var(--font-display); font-size: clamp(44px, 6vw, 68px); line-height: 1.1; color: var(--ink); margin: var(--space-3) 0; }
 .gapline { font-size: 16px; font-weight: 600; color: var(--navy); margin: var(--space-4) 0 var(--space-5); }
 
 /* Reglas del cálculo: una ficha por tema, con etiqueta y valor. */
@@ -504,7 +529,7 @@ tr.flip td { background: #fff7e8; font-weight: 600; }
   .menu-open .sidebar { transform: none; visibility: visible; }
   .brand .close { display: inline-flex; margin-left: auto; padding: 6px; }
 
-  .backdrop { position: fixed; inset: 0; z-index: 30; background: rgba(11, 33, 56, 0.55); }
+  .backdrop { position: fixed; inset: 0; z-index: 30; background: rgba(42, 14, 70, 0.55); }
   .menu-open .backdrop { display: block; }
   .menu-open { overflow: hidden; }
 

@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>ATENEA · Indicador recomputable · Nivel 1</title>
 <link rel="icon" type="image/png" href="/src/logo.png">
+<link rel="preload" href="/src/inter-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/src/montserrat-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/src/style.css">
 <script src="/vendor/papaparse.umd.js"></script>
 <script type="importmap">{"imports":{"papaparse":"/vendor/papaparse.mjs","ethers":"/vendor/ethers.mjs"}}</script>
@@ -70,7 +72,7 @@
 
 <section id="panel" class="view" data-route="panel" aria-labelledby="t-panel">
   <header class="viewhead"><h1 id="t-panel" tabindex="-1">Panel</h1><p>Resumen del mes: qué se selló, qué dio la última verificación y cuánto se separan los dos indicadores.</p></header>
-  <p id="headline" class="headline">Publicado 98,25 % · Solo confirmados por el usuario: pendiente de verificación</p>
+  <p id="headline" class="headline"><span class="hl-side"><span class="hl-label">Publicado</span> <strong class="hl-num">98,25 %</strong></span><span class="hl-vs"> · </span><span class="hl-side hl-b"><span class="hl-label">Solo confirmados por el usuario:</span> <strong class="hl-num hl-pending">pendiente de verificación</strong></span></p>
   <div class="stats">
     <article class="card stat"><h2>Estado del sello</h2><p class="stat-value" id="sumSeal">Sin sello</p><p class="hashline"><span id="sumSealTx" class="hash">—</span><button class="copy" type="button" data-ui data-copy="sumSealTx" aria-label="Copiar transacción del sello"><svg class="icon"><use href="#i-copy"/></svg></button></p></article>
     <article class="card stat"><h2>Última verificación</h2><p class="stat-value"><span id="sumVerify" class="pill gray">Pendiente</span></p><p class="small" id="sumVerifyNote">Todavía no se verificó en esta sesión.</p></article>
