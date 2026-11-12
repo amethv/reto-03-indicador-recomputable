@@ -470,6 +470,21 @@ th { text-align: left; background: #eee6fb; position: sticky; top: 0; }
 td, th { padding: 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
 td { line-height: 1.6; }
 table.summary td.num { font-family: var(--font-display); font-size: 18px; font-weight: 700; white-space: nowrap; }
+/* ---------- Nivel 2 · Reloj del proveedor ---------- */
+.info { background: var(--surface-soft); color: var(--ink); border: 1px solid var(--border); }
+.signer-list { list-style: none; margin: 0 0 var(--space-3); padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr)); gap: var(--space-3); line-height: 1.4; }
+.signer-list li { display: flex; flex-direction: column; gap: 2px; padding: var(--space-3) var(--space-4); border-radius: var(--radius); background: var(--surface-soft); border: 1px solid var(--border); color: var(--text); }
+.signer-list strong { font-family: var(--font-display); font-size: 17px; color: var(--ink); }
+.signer-list .hash { color: var(--muted); }
+.verdict-main.case-total strong { font-size: clamp(40px, 6vw, 60px); line-height: 1.1; }
+table.cases td { white-space: nowrap; }
+table.cases tr.rejected td[colspan], table.cases td.third { white-space: normal; }
+table.cases td.pen strong { font-family: var(--font-display); font-size: 16px; color: var(--ink); }
+table.cases tr.rejected td { background: var(--red-bg); color: var(--red); }
+table.cases tr.rejected strong { color: var(--red); }
+.match { font-weight: 700; color: var(--green); }
+.nomatch { font-weight: 700; color: var(--red); }
+
 /* Comparar vacío: un aviso y el botón para recalcular ahí mismo. */
 .compare-start { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-3); border-left: 6px solid var(--action); }
 .compare-start p { margin: 0; font-weight: 600; color: var(--ink); }

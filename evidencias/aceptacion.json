@@ -1,5 +1,5 @@
 {
-  "started": "2026-11-12T21:52:36.376Z",
+  "started": "2026-11-12T22:11:42.137Z",
   "timezone": "America/Guayaquil",
   "criteria": [
     {
@@ -277,6 +277,6 @@
   ],
   "completed": true,
   "instance": "nivel1-v5-auditoria",
-  "finished": "2026-11-12T21:54:01.491Z",
+  "finished": "2026-11-12T22:12:51.694Z",
   "level1Complete": true
 }

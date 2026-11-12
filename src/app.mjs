@@ -3,12 +3,15 @@ import {ABI,readAnchor} from './chain.mjs';
 import {POLICY,PERIOD,SOURCES,BITACORA_HEADERS,csv,businessHours,buildEvidence,verifyText,evidenceHash,authenticateEvidence,sealedValues,newSalt,validSalt,saltCommitment} from './core.mjs';
 import {simulateHolidays} from './findings.mjs';
 import {personalValues,searchPersonalData,collectChainData} from './privacy.mjs';
+import {initProveedor} from './proveedor.mjs';
 
 const $=id=>document.getElementById(id);
 let network='local',config,provider,baseline,evidence=null,prepared=null,preparedSalt=null,salt=null,originalTexts=null,verified=null,sealed=false,busy=false;
 // Para el menú y el panel: último ancla leída, estado de la última verifyText (VERDE/ROJO),
 // coincidencias de la última búsqueda de datos personales y pasos del guion cumplidos en esta sesión.
 let lastAnchor=null,lastStatus=null,privacyMatches=null;const done=new Set();
+// Nivel 2: configuración del RelojProveedor de esta red (solo existe en la red local).
+let reloj=null;
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt=v=>Number(v).toLocaleString('es-EC',{minimumFractionDigits:2,maximumFractionDigits:2});
 const pct=r=>`${fmt(r.percent)} %`;
@@ -249,6 +252,7 @@ async function useNetwork(name){
  // La red local se consulta por /rpc del mismo servidor (funciona igual en el equipo y en un servicio publicado).
  const rpcUrl=config.local?new URL('/rpc',location.href).href:config.rpc;
  provider=new JsonRpcProvider(rpcUrl,undefined,{cacheTimeout:-1});provider.pollingInterval=config.local?100:4000;
+ reloj=null;if(config.local){const r=await fetch('/evidencias/reloj-local.json');if(r.ok)reloj=await r.json();}proveedorUI.reset();
  refreshNetwork();
  $('privacy').innerHTML=facts([['Contrato configurado',config.address],['Red',config.network],['RPC de lectura',rpcUrl],['Transacción de despliegue',config.deploymentTransaction],['Sello','Falta consultar el sellado.']]);
  $('onchain').innerHTML='<p class="small">Sin consulta.</p>';$('chainData').replaceChildren();
@@ -270,7 +274,7 @@ function showSalt(){
 }
 // ---------- Navegación por vistas, estado del menú y tarjeta de red ----------
 // Cada vista es un <section> que se muestra u oculta: el estado en memoria se conserva.
-const ROUTES={panel:'panel',sellar:'s1',recalcular:'s2',verificar:'s3',comparar:'s4',privacidad:'s5',feriado:'holiday'};
+const ROUTES={panel:'panel',sellar:'s1',recalcular:'s2',verificar:'s3',comparar:'s4',privacidad:'s5',proveedor:'s6',feriado:'holiday'};
 const TITLES={panel:'Panel',sellar:'Sellar',recalcular:'Recalcular',verificar:'Verificar',comparar:'Comparar',privacidad:'Privacidad',feriado:'Simular feriado'};
 let route=null;
 const short=h=>h?`${h.slice(0,6)}…${h.slice(-4)}`:'—';
@@ -296,7 +300,8 @@ function renderNav(){
   sellar:sealOk?['green','sello confirmado']:['gray','sin sello'],
   recalcular:result,comparar:result,
   verificar:lastStatus==='ROJO'?['red','alteración detectada']:['gray','sin alteración detectada'],
-  privacidad:privacyMatches===null?['gray','pendiente']:privacyMatches===0?['green','0 coincidencias']:['red',`${privacyMatches} coincidencias`]
+  privacidad:privacyMatches===null?['gray','pendiente']:privacyMatches===0?['green','0 coincidencias']:['red',`${privacyMatches} coincidencias`],
+  proveedor:done.has(6)?['green','casos cargados']:['gray','pendiente']
  };
  for(const [name,[kind,label]] of Object.entries(dots))setDot(document.querySelector(`[data-dot="${name}"]`),kind,`Estado: ${label}`);
  // Panel
@@ -306,7 +311,7 @@ function renderNav(){
  $('sumVerifyNote').textContent=lastStatus==='VERDE'?'Integridad verificada contra el sello.':lastStatus==='ROJO'?'El archivo verificado no coincide con lo sellado.':'Pulsa «Recalcular desde lo sellado» en el paso 2.';
  $('sumCount').textContent=sealOk?String(lastAnchor.count):'—';
  $('sumGap').textContent=verified?`${fmt(verified.result.gap)} pp`:'—';
- const steps=[sealOk,done.has(2),done.has(3),done.has(4),done.has(5)];
+ const steps=[sealOk,done.has(2),done.has(3),done.has(4),done.has(5),done.has(6)];
  for(const li of $('demoScript').children){const ok=steps[Number(li.dataset.step)-1];li.classList.toggle('done',ok);li.querySelector('.check').setAttribute('aria-label',ok?'Cumplido':'Pendiente');}
  // Botones «Siguiente» solo cuando el paso de la vista ya se hizo.
  const next={sellar:sealOk,recalcular:lastStatus==='VERDE',verificar:done.has(3),comparar:!!verified};
@@ -351,5 +356,7 @@ addEventListener('hashchange',()=>showRoute({focus:true}));
 showRoute();
 
 $('network').onchange=()=>run(()=>useNetwork($('network').value));
+// Nivel 2: la vista vive en proveedor.mjs; aquí solo se le pasa el estado compartido.
+const proveedorUI=initProveedor({$,esc,run,getProvider:()=>provider,getReloj:()=>reloj,rpcUrl:()=>new URL('/rpc',location.href).href,markDone:()=>done.add(6)});
 await run(async()=>{baseline=JSON.parse(await get('/src/originals.json'));await useNetwork('local');});
 window.__ateneaReady=true;

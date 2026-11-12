@@ -42,7 +42,12 @@ export function penalidadCentavos(apertura,respuesta,slaSegundos,tarifa){
  const d=BigInt(respuesta)-BigInt(apertura);if(d<0n)return null;
  const exceso=d-BigInt(slaSegundos);return exceso>0n?exceso*BigInt(tarifa)/3600n:0n;
 }
-export const usd=c=>c===null?'—':`${(Number(c)/100).toLocaleString('es-EC',{minimumFractionDigits:0,maximumFractionDigits:2})} USD`;
+/** Centavos → «2.592 USD» o «12,50 USD». Se agrupa a mano: en español Intl no agrupa los números de 4 cifras. */
+export function usd(c){
+ if(c===null||c===undefined)return '—';
+ const v=BigInt(c),neg=v<0n,a=neg?-v:v,ent=(a/100n).toString().replace(/\B(?=(\d{3})+(?!\d))/g,'.'),dec=a%100n;
+ return `${neg?'−':''}${ent}${dec?','+dec.toString().padStart(2,'0'):''} USD`;
+}
 // Motivo del revert tal como lo escribe el contrato, sin el prefijo que añade cada nodo («VM Exception… revert »).
 const revertReason=e=>String(e?.reason??e?.revert?.args?.[0]??e?.info?.error?.message??e?.shortMessage??e?.message??e).replace(/^.*\brevert(?:ed)?:?\s*/i,'').replace(/^"|"$/g,'');
 

@@ -22,6 +22,7 @@
     <symbol id="i-compare" viewBox="0 0 24 24"><path d="M5 20V10M10 20V4M14 20v-6M19 20V8"/><path d="M3 20.5h18"/></symbol>
     <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z"/><circle cx="12" cy="12" r="3"/></symbol>
     <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 9.5h17M8 3v4M16 3v4"/><path d="M8 13.5h.01M12 13.5h.01M16 13.5h.01M8 17h.01M12 17h.01"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12.5" r="8"/><path d="M12 8.5v4l2.8 2"/><path d="M9.5 2.5h5"/></symbol>
     <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 6.5h16M4 12h16M4 17.5h16"/></symbol>
     <symbol id="i-close" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></symbol>
     <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8.5" y="8.5" width="11" height="11" rx="2"/><path d="M15.5 8.5v-2a2 2 0 0 0-2-2h-7a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h2"/></symbol>
@@ -53,6 +54,10 @@
       <li><a href="#/comparar" data-route="comparar"><span class="menu-ico"><svg class="icon"><use href="#i-compare"/></svg><span class="menu-num" aria-hidden="true">4</span></span><span class="item"><strong>Comparar</strong><small>Todos vs. confirmados</small></span><span class="dot" data-dot="comparar" role="img" aria-label="Estado: pendiente"></span></a></li>
       <li><a href="#/privacidad" data-route="privacidad"><span class="menu-ico"><svg class="icon"><use href="#i-eye"/></svg><span class="menu-num" aria-hidden="true">5</span></span><span class="item"><strong>Privacidad</strong><small>Qué hay en la cadena</small></span><span class="dot" data-dot="privacidad" role="img" aria-label="Estado: pendiente"></span></a></li>
     </ul>
+    <p class="menu-sep">Nivel 2</p>
+    <ul class="menu">
+      <li><a href="#/proveedor" data-route="proveedor"><span class="menu-ico"><svg class="icon"><use href="#i-clock"/></svg><span class="menu-num" aria-hidden="true">6</span></span><span class="item"><strong>Reloj del proveedor</strong><small>Municipio y proveedor firman</small></span><span class="dot" data-dot="proveedor" role="img" aria-label="Estado: pendiente"></span></a></li>
+    </ul>
     <p class="menu-sep">Herramientas</p>
     <ul class="menu">
       <li><a href="#/feriado" data-route="feriado"><svg class="icon"><use href="#i-calendar"/></svg><span class="item"><strong>Simular feriado</strong><small>Sin tocar el sello</small></span></a></li>
@@ -64,7 +69,7 @@
     <select id="network"><option value="local">Local (Ganache)</option><option value="sepolia">Pública (Sepolia)</option></select>
     <p class="netline"><span id="rpcDot" class="dot gray" role="img" aria-label="RPC: sin comprobar"></span><span id="netName">Conectando…</span></p>
     <p class="netmeta">Bloque <span id="netBlock">—</span> · <span id="netContract" class="hash">—</span></p>
-    <p class="netnote">Datos sintéticos · Nivel 1</p>
+    <p class="netnote">Datos sintéticos · Niveles 1 y 2</p>
   </div>
 </aside>
 
@@ -87,6 +92,7 @@
       <li data-step="3"><span class="check" role="img" aria-label="Pendiente"><svg class="icon"><use href="#i-check"/></svg></span><span><a href="#/verificar">Detectar una alteración</a><small>Un CSV editado a mano da <strong>ROJO</strong> y señala el ticket.</small></span></li>
       <li data-step="4"><span class="check" role="img" aria-label="Pendiente"><svg class="icon"><use href="#i-check"/></svg></span><span><a href="#/comparar">Comparar</a><small>Todos los cierres frente a solo los confirmados.</small></span></li>
       <li data-step="5"><span class="check" role="img" aria-label="Pendiente"><svg class="icon"><use href="#i-check"/></svg></span><span><a href="#/privacidad">Privacidad</a><small>Ningún nombre ni contenido de ticket en la cadena.</small></span></li>
+      <li data-step="6"><span class="check" role="img" aria-label="Pendiente"><svg class="icon"><use href="#i-check"/></svg></span><span><a href="#/proveedor">Reloj del proveedor · Nivel 2</a><small>Penalidades de <strong>2.592 USD</strong> y el caso con tiempo negativo <strong>RECHAZADO</strong>.</small></span></li>
     </ol>
   </div>
   <aside class="notice"><strong>Universo del reto: los 187 tickets originales.</strong> <span id="scopeNote">El lote incluye reportes fuera de julio. Los conteos se muestran al validar los originales. Se usa el estado final del lote, no un corte calendario estricto.</span></aside>
@@ -200,6 +206,24 @@
   </div>
 </section>
 
+<section id="s6" class="view" data-route="proveedor" aria-labelledby="t-proveedor" hidden>
+  <header class="viewhead"><h1 id="t-proveedor" tabindex="-1">Reloj del proveedor</h1><p>Nivel 2: el municipio firma la apertura de cada caso y el proveedor su respuesta, cada uno con su propia llave. Cualquiera puede recalcular el tiempo y la penalidad.</p></header>
+  <div class="card">
+    <div id="signers" class="signers"></div>
+    <div class="actions"><button id="loadCases" type="button">Cargar los 9 casos</button><button id="thirdParty" type="button" class="secondary" hidden>Recalcular como tercero</button></div>
+    <output id="caseStatus" class="status info" aria-live="polite">Sin casos cargados en esta sesión.</output>
+  </div>
+  <div id="caseResults" hidden>
+    <div id="caseTotal" class="verdict" aria-live="polite"></div>
+    <div id="caseRejected"></div>
+    <div class="card">
+      <h2>Casos de tickets_proveedor.csv</h2>
+      <div class="tablewrap"><table class="cases"><thead><tr><th>Caso</th><th>Abre → responde</th><th>Apertura</th><th>Respuesta</th><th>Horas</th><th>SLA (h)</th><th>Cumple</th><th>Penalidad del contrato</th><th>Penalidad que declaraba el CSV</th><th>Tercero</th></tr></thead><tbody id="cases"></tbody></table></div>
+      <p class="small">Supuesto: el SLA contractual se mide en horas corridas, no hábiles, porque así vienen los datos. Fechas en UTC−05:00.</p>
+    </div>
+  </div>
+</section>
+
 <section id="holiday" class="view" data-route="feriado" aria-labelledby="t-feriado" hidden>
   <header class="viewhead"><h1 id="t-feriado" tabindex="-1">Simular feriado</h1><p>Sin tocar el sello: el efecto de una fecha concreta sobre los tickets ya verificados.</p></header>
   <div class="card">
@@ -210,7 +234,7 @@
   </div>
 </section>
 
-<footer class="footer">Datos sintéticos · Desarrollo exclusivo del Nivel 1 · Sin penalidades ni funciones de Niveles 2 y 3</footer>
+<footer class="footer">Datos sintéticos · Nivel 1 completo y Nivel 2: reloj del proveedor con penalidades · Sin funciones del Nivel 3</footer>
 </main>
 </div>
 </body>
