@@ -62,15 +62,15 @@ function slide2() {
   const els = [rect(0, 0, W, H, C.navy)];
   els.push(text(0.6, 0.45, 12.1, 0.7, 'Delimitación: dónde sí y dónde no', {size: 36, bold: true, color: C.white}));
   els.push(rect(0.6, 1.35, 12.13, 1.35, C.deep, {radius: 0.12}));
-  els.push(text(0.9, 1.45, 11.6, 1.15, [{t: 'La cadena se usa solo donde quien emite el dato es el mismo que se mide con él: '}, {t: 'el indicador público.', color: C.mint}, {t: ' La operación interna se resuelve mejor con logs firmados.'}], {size: 19, color: C.white, valign: 'middle'}));
+  els.push(text(0.9, 1.45, 11.6, 1.15, [{t: 'La cadena se usa solo donde hay frontera de confianza: '}, {t: 'el indicador público', color: C.mint}, {t: ' (quien emite el dato es el medido) y '}, {t: 'el reloj con el proveedor.', color: C.mint}, {t: ' La operación interna se resuelve mejor con logs firmados.'}], {size: 19, color: C.white, valign: 'middle'}));
   // Cada ítem: [encabezado, líneas que ocupa el encabezado, texto].
   const cols = [
     {x: 0.6, w: 5.2, title: 'Lo que decidimos no poner en cadena', items: [
       ['Asignaciones y escalamientos', 1, 'Operación interna de una sola institución: no cruza una frontera de confianza. Basta un log firmado.'],
       ['Bitácora completa', 1, 'Tiene nombres de actores. Solo su SHA-256 entra al sello; el contenido se queda fuera.'],
       ['Contenido de los tickets', 1, 'Usuarios, unidades, sistemas y vulnerabilidades: ni en claro ni cifrado.']]},
-    {x: 6.05, w: 3.2, title: 'Frontera futura', items: [
-      ['Reloj compartido con el proveedor de Nivel 3', 2, 'El municipio firma la apertura y el proveedor la respuesta, cada uno con su llave. Dos organizaciones, un contrato y penalidades en dólares. No se implementa en este nivel.']]},
+    {x: 6.05, w: 3.2, title: 'Implementado · Nivel 2', items: [
+      ['Reloj compartido con el proveedor', 2, 'Aquí sí hay frontera de confianza: dos organizaciones, un contrato y dinero. El municipio firma la apertura y el proveedor la respuesta, cada uno con su llave. 9 casos: PVT-04226 rechazado y 2.592 USD en penalidades, recalculables por cualquiera.']]},
     {x: 9.5, w: 3.23, title: 'Lo que la cadena no hace', items: [
       ['No prueba que los datos fueran verdaderos', 2, 'Solo que no cambiaron después del sello.'],
       ['No mejora los tiempos de respuesta', 2, 'Los hace verificables, que es otra cosa.']]}
@@ -92,7 +92,7 @@ function slide2() {
 
 const SLIDES = [
   {name: 'lamina-1', title: 'Arquitectura', notes: 'Punto de entrada: la exportación de ATENEA. El municipio sella con su llave; el contrato en Sepolia guarda solo hashes, conteos, período y reglas. Cualquiera verifica en el navegador sin wallet. Titular: 98,25 % publicado contra 55,61 % confirmado por el usuario.', build: slide1},
-  {name: 'lamina-2', title: 'Delimitación', notes: 'La frontera de confianza: el emisor del indicador es el medido. Lo interno se resuelve con logs firmados. El reloj con el proveedor es la frontera futura. La cadena no prueba veracidad previa ni mejora tiempos.', build: slide2}
+  {name: 'lamina-2', title: 'Delimitación', notes: 'Dos fronteras de confianza: el emisor del indicador es el medido, y el reloj con el proveedor junta dos organizaciones, un contrato y dinero. El reloj ya está implementado (Nivel 2): el contrato rechaza PVT-04226 y calcula 2.592 USD de penalidades. Lo interno se resuelve con logs firmados. La cadena no prueba veracidad previa ni mejora tiempos.', build: slide2}
 ];
 
 const flat = v => Array.isArray(v) ? v.map(r => r.t).join('') : v;
@@ -100,7 +100,7 @@ const flat = v => Array.isArray(v) ? v.map(r => r.t).join('') : v;
 async function buildPptx() {
   const pres = new PptxGenJS();
   pres.layout = 'LAYOUT_WIDE';
-  pres.title = 'Reto 03 · Nivel 1 · Arquitectura y delimitación';
+  pres.title = 'Reto 03 · Niveles 1 y 2 · Arquitectura y delimitación';
   pres.author = 'Equipo Reto 03';
   pres.theme = {headFontFace: FONT, bodyFontFace: FONT};
   for (const s of SLIDES) {

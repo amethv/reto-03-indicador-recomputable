@@ -1,5 +1,5 @@
 {
-  "started": "2026-11-12T22:11:42.137Z",
+  "started": "2026-11-12T23:20:14.450Z",
   "timezone": "America/Guayaquil",
   "criteria": [
     {
@@ -229,6 +229,114 @@
     }
   ],
   "browserErrors": [],
+  "level2": {
+    "name": "Nivel 2 · Reloj del proveedor",
+    "implementation": "contracts/RelojProveedor.sol: abrirCaso, responder, penalidad; src/reloj.mjs: cargarCasos, recalcularComoTercero; src/proveedor.mjs: vista #/proveedor; scripts/reloj.mjs: despliegue y fondeo.",
+    "status": "APROBADO",
+    "test": "Cargar los 9 casos de datos/tickets_proveedor.csv desde la vista #/proveedor (el municipio abre con la cuenta 0, PV-01 responde con la cuenta 1); comprobar 8 aceptados, PVT-04226 rechazado con «Respuesta anterior a la apertura», penalidades del contrato y total 2.592 USD; «Recalcular como tercero» desde eventos; repetir el cálculo desde Node; buscar los textos de proveedores.csv en calldata y eventos.",
+    "result": {
+      "contrato": "0x254dffcd3277C0b1660F6d42EFbB754edaBAbC2B",
+      "municipio": "0x90F8bf6A479f320ead074411a4B0e7944Ea8c9C1",
+      "proveedores": [
+        {
+          "id": "PV-01",
+          "cuenta": "0xFFcf8FDEE72ac11b5c542428B35EEF5769C409f0",
+          "slaSegundos": 21600,
+          "tarifaCentavosPorHora": 18000
+        },
+        {
+          "id": "PV-02",
+          "cuenta": "0x22d491Bde2303f2f43325b2108D26f1eAbA1e32b",
+          "slaSegundos": 14400,
+          "tarifaCentavosPorHora": 24000
+        }
+      ],
+      "aceptados": 8,
+      "rechazados": [
+        "PVT-04226"
+      ],
+      "totalUSD": 2592,
+      "terceroCoincide": true,
+      "casos": [
+        {
+          "caso": "PVT-04226",
+          "estado": "RECHAZADO",
+          "motivo": "Respuesta anterior a la apertura",
+          "horasDeclaradas": -1.42,
+          "penalidadDeclaradaUSD": 0
+        },
+        {
+          "caso": "PVT-04244",
+          "estado": "ACEPTADO",
+          "horas": 11.3,
+          "penalidadContratoUSD": 954,
+          "penalidadDeclaradaUSD": 954
+        },
+        {
+          "caso": "PVT-04288",
+          "estado": "ACEPTADO",
+          "horas": 7.9,
+          "penalidadContratoUSD": 342,
+          "penalidadDeclaradaUSD": 342
+        },
+        {
+          "caso": "PVT-04301",
+          "estado": "ACEPTADO",
+          "horas": 3.8,
+          "penalidadContratoUSD": 0,
+          "penalidadDeclaradaUSD": 0
+        },
+        {
+          "caso": "PVT-04315",
+          "estado": "ACEPTADO",
+          "horas": 2.5,
+          "penalidadContratoUSD": 0,
+          "penalidadDeclaradaUSD": 0
+        },
+        {
+          "caso": "PVT-04320",
+          "estado": "ACEPTADO",
+          "horas": 3.8,
+          "penalidadContratoUSD": 0,
+          "penalidadDeclaradaUSD": 0
+        },
+        {
+          "caso": "PVT-04326",
+          "estado": "ACEPTADO",
+          "horas": 11.3,
+          "penalidadContratoUSD": 954,
+          "penalidadDeclaradaUSD": 954
+        },
+        {
+          "caso": "PVT-04360",
+          "estado": "ACEPTADO",
+          "horas": 3.8,
+          "penalidadContratoUSD": 0,
+          "penalidadDeclaradaUSD": 0
+        },
+        {
+          "caso": "PVT-04367",
+          "estado": "ACEPTADO",
+          "horas": 7.9,
+          "penalidadContratoUSD": 342,
+          "penalidadDeclaradaUSD": 342
+        }
+      ],
+      "privacidad": {
+        "valoresBuscados": 8,
+        "bytes": 8066,
+        "coincidencias": 0
+      },
+      "supuesto": "SLA contractual en horas corridas, no hábiles"
+    },
+    "evidence": [
+      "evidencias/08-proveedor.png",
+      "evidencias/vista-proveedor-movil.png",
+      "evidencias/proveedor.json",
+      "evidencias/reloj-local.json"
+    ],
+    "pending": []
+  },
   "sourceFiles": [
     {
       "file": "asignaciones.csv",
@@ -277,6 +385,7 @@
   ],
   "completed": true,
   "instance": "nivel1-v5-auditoria",
-  "finished": "2026-11-12T22:12:51.694Z",
-  "level1Complete": true
+  "finished": "2026-11-12T23:24:58.033Z",
+  "level1Complete": true,
+  "level2Complete": true
 }

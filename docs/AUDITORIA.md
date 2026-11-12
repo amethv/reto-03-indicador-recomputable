@@ -1,6 +1,6 @@
 # Auditoría Nivel 1 — Reto 03
 
-Ejecución UTC: 2026-11-12T22:11:42.137Z → 2026-11-12T22:12:51.694Z. Zona de presentación: America/Guayaquil.
+Ejecución UTC: 2026-11-12T23:20:14.450Z → 2026-11-12T23:24:58.033Z. Zona de presentación: America/Guayaquil.
 
 Resultado: **NIVEL 1 COMPLETO**.
 
@@ -51,6 +51,17 @@ Se leyeron ambos PDF entregados (docs/referencia/) y el README de datos/. Los or
 - Evidencia disponible: evidencias/blockchain.json, evidencias/contrato.json, evidencias/05-privacidad.png
 - Correcciones o validaciones pendientes: Ninguna en esta prueba automatizada; repetir ante el jurado para la demostración en vivo.
 
+## Nivel 2 · Reloj del proveedor
+
+Resultado: **NIVEL 2 COMPLETO**.
+
+- Archivos y funciones: contracts/RelojProveedor.sol: abrirCaso, responder, penalidad; src/reloj.mjs: cargarCasos, recalcularComoTercero; src/proveedor.mjs: vista #/proveedor; scripts/reloj.mjs: despliegue y fondeo.
+- Prueba ejecutada: Cargar los 9 casos de datos/tickets_proveedor.csv desde la vista #/proveedor (el municipio abre con la cuenta 0, PV-01 responde con la cuenta 1); comprobar 8 aceptados, PVT-04226 rechazado con «Respuesta anterior a la apertura», penalidades del contrato y total 2.592 USD; «Recalcular como tercero» desde eventos; repetir el cálculo desde Node; buscar los textos de proveedores.csv en calldata y eventos.
+- Resultado real: {"aceptados":8,"rechazados":["PVT-04226"],"totalUSD":2592,"terceroCoincide":true,"penalidades":{"PVT-04244":954,"PVT-04288":342,"PVT-04301":0,"PVT-04315":0,"PVT-04320":0,"PVT-04326":954,"PVT-04360":0,"PVT-04367":342},"privacidad":{"valoresBuscados":8,"bytes":8066,"coincidencias":0}}
+- Estado: **APROBADO**.
+- Evidencia disponible: evidencias/08-proveedor.png, evidencias/vista-proveedor-movil.png, evidencias/proveedor.json, evidencias/reloj-local.json
+- Correcciones o validaciones pendientes: Ninguna en esta prueba automatizada.
+
 ## Pruebas complementarias
 
 - Navegación: 7 rutas con una sola vista visible, aria-current, atrás y adelante, estado de sello y verificación conservado entre vistas, guion con 5 pasos cumplidos: APROBADO.
@@ -72,3 +83,5 @@ Se leyeron ambos PDF entregados (docs/referencia/) y el README de datos/. Los or
 - El motor descuenta feriados configurados. Se usa lista vacía como supuesto explícito porque no se entregó calendario oficial. Ver docs/CALENDARIO.md. El panel «Simular feriado» muestra el efecto sin sellar.
 - El ancla pública en Sepolia se despliega con npm run deploy:sepolia y npm run seal:sepolia; sin evidencias/red-sepolia.json la auditoría solo comprueba que la interfaz lo declara pendiente.
 - Un sello acredita integridad posterior al anclaje, no veracidad ni cumplimiento institucional anterior.
+- Nivel 2: en la demo las llaves del municipio y de los proveedores están en el mismo servidor (cuentas de Ganache). En la realidad cada organización guarda la suya y firma desde su propio equipo; el contrato ya exige que cada paso lo firme la cuenta correcta.
+- Nivel 2: el SLA contractual se mide en horas corridas, no hábiles, porque así vienen los datos de tickets_proveedor.csv. El reloj registra lo que cada parte firma; no prueba que la hora firmada sea la real.
