@@ -1,6 +1,6 @@
 # Auditoría Nivel 1 — Reto 03
 
-Ejecución UTC: 2026-11-09T02:40:25.186Z → 2026-11-09T02:40:43.547Z. Zona de presentación: America/Guayaquil.
+Ejecución UTC: 2026-11-12T02:16:36.564Z → 2026-11-12T02:17:28.429Z. Zona de presentación: America/Guayaquil.
 
 Resultado: **NIVEL 1 NO DECLARADO COMPLETO**.
 
@@ -10,7 +10,7 @@ Se leyeron ambos PDF entregados (docs/referencia/) y el README de datos/. Los or
 
 - Archivos y funciones: src/core.mjs: buildEvidence, leaf, merkle, evidenceHash; contracts/RegistroIndicador.sol: seal; src/chain.mjs: readAnchor; src/app.mjs: botón seal.
 - Prueba ejecutada: Cargar originales, pulsar sellado en navegador si aún no existe; comprobar código, recibo, evento y getSeal mediante JSON-RPC real.
-- Resultado real: {"count":187,"root":"0x9277bf7192fa581c9acf0a6885d1d4925598669293057e2731e7044fb436a6c4","transaction":"0x8005337484a237e29598474695996e4d79a5e88aef1531ec0961dd13dbfb221f","block":2,"address":"0xe78A0F7E598Cc8b0Bb87894B0F60dD2a88d6a8Ab","chainId":31337}
+- Resultado real: {"count":187,"root":"0xd1506cf2f835116158223ae41d8e6fcbe0906d9ac6c18b89bf806bc6dd34020c","transaction":"0xf23b6c1122b310b0567c90bb1cb62614f51212f1960034c5cac74e95fde2ff76","block":2,"address":"0xe78A0F7E598Cc8b0Bb87894B0F60dD2a88d6a8Ab","chainId":31337}
 - Estado: **APROBADO**.
 - Evidencia disponible: evidencias/red-local.json, evidencias/sello-original.json, evidencias/01-sellado.png
 - Correcciones o validaciones pendientes: Ninguna en esta prueba automatizada; repetir ante el jurado para la demostración en vivo.
@@ -46,7 +46,7 @@ Se leyeron ambos PDF entregados (docs/referencia/) y el README de datos/. Los or
 
 - Archivos y funciones: contracts/RegistroIndicador.sol; src/chain.mjs: readAnchor; src/privacy.mjs: collectChainData, searchPersonalData; src/app.mjs: botón searchPersonal.
 - Prueba ejecutada: Consultar contrato, recibo, calldata, evento y almacenamiento reales; pulsar «Buscar datos personales en la cadena» y comprobar 0 coincidencias de todos los usuarios, técnicos, unidades y actores de la bitácora.
-- Resultado real: {"stored":["period","root","evidenceHash","count","timestamp","owner","rulesHash"],"sealCalldataBytes":132,"transaction":"0x8005337484a237e29598474695996e4d79a5e88aef1531ec0961dd13dbfb221f","contract":"0xe78A0F7E598Cc8b0Bb87894B0F60dD2a88d6a8Ab","network":"EVM local Ganache (red de desarrollo real)","personalDataSearch":{"values":174,"patterns":1530,"bytes":3328,"matches":0,"sources":["calldata de la transacción de sellado","calldata del despliegue (bytecode + hash de reglas)","bytecode desplegado","evento 1: temas y datos","almacenamiento del sello (3 ranuras)"]}}
+- Resultado real: {"stored":["period","root","evidenceHash","count","timestamp","owner","rulesHash"],"sealCalldataBytes":132,"transaction":"0xf23b6c1122b310b0567c90bb1cb62614f51212f1960034c5cac74e95fde2ff76","contract":"0xe78A0F7E598Cc8b0Bb87894B0F60dD2a88d6a8Ab","network":"EVM local Ganache (red de desarrollo real)","personalDataSearch":{"values":174,"patterns":1530,"bytes":3328,"matches":0,"sources":["calldata de la transacción de sellado","calldata del despliegue (bytecode + hash de reglas)","bytecode desplegado","evento 1: temas y datos","almacenamiento del sello (3 ranuras)"]}}
 - Estado: **APROBADO**.
 - Evidencia disponible: evidencias/blockchain.json, evidencias/contrato.json, evidencias/05-privacidad.png
 - Correcciones o validaciones pendientes: Ninguna en esta prueba automatizada; repetir ante el jurado para la demostración en vivo.
