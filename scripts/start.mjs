@@ -9,7 +9,7 @@ import {ROOT,STATE_ROOT,EVIDENCE_DIR,INSTANCE,SALT_FILES,deploy,providerFor,writ
 import {readAnchor} from '../src/chain.mjs';
 import {authenticateEvidence,validSalt,saltCommitment} from '../src/core.mjs';
 import {verifySource} from './verify-source.mjs';
-import {ensureReloj} from './reloj.mjs';
+import {ensureReloj,reiniciarReloj} from './reloj.mjs';
 // En el equipo: 127.0.0.1:8080. En un servicio como Render: HOST=0.0.0.0 y el PORT que asigne la plataforma.
 const PORT=Number(process.env.PORT)||8080,HOST=process.env.HOST||'127.0.0.1';
 // Hosts que pueden usar la API (defensa ante DNS rebinding). Render publica su dominio en RENDER_EXTERNAL_HOSTNAME.
@@ -43,7 +43,8 @@ export async function startApp(){
  if(!config){config=await deploy(provider);await fs.writeFile(path.join(EVIDENCE_DIR,'red-local.json'),JSON.stringify(config,null,2));}
  if(await provider.getCode(config.address)==='0x')throw new Error('La cadena persistida no contiene el contrato configurado. No se reemplazará automáticamente.');
  // Nivel 2: después del contrato del Nivel 1, para no alterar su dirección en una instancia nueva.
- const reloj=await ensureReloj(provider),contracts=[config.address,reloj.address];
+ // «Reiniciar simulación» cambia el reloj vigente: la lista del proxy se actualiza con él.
+ let reloj=await ensureReloj(provider),contracts=[config.address,reloj.address];
  const mime={'.html':'text/html; charset=utf-8','.mjs':'text/javascript; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.json':'application/json; charset=utf-8','.csv':'text/csv; charset=utf-8','.sol':'text/plain; charset=utf-8','.md':'text/plain; charset=utf-8','.pdf':'application/pdf','.png':'image/png','.woff2':'font/woff2'};
  // Vendor se lee y se comprime una sola vez; se guarda en memoria mientras corre el servidor.
  const vendorCache=new Map();
@@ -77,6 +78,12 @@ export async function startApp(){
     try{await fs.writeFile(file,JSON.stringify(evidence,null,2),{flag:'wx'});}catch(e){if(e.code!=='EEXIST')throw e;const old=JSON.parse(await fs.readFile(file,'utf8'));if(JSON.stringify(old)!==JSON.stringify(evidence))throw new Error('No se puede reemplazar la evidencia original');}
     res.writeHead(200,{'Content-Type':'application/json'});res.end(JSON.stringify({saved:true}));return;
    }
+   if(req.method==='POST'&&url.pathname==='/api/reloj/reiniciar'){
+    // Solo desde esta misma página. Despliega un RelojProveedor nuevo en la red local; el del Nivel 1 no se toca.
+    if(!req.headers.origin||!sameSite(req)){res.writeHead(403);res.end();return;}
+    reloj=await reiniciarReloj(provider);contracts=[config.address,reloj.address];
+    res.writeHead(200,{'Content-Type':'application/json'});res.end(JSON.stringify(reloj));return;
+   }
    if(req.method!=='GET'){res.writeHead(405);res.end();return;}
    if(url.pathname==='/api/sal'){
     // Solo para esta misma página: sin CORS y rechazando peticiones desde otros sitios.
@@ -109,7 +116,7 @@ export async function startApp(){
  });
  await new Promise((resolve,reject)=>{server.once('error',reject);server.listen(PORT,HOST,resolve);});
  console.log(`Instancia: ${INSTANCE}`);console.log(`Aplicación: http://${HOST==='0.0.0.0'?'127.0.0.1':HOST}:${PORT}`);console.log(`Blockchain: ${config.rpc} | contrato ${config.address}`);console.log(`Nivel 2: RelojProveedor ${reloj.address}`);
- return {config,reloj,provider,close:async()=>{provider.destroy();await new Promise(resolve=>server.close(resolve));await chain.close();}};
+ return {config,get reloj(){return reloj;},provider,close:async()=>{provider.destroy();await new Promise(resolve=>server.close(resolve));await chain.close();}};
 }
 if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href){
  const app=await startApp();for(const signal of ['SIGINT','SIGTERM'])process.on(signal,async()=>{await app.close();process.exit(0);});

@@ -22,7 +22,7 @@ const implementation=[
 ];
 const report={started:new Date().toISOString(),timezone:'America/Guayaquil',criteria:names.map((name,i)=>({criterion:i+1,name,implementation:implementation[i],status:'NO VERIFICADO',test:'No ejecutada',result:null,evidence:[],pending:[]})),supplementary:[],browserErrors:[]};
 // Nivel 2: sección aparte. No cambia los cinco criterios del Nivel 1 ni su resultado.
-report.level2={name:'Nivel 2 · Reloj del proveedor',implementation:'contracts/RelojProveedor.sol: abrirCaso, responder, penalidad; src/reloj.mjs: cargarCasos, recalcularComoTercero; src/proveedor.mjs: vista #/proveedor; scripts/reloj.mjs: despliegue y fondeo.',status:'NO VERIFICADO',test:'Cargar los 9 casos de datos/tickets_proveedor.csv desde la vista #/proveedor (el municipio abre con la cuenta 0, PV-01 responde con la cuenta 1); comprobar 8 aceptados, PVT-04226 rechazado con «Respuesta anterior a la apertura», penalidades del contrato y total 2.592 USD; «Recalcular como tercero» desde eventos; repetir el cálculo desde Node; buscar los textos de proveedores.csv en calldata y eventos.',result:null,evidence:[],pending:[]};
+report.level2={name:'Nivel 2 · Reloj del proveedor',implementation:'contracts/RelojProveedor.sol: abrirCaso, responder, penalidad; src/reloj.mjs: abrirCasos, responderCasos, recalcularComoTercero; src/proveedor.mjs: vista #/proveedor por roles; scripts/reloj.mjs y POST /api/reloj/reiniciar: despliegue, fondeo y reinicio.',status:'NO VERIFICADO',test:'En la vista #/proveedor, por roles y sobre un reloj recién desplegado («Reiniciar simulación»): el proveedor intenta responder antes de la apertura (mensaje, «Caso no abierto»); el municipio firma la apertura de los 9 casos con la cuenta 0 y una segunda firma se explica («Caso ya abierto»); el proveedor 1 firma con la cuenta 1: 8 aceptados y PVT-04226 rechazado («Respuesta anterior a la apertura»), total 2.592 USD; el auditor recalcula sin llaves desde los eventos y coincide en las 8 filas. Después se repite el cálculo desde Node y se buscan los textos de proveedores.csv en calldata y eventos.',result:null,evidence:[],pending:[]};
 let app,browser,step=0,anchor,evidence,originals,salt;
 try {
  report.sourceFiles=(await verifySource()).map(({file,actual})=>({file,sha256:actual}));
@@ -140,14 +140,27 @@ try {
  const l2=report.level2;
  try {
   await page.setViewportSize({width:1440,height:1100});await go('proveedor');
-  await expect(page.locator('#signers')).toContainText('Municipio');await expect(page.locator('#signers')).toContainText('Proveedor 1');
-  await page.locator('#loadCases').click();
-  await expect(page.locator('#caseStatus')).toContainText('9 casos procesados: 8 aceptados y 1 rechazado por el contrato',{timeout:120000});
+  const caseStatus=page.locator('#caseStatus'),guide=page.locator('#roleGuide');
+  // Reiniciar: un reloj nuevo en la red local, para recorrer el flujo desde cero en cualquier instancia.
+  await page.locator('#resetReloj').click();await expect(caseStatus).toContainText('Simulación reiniciada',{timeout:60000});await expect(guide).toContainText('Paso 1 de 3');
+  // Fuera de turno: el proveedor antes de la apertura recibe un mensaje claro y no se envía nada.
+  await page.locator('#roleProveedor').click();await expect(page.locator('#signers')).toContainText('Proveedor 1');await expect(page.locator('#signers')).toContainText('No puede');
+  await page.locator('#answerCases').click();await expect(caseStatus).toContainText('Todavía no le toca al proveedor 1',{timeout:60000});await expect(caseStatus).toContainText('Caso no abierto');
+  // Paso 1: el municipio firma la apertura; una segunda firma se explica con el motivo del contrato.
+  await page.locator('#roleMunicipio').click();await expect(page.locator('#signers')).toContainText('Municipio');
+  await page.locator('#loadCases').click();await expect(caseStatus).toContainText('El municipio firmó la apertura de 9 casos',{timeout:120000});await expect(guide).toContainText('Paso 2 de 3');
+  await page.locator('#loadCases').click();await expect(caseStatus).toContainText('El municipio ya firmó la apertura',{timeout:60000});await expect(caseStatus).toContainText('Caso ya abierto');
+  // Paso 2: el proveedor 1 firma sus respuestas; PVT-04226 sale rechazado.
+  await page.locator('#roleProveedor').click();await page.locator('#answerCases').click();
+  await expect(caseStatus).toContainText('9 casos procesados: 8 aceptados y 1 rechazado por el contrato',{timeout:120000});await expect(guide).toContainText('Paso 3 de 3');
+  await expect(page.locator('#cases tr.rejected')).toContainText('anterior a la apertura');
+  await expect(page.locator('#caseTotal .metric-value').nth(0)).toHaveText('8');await expect(page.locator('#caseTotal .metric-value').nth(1)).toHaveText('1');
+  await page.locator('#roleAuditor').click();
   await expect(page.locator('#cases tr')).toHaveCount(9);await expect(page.locator('#cases tr.rejected')).toHaveCount(1);await expect(page.locator('#cases tr.rejected')).toContainText('PVT-04226');
   await expect(page.locator('#caseRejected')).toContainText('PVT-04226 · Rechazado por el contrato: respuesta anterior a la apertura. El CSV lo reportaba como cumplido con 0 USD');
   await expect(page.locator('#caseTotal .case-total')).toHaveText('2.592 USD');
   await page.locator('#thirdParty').click();await expect(page.locator('#thirdTotal')).toContainText('2.592 USD · coincide con el contrato',{timeout:60000});await expect(page.locator('#cases td.third .match')).toHaveCount(8);
-  await expect(page.locator('[data-dot="proveedor"]')).toHaveClass(/green/);
+  await expect(guide).toContainText('Flujo completo');await expect(page.locator('[data-dot="proveedor"]')).toHaveClass(/green/);
   await shot('08-proveedor.png');
   // El mismo resultado desde Node, sin la interfaz: estado del contrato, penalidad() y eventos.
   const reloj=app.reloj,casos=parseCasos(await fs.readFile(path.join(ROOT,'datos/tickets_proveedor.csv'),'utf8'));

@@ -49,6 +49,20 @@ export async function deployReloj(provider){
   municipio:await municipio.getAddress(),proveedores:proveedores.map((p,i)=>({id:p.id,cuenta:cuentas[i],slaSegundos:p.slaSegundos,tarifaCentavosPorHora:p.tarifaCentavosPorHora})),
   supuesto:'SLA contractual en horas corridas, no hábiles',local:true};
 }
+/** «Reiniciar simulación»: despliega un RelojProveedor nuevo en la red local y lo deja como el vigente.
+ *  El anterior sigue en la cadena (nada se borra); simplemente deja de usarse. Un reinicio a la vez. */
+let reinicio=Promise.resolve();
+export function reiniciarReloj(provider){
+ const tarea=reinicio.then(async()=>{
+  const proveedores=parseProveedores(await fs.readFile(path.join(ROOT,'datos','proveedores.csv'),'utf8'));
+  await fondear(provider,proveedores.map((_,i)=>i+1));
+  const config=await deployReloj(provider);
+  await fs.mkdir(EVIDENCE_DIR,{recursive:true});await fs.writeFile(path.join(EVIDENCE_DIR,RELOJ_CONFIG),JSON.stringify(config,null,2));
+  return config;
+ });
+ reinicio=tarea.catch(()=>{});
+ return tarea;
+}
 /** Usa el RelojProveedor ya desplegado en esta instancia o lo despliega una vez. Nunca toca el contrato del Nivel 1. */
 export async function ensureReloj(provider){
  const file=path.join(EVIDENCE_DIR,RELOJ_CONFIG);

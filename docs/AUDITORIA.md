@@ -1,6 +1,6 @@
 # Auditoría Nivel 1 — Reto 03
 
-Ejecución UTC: 2026-11-13T02:08:26.865Z → 2026-11-13T02:09:41.278Z. Zona de presentación: America/Guayaquil.
+Ejecución UTC: 2026-11-13T02:51:59.512Z → 2026-11-13T02:53:47.009Z. Zona de presentación: America/Guayaquil.
 
 Resultado: **NIVEL 1 COMPLETO**.
 
@@ -55,8 +55,8 @@ Se leyeron ambos PDF entregados (docs/referencia/) y el README de datos/. Los or
 
 Resultado: **NIVEL 2 COMPLETO**.
 
-- Archivos y funciones: contracts/RelojProveedor.sol: abrirCaso, responder, penalidad; src/reloj.mjs: cargarCasos, recalcularComoTercero; src/proveedor.mjs: vista #/proveedor; scripts/reloj.mjs: despliegue y fondeo.
-- Prueba ejecutada: Cargar los 9 casos de datos/tickets_proveedor.csv desde la vista #/proveedor (el municipio abre con la cuenta 0, PV-01 responde con la cuenta 1); comprobar 8 aceptados, PVT-04226 rechazado con «Respuesta anterior a la apertura», penalidades del contrato y total 2.592 USD; «Recalcular como tercero» desde eventos; repetir el cálculo desde Node; buscar los textos de proveedores.csv en calldata y eventos.
+- Archivos y funciones: contracts/RelojProveedor.sol: abrirCaso, responder, penalidad; src/reloj.mjs: abrirCasos, responderCasos, recalcularComoTercero; src/proveedor.mjs: vista #/proveedor por roles; scripts/reloj.mjs y POST /api/reloj/reiniciar: despliegue, fondeo y reinicio.
+- Prueba ejecutada: En la vista #/proveedor, por roles y sobre un reloj recién desplegado («Reiniciar simulación»): el proveedor intenta responder antes de la apertura (mensaje, «Caso no abierto»); el municipio firma la apertura de los 9 casos con la cuenta 0 y una segunda firma se explica («Caso ya abierto»); el proveedor 1 firma con la cuenta 1: 8 aceptados y PVT-04226 rechazado («Respuesta anterior a la apertura»), total 2.592 USD; el auditor recalcula sin llaves desde los eventos y coincide en las 8 filas. Después se repite el cálculo desde Node y se buscan los textos de proveedores.csv en calldata y eventos.
 - Resultado real: {"aceptados":8,"rechazados":["PVT-04226"],"totalUSD":2592,"terceroCoincide":true,"penalidades":{"PVT-04244":954,"PVT-04288":342,"PVT-04301":0,"PVT-04315":0,"PVT-04320":0,"PVT-04326":954,"PVT-04360":0,"PVT-04367":342},"privacidad":{"valoresBuscados":8,"bytes":8066,"coincidencias":0}}
 - Estado: **APROBADO**.
 - Evidencia disponible: evidencias/08-proveedor.png, evidencias/vista-proveedor-movil.png, evidencias/proveedor.json, evidencias/reloj-local.json

@@ -1,5 +1,5 @@
 {
-  "started": "2026-11-13T02:08:26.865Z",
+  "started": "2026-11-13T02:51:59.512Z",
   "timezone": "America/Guayaquil",
   "criteria": [
     {
@@ -231,11 +231,11 @@
   "browserErrors": [],
   "level2": {
     "name": "Nivel 2 · Reloj del proveedor",
-    "implementation": "contracts/RelojProveedor.sol: abrirCaso, responder, penalidad; src/reloj.mjs: cargarCasos, recalcularComoTercero; src/proveedor.mjs: vista #/proveedor; scripts/reloj.mjs: despliegue y fondeo.",
+    "implementation": "contracts/RelojProveedor.sol: abrirCaso, responder, penalidad; src/reloj.mjs: abrirCasos, responderCasos, recalcularComoTercero; src/proveedor.mjs: vista #/proveedor por roles; scripts/reloj.mjs y POST /api/reloj/reiniciar: despliegue, fondeo y reinicio.",
     "status": "APROBADO",
-    "test": "Cargar los 9 casos de datos/tickets_proveedor.csv desde la vista #/proveedor (el municipio abre con la cuenta 0, PV-01 responde con la cuenta 1); comprobar 8 aceptados, PVT-04226 rechazado con «Respuesta anterior a la apertura», penalidades del contrato y total 2.592 USD; «Recalcular como tercero» desde eventos; repetir el cálculo desde Node; buscar los textos de proveedores.csv en calldata y eventos.",
+    "test": "En la vista #/proveedor, por roles y sobre un reloj recién desplegado («Reiniciar simulación»): el proveedor intenta responder antes de la apertura (mensaje, «Caso no abierto»); el municipio firma la apertura de los 9 casos con la cuenta 0 y una segunda firma se explica («Caso ya abierto»); el proveedor 1 firma con la cuenta 1: 8 aceptados y PVT-04226 rechazado («Respuesta anterior a la apertura»), total 2.592 USD; el auditor recalcula sin llaves desde los eventos y coincide en las 8 filas. Después se repite el cálculo desde Node y se buscan los textos de proveedores.csv en calldata y eventos.",
     "result": {
-      "contrato": "0x254dffcd3277C0b1660F6d42EFbB754edaBAbC2B",
+      "contrato": "0xA57B8a5584442B467b4689F1144D269d096A3daF",
       "municipio": "0x90F8bf6A479f320ead074411a4B0e7944Ea8c9C1",
       "proveedores": [
         {
@@ -385,7 +385,7 @@
   ],
   "completed": true,
   "instance": "nivel1-v5-auditoria",
-  "finished": "2026-11-13T02:09:41.278Z",
+  "finished": "2026-11-13T02:53:47.009Z",
   "level1Complete": true,
   "level2Complete": true
 }

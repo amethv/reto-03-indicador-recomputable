@@ -11,7 +11,8 @@ let network='local',config,provider,baseline,evidence=null,prepared=null,prepare
 // coincidencias de la última búsqueda de datos personales y pasos del guion cumplidos en esta sesión.
 let lastAnchor=null,lastStatus=null,privacyMatches=null;const done=new Set();
 // Nivel 2: configuración del RelojProveedor de esta red (solo existe en la red local).
-let reloj=null;
+// La vista usa siempre el RelojProveedor de la red local, sin importar la red elegida para el sellado.
+let proveedorUI=null;
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt=v=>Number(v).toLocaleString('es-EC',{minimumFractionDigits:2,maximumFractionDigits:2});
 const pct=r=>`${fmt(r.percent)} %`;
@@ -295,12 +296,13 @@ async function useNetwork(name){
  }
  const next=await response.json();
  provider?.destroy();
- network=name;config=next;evidence=null;salt=null;sealed=false;prepared=null;preparedSalt=null;lastAnchor=null;privacyMatches=null;done.clear();clearResults();controls();showSalt();
+ // El paso 6 (reloj del proveedor) vive en la red local siempre: cambiar la red del sellado no lo borra.
+ const reloj6=done.has(6);
+ network=name;config=next;evidence=null;salt=null;sealed=false;prepared=null;preparedSalt=null;lastAnchor=null;privacyMatches=null;done.clear();if(reloj6)done.add(6);clearResults();controls();showSalt();
  $('configLink').href=`/evidencias/${CONFIG_FILES[name]}`;
  // La red local se consulta por /rpc del mismo servidor (funciona igual en el equipo y en un servicio publicado).
  const rpcUrl=config.local?new URL('/rpc',location.href).href:config.rpc;
  provider=new JsonRpcProvider(rpcUrl,undefined,{cacheTimeout:-1});provider.pollingInterval=config.local?100:4000;
- reloj=null;if(config.local){const r=await fetch('/evidencias/reloj-local.json');if(r.ok)reloj=await r.json();}proveedorUI.reset();
  refreshNetwork();
  $('privacy').innerHTML=facts([['Contrato configurado',config.address],['Red',redVisible(config.network)],['RPC de lectura',rpcUrl],['Transacción de despliegue',config.deploymentTransaction],['Sello','Falta consultar el sellado.']]);
  $('onchain').innerHTML='<p class="small">Sin consulta.</p>';$('chainData').replaceChildren();
@@ -331,6 +333,7 @@ function showRoute({focus=false}={}){
  const name=routeFromHash();
  if(!name){history.replaceState(null,'','#/panel');return showRoute({focus});}
  for(const [r,id] of Object.entries(ROUTES))$(id).hidden=r!==name;
+ if(name==='proveedor'&&route!==name&&!busy)proveedorUI?.refresh();
  for(const a of document.querySelectorAll('nav a[data-route]'))if(a.dataset.route===name)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current');
  // El mensaje de verificación es uno solo: se muestra en Recalcular y en Verificar.
  const slot=$(ROUTES[name]).querySelector('[data-slot="verification"]');if(slot)slot.append($('verification'));
@@ -405,6 +408,6 @@ showRoute();
 
 $('network').onchange=()=>run(()=>useNetwork($('network').value));
 // Nivel 2: la vista vive en proveedor.mjs; aquí solo se le pasa el estado compartido.
-const proveedorUI=initProveedor({$,esc,run,getProvider:()=>provider,getReloj:()=>reloj,rpcUrl:()=>new URL('/rpc',location.href).href,markDone:()=>done.add(6)});
+proveedorUI=initProveedor({$,esc,run,setDone:v=>{if(v)done.add(6);else done.delete(6);renderNav();}});
 await run(async()=>{baseline=JSON.parse(await get('/src/originals.json'));await useNetwork('local');});
 window.__ateneaReady=true;

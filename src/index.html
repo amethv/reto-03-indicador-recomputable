@@ -205,18 +205,26 @@
 </section>
 
 <section id="s6" class="view" data-route="proveedor" aria-labelledby="t-proveedor" hidden>
-  <header class="viewhead"><h1 id="t-proveedor" tabindex="-1">Reloj del proveedor</h1><p>El municipio firma la apertura de cada caso y el proveedor su respuesta, cada uno con su propia llave. Cualquiera puede recalcular el tiempo y la penalidad.</p></header>
+  <header class="viewhead"><h1 id="t-proveedor" tabindex="-1">Reloj del proveedor</h1><p>Dos organizaciones firman el mismo registro: el municipio abre cada caso y el proveedor responde, cada uno con su propia llave. Un auditor externo recalcula las penalidades sin llaves.</p><span class="sim-note">Simulación del flujo entre organizaciones · red local</span></header>
   <div class="card">
-    <div id="signers" class="signers"></div>
-    <div class="actions"><button id="loadCases" type="button">Cargar los 9 casos</button><button id="thirdParty" type="button" class="secondary" hidden>Recalcular como tercero</button></div>
-    <output id="caseStatus" class="status info" aria-live="polite">Sin casos cargados en esta sesión.</output>
+    <div class="role-tabs" role="tablist" aria-label="Elegir rol">
+      <button id="roleMunicipio" class="role-tab active" type="button" role="tab" aria-selected="true" data-ui>Como municipio</button>
+      <button id="roleProveedor" class="role-tab" type="button" role="tab" aria-selected="false" data-ui>Como proveedor 1</button>
+      <button id="roleAuditor" class="role-tab" type="button" role="tab" aria-selected="false" data-ui>Como auditor externo</button>
+    </div>
+    <p id="roleGuide" class="role-guide" aria-live="polite"></p>
+    <div id="signers" class="role-card"></div>
+    <div class="actions"><button id="loadCases" type="button">Firmar apertura de 9 casos</button><button id="answerCases" type="button" hidden>Firmar respuestas</button><button id="thirdParty" type="button" hidden>Recalcular sin llaves</button><button id="resetReloj" type="button" class="secondary">Reiniciar simulación</button></div>
+    <output id="caseStatus" class="status info" aria-live="polite">Cargando el reloj del proveedor…</output>
   </div>
-  <div id="caseResults" hidden>
-    <div id="caseTotal" class="verdict" aria-live="polite"></div>
+  <div id="caseResults">
+    <div id="caseTotal" class="metrics" aria-live="polite"></div>
     <div id="caseRejected"></div>
     <div class="card">
-      <h2>Casos del proveedor</h2>
-      <div class="tablewrap"><table class="cases"><thead><tr><th>Caso</th><th>Abre → responde</th><th>Apertura</th><th>Respuesta</th><th>Horas</th><th>SLA (h)</th><th>Cumple</th><th>Penalidad del contrato</th><th>Penalidad que declaraba el CSV</th><th>Tercero</th></tr></thead><tbody id="cases"></tbody></table></div>
+      <h2>Casos de julio</h2>
+      <div class="tablewrap"><table class="cases"><thead><tr><th>Caso</th><th>Apertura</th><th>Respuesta</th><th>Horas</th><th>Penalidad</th><th>Auditor</th></tr></thead><tbody id="cases"></tbody></table></div>
+      <p id="thirdTotal" class="third-total"></p>
+      <p id="otherProviders" class="small"></p>
       <p class="small">El plazo contractual se mide en horas corridas, no hábiles, tal como lo registran el municipio y el proveedor. Fechas en UTC−05:00.</p>
     </div>
   </div>

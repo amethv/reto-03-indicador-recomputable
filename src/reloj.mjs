@@ -78,6 +78,49 @@ export async function cargarCasos(contract,municipio,signerFor,casos,onStep=()=>
  return resultados;
 }
 
+export const motivoRevert=revertReason;
+
+/**
+ * Turno del municipio: firma la apertura de los casos que aún no están abiertos.
+ * Devuelve {abiertos, yaAbiertos, motivo}: si todos estaban abiertos no envía nada y trae el
+ * motivo con el que el contrato rechazaría una segunda firma («Caso ya abierto»).
+ */
+export async function abrirCasos(contract,municipio,casos,onStep=()=>{}){
+ const cuenta=await municipio.getAddress(),pendientes=[];
+ for(const c of casos)if(!(await contract.casos(idHash(c.id))).abierto)pendientes.push(c);
+ if(!pendientes.length){
+  const c=casos[0];let motivo=null;
+  try{await contract.connect(municipio).abrirCaso.staticCall(idHash(c.id),idHash(c.proveedorId),c.apertura);}catch(e){motivo=revertReason(e);}
+  return {abiertos:0,yaAbiertos:casos.length,motivo};
+ }
+ for(const c of pendientes){
+  const tx=await contract.connect(municipio).abrirCaso(idHash(c.id),idHash(c.proveedorId),c.apertura);await tx.wait();
+  onStep({id:c.id,paso:'apertura',cuenta,tx:tx.hash});
+ }
+ return {abiertos:pendientes.length,yaAbiertos:casos.length-pendientes.length,motivo:null};
+}
+
+/**
+ * Turno del proveedor: responde los casos abiertos y aún sin respuesta.
+ * Cada resultado: ACEPTADO, RECHAZADO (con el motivo del contrato), YA_RESPONDIDO o SIN_APERTURA
+ * (con el motivo con que el contrato lo rechazaría: «Caso no abierto»). Nada de esto lanza error.
+ */
+export async function responderCasos(contract,signerFor,casos,onStep=()=>{}){
+ const resultados=[];
+ for(const c of casos){
+  const casoId=idHash(c.id),prov=await signerFor(c.proveedorId),cuenta=await prov.getAddress(),estado=await contract.casos(casoId);
+  const r={id:c.id,casoId,cuenta,estado:null,motivo:null,tx:null};
+  if(estado.respondido)r.estado='YA_RESPONDIDO';
+  else if(!estado.abierto){r.estado='SIN_APERTURA';try{await contract.connect(prov).responder.staticCall(casoId,c.respuesta);}catch(e){r.motivo=revertReason(e);}}
+  else{
+   try{const tx=await contract.connect(prov).responder(casoId,c.respuesta);await tx.wait();r.tx=tx.hash;r.estado='ACEPTADO';}
+   catch(e){r.estado='RECHAZADO';r.motivo=revertReason(e);}
+  }
+  onStep(r);resultados.push(r);
+ }
+ return resultados;
+}
+
 /**
  * Recálculo de un tercero: sin llaves y sin CSV. Lee solo los eventos del contrato, recalcula
  * horas y penalidad de cada caso y las compara con penalidad() del contrato.
