@@ -1,6 +1,7 @@
-import {Contract,JsonRpcProvider} from 'ethers';
+import {Contract,ContractFactory,JsonRpcProvider} from 'ethers';
 import {ABI,readAnchor} from './chain.mjs';
-import {POLICY,PERIOD,SOURCES,BITACORA_HEADERS,csv,businessHours,buildEvidence,verifyText,evidenceHash,authenticateEvidence,sealedValues,newSalt,validSalt,saltCommitment} from './core.mjs';
+import {POLICY,PERIOD,SOURCES,BITACORA_HEADERS,csv,businessHours,buildEvidence,verifyText,evidenceHash,authenticateEvidence,sealedValues,newSalt,validSalt,saltCommitment,sha} from './core.mjs';
+import {conectarSepolia,mensajeBilletera} from './wallet.mjs';
 import {simulateHolidays} from './findings.mjs';
 import {personalValues,searchPersonalData,collectChainData} from './privacy.mjs';
 import {initProveedor} from './proveedor.mjs';
@@ -73,8 +74,14 @@ function showExplorer(anchor){
  const tx=anchor?.transactionHash??config.sealTransaction;
  $('explorer').innerHTML=`Explorador público: ${tx?`<a href="${esc(config.explorer)}/tx/${esc(tx)}" target="_blank" rel="noopener">transacción del sello</a> · `:''}<a href="${esc(config.explorer)}/address/${esc(config.address)}" target="_blank" rel="noopener">contrato ${esc(config.address)}</a>`;
 }
+// Enlaces del sello en el explorador público (solo redes con explorador, como Sepolia) y respaldo de la sal.
+function showSealLinks(anchor){
+ const tx=anchor?.transactionHash;
+ $('sealLinks').innerHTML=config?.explorer&&tx?`<a href="${esc(config.explorer)}/tx/${esc(tx)}" target="_blank" rel="noopener">Transacción del sello en Etherscan</a> · <a href="${esc(config.explorer)}/address/${esc(config.address)}" target="_blank" rel="noopener">Contrato en Etherscan</a>`:'';
+ $('downloadSalt').hidden=!(network==='sepolia'&&salt&&tx);
+}
 function showAnchor(anchor){
- lastAnchor=anchor;showExplorer(anchor);
+ lastAnchor=anchor;showExplorer(anchor);showSealLinks(anchor);
  // Solo la transacción: lo que el sello guarda se lista una vez, en «Lo que sí hay en la cadena» y en el detalle técnico.
  $('privacy').innerHTML=facts([['Contrato',anchor.address],['Red',redVisible(config.network)],['Chain ID',anchor.chainId],['Transacción del sello',anchor.transactionHash],['Bloque',anchor.blockNumber]]);
  const k=(label,key,value,show)=>[label,value,{key,show}];
@@ -177,7 +184,8 @@ $('prepareFiles').onclick=()=>run(async()=>{
 $('seal').onclick=()=>run(async()=>{
  if(!prepared||sealed)throw new Error('No hay un lote preparado para sellar o el sello ya existe.');
  const read=new Contract(config.address,ABI,provider),current=await read.getSeal(PERIOD);if(current.timestamp!==0n){sealed=true;throw new Error('El período ya está sellado. No se reemplazará.');}
- if(!config.local||Number((await provider.getNetwork()).chainId)!==31337)throw new Error('El sellado desde esta interfaz está habilitado solo para la red local documentada. En Sepolia sella el municipio con scripts/seal-testnet.mjs.');
+ if(network==='sepolia')return sealSepolia();
+ if(!config.local||Number((await provider.getNetwork()).chainId)!==31337)throw new Error('Esta red no admite sellar desde la página.');
  const signer=await provider.getSigner(0),contract=new Contract(config.address,ABI,signer);
  status('sealStatus','Enviando transacción real; esperando recibo…');
  const tx=await contract.seal(PERIOD,prepared.root,await evidenceHash(prepared),187),receipt=await tx.wait();if(receipt.status!==1)throw new Error('Transacción fallida');
@@ -185,6 +193,51 @@ $('seal').onclick=()=>run(async()=>{
  evidence=prepared;salt=preparedSalt;sealed=true;showAnchor(anchor);showSalt();
  const saved=await fetch('/api/evidence',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({evidence,salt})});
  status('sealStatus',`SELLADO CONFIRMADO · 187 tickets · bloque ${receipt.blockNumber}\nTX: ${anchor.transactionHash}${saved.ok?'\nLa evidencia y la sal secreta quedaron guardadas en el servidor, por separado.':'\nNo se pudo guardar la evidencia ni la sal en el servidor; descarga el respaldo del sellado antes de cerrar.'}`,'green');
+});
+// ---------- Sepolia con MetaMask: el municipio firma en su billetera; la llave nunca sale de ella ----------
+const postJson=async(url,data)=>{const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});if(!r.ok)throw new Error(await r.text()||`HTTP ${r.status}`);return r.json();};
+async function sealSepolia(){
+ try{
+  const {signer,address}=await conectarSepolia(t=>status('sealStatus',t));
+  // Solo el owner del contrato (la cuenta que preparó el período) puede sellar.
+  const owner=await new Contract(config.address,ABI,provider).owner();
+  if(owner.toLowerCase()!==address.toLowerCase())throw new Error(`Solo el municipio puede sellar: el contrato lo firma la cuenta ${short(owner)} y MetaMask está conectada con ${short(address)}. Cambia de cuenta en MetaMask.`);
+  // La sal se genera en el navegador y se guarda en el servidor ANTES de firmar, en un archivo propio de este contrato.
+  let s=null;const r=await fetch('/api/sal?red=sepolia');if(r.ok){const j=await r.json();if(validSalt(j.salt))s=j.salt;}
+  if(!s){s=preparedSalt;await postJson('/api/sepolia/sal',{address:config.address,salt:s});}
+  const candidate=s===preparedSalt?prepared:await buildEvidence(originalTexts,baseline,s);
+  status('sealStatus','Confirma la transacción en MetaMask…');
+  const tx=await new Contract(config.address,ABI,signer).seal(PERIOD,candidate.root,await evidenceHash(candidate),187);
+  status('sealStatus',`Esperando confirmación de la red… (Sepolia tarda unos segundos)\nTX: ${tx.hash}`);
+  const receipt=await tx.wait(1);if(receipt.status!==1)throw new Error('La transacción de sellado falló en la red.');
+  status('sealStatus','Comprobando el sello en la red pública…');
+  config=await postJson('/api/sepolia/sello',{transactionHash:receipt.hash,evidence:candidate});
+  const anchor=await readAnchor(provider,config);
+  prepared=evidence=candidate;preparedSalt=salt=s;sealed=true;showAnchor(anchor);showSalt();
+  status('sealStatus',`SELLADO CONFIRMADO · 187 tickets · bloque ${anchor.blockNumber}\nTX: ${anchor.transactionHash}\nLa evidencia quedó en el servidor y la sal secreta en un archivo aparte, solo para este contrato. Descarga su respaldo.`,'green');
+ }catch(e){throw new Error(mensajeBilletera(e));}
+}
+$('downloadSalt').onclick=()=>{
+ if(!salt||!config?.address)return;
+ const data={period:PERIOD,contrato:config.address,red:config.network,salt,aviso:'Secreto: no publicar. Sin esta sal no se pueden comprobar los tickets del sello.'};
+ const url=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'})),a=document.createElement('a');
+ a.href=url;a.download=`sal-sepolia-${config.address}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+};
+// «Preparar nuevo período»: despliega RegistroIndicador con MetaMask; el servidor lo comprueba en Sepolia antes de usarlo.
+$('prepareSepolia').onclick=()=>run(async()=>{
+ const st=(t,k='info')=>{const o=$('adminStatus');o.hidden=false;o.className=`status ${k}`;o.textContent=t;};
+ try{
+  const {signer,address}=await conectarSepolia(t=>st(t));
+  const artifact=JSON.parse(await get('/contracts/RegistroIndicador.json'));
+  st(`Confirma en MetaMask el despliegue del contrato (cuenta ${short(address)}).`);
+  const contract=await new ContractFactory(artifact.abi,artifact.bytecode,signer).deploy(await sha(JSON.stringify(POLICY)));
+  st('Esperando confirmación de la red… (Sepolia tarda unos segundos)');
+  const receipt=await contract.deploymentTransaction().wait(1);
+  st('Comprobando el contrato en la red pública…');
+  const nuevo=await postJson('/api/sepolia/periodo',{address:await contract.getAddress(),deploymentTransaction:receipt.hash});
+  $('network').value='sepolia';await useNetwork('sepolia');
+  st(`Período preparado: contrato ${short(nuevo.address)} sin sellar, comprobado en Sepolia. Ahora carga los originales y sella julio.`,'green');
+ }catch(e){st(`No se preparó el período · ${mensajeBilletera(e)}`,'pending');console.error(e);}
 });
 $('verify').onclick=()=>run(doVerify);
 // ---------- Calendario de feriados: uno o varios feriados simulados, sin tocar el registro sellado ----------
@@ -305,7 +358,7 @@ async function useNetwork(name){
  provider=new JsonRpcProvider(rpcUrl,undefined,{cacheTimeout:-1});provider.pollingInterval=config.local?100:4000;
  refreshNetwork();
  $('privacy').innerHTML=facts([['Contrato configurado',config.address],['Red',redVisible(config.network)],['RPC de lectura',rpcUrl],['Transacción de despliegue',config.deploymentTransaction],['Sello','Falta consultar el sellado.']]);
- $('onchain').innerHTML='<p class="small">Sin consulta.</p>';$('chainData').replaceChildren();
+ $('onchain').innerHTML='<p class="small">Sin consulta.</p>';$('chainData').replaceChildren();showSealLinks(null);
  showExplorer(null);
  $('networkNote').textContent=config.local?'Local: red propia de este servidor, funciona sin internet. El sellado se hace desde esta página.':`Pública: ${redVisible(config.network)}. El navegador solo lee por un RPC público, sin wallet ni credenciales. El municipio selló con su propia llave.`;
  status('sealStatus','Sin sellado comprobado en esta red.');
@@ -320,6 +373,7 @@ async function useNetwork(name){
  }
 }
 function showSalt(){
+ $('downloadSalt').hidden=!(network==='sepolia'&&salt&&lastAnchor);
  $('saltStatus').textContent=salt?'Sal secreta: cargada y coincide con el compromiso del manifiesto.':evidence?'Sal secreta: falta. Sin ella no se pueden comprobar los tickets; impórtala en «Verificar desde otro equipo».':'Sal secreta: pendiente.';
 }
 // ---------- Navegación por vistas, estado del menú y tarjeta de red ----------
@@ -373,7 +427,8 @@ async function refreshNetwork(){
  if(!config||!provider)return;
  const p=provider,dot=$('rpcDot');
  $('netName').textContent=config.local?'Local · Ganache':'Pública · Sepolia';
- $('netContract').textContent=short(config.address);$('netContract').title=config.address;
+ // En redes con explorador público (Sepolia), la dirección enlaza al contrato en Etherscan.
+ $('netContract').innerHTML=config.explorer?`<a href="${esc(config.explorer)}/address/${esc(config.address)}" target="_blank" rel="noopener">${esc(short(config.address))}</a>`:esc(short(config.address));$('netContract').title=config.address;
  try{const block=await p.getBlockNumber();if(p!==provider)return;$('netBlock').textContent=block.toLocaleString('es-EC');setDot(dot,'green','RPC: responde');}
  catch{if(p!==provider)return;$('netBlock').textContent='—';setDot(dot,'red','RPC: no responde');}
 }

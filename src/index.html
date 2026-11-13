@@ -114,9 +114,16 @@
     </details>
     <output id="sealStatus" class="status pending" aria-live="polite">Sin sellado comprobado.</output>
     <div id="commitment" class="factbox"></div>
+    <div id="sealLinks" class="seal-links"></div>
+    <button id="downloadSalt" type="button" class="secondary" hidden>Descargar sal secreta (respaldo)</button>
     <details><summary>Respaldo del sello</summary>
       <p class="small">Copia del manifiesto con la huella de los 187 tickets. La app ya la guarda sola en este equipo; solo hace falta para verificar desde otro equipo.</p>
       <button id="export" class="secondary" disabled>Descargar respaldo del sellado</button>
+    </details>
+    <details class="admin"><summary>Administración</summary>
+      <p class="small">Antes de cada presentación: despliega con MetaMask un contrato nuevo en Sepolia para que julio quede sin sellar. El servidor lo comprueba en la red pública antes de usarlo; el período anterior queda en el historial.</p>
+      <button id="prepareSepolia" type="button" class="secondary">Preparar nuevo período en Sepolia</button>
+      <output id="adminStatus" class="status info" aria-live="polite" hidden></output>
     </details>
   </div>
   <a class="next" href="#/recalcular" data-next="sellar" hidden>Siguiente: Recalcular <svg class="icon"><use href="#i-arrow"/></svg></a>

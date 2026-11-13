@@ -35,7 +35,7 @@ Para una demostración desde cero (contrato sin sellar en una instancia nueva): 
 | `npm.cmd run verify:source` | Compara los 11 archivos de `datos/` con sus SHA-256 |
 | `npm.cmd run audit` | Los cinco criterios del Nivel 1 y la sección del Nivel 2 en Edge sobre la cadena real; escribe `docs/AUDITORIA.md` y `evidencias/` |
 | `npm.cmd run slides` | Regenera las láminas de `presentacion/` |
-| `npm.cmd run deploy:sepolia` / `seal:sepolia` | Ancla pública (ver abajo) |
+| `npm.cmd run deploy:sepolia` / `seal:sepolia` | Ancla pública por script, alternativa a MetaMask (ver abajo) |
 
 ## Números clave
 
@@ -82,7 +82,7 @@ En la vista **6 · Reloj del proveedor** (`#/proveedor`), «Cargar los 9 casos»
 
 | Red | Dirección |
 |---|---|
-| Sepolia (pública) | **Pendiente**: se completa en `evidencias/red-sepolia.json` al correr los scripts |
+| Sepolia (pública) | Cambia en cada período: se prepara con MetaMask antes de cada presentación y queda en `evidencias/red-sepolia.json` (los anteriores, en `evidencias/sepolia-historial/`) |
 | Ganache local (respaldo) | `0xe78A0F7E598Cc8b0Bb87894B0F60dD2a88d6a8Ab`, chain ID 31337 (determinista; ver `evidencias/red-local.json`) |
 | RelojProveedor, Nivel 2 (solo local) | En una instancia nueva, `0x5b1869D9A4C187F2EAa108f3062412ecf0526b24`. En una cadena creada antes del Nivel 2 la dirección cambia (primero se fondea la cuenta de PV-02); cada instancia la guarda en `evidencias/reloj-local.json` |
 
@@ -92,25 +92,37 @@ En la vista **6 · Reloj del proveedor** (`#/proveedor`), «Cargar los 9 casos»
 
 `render.yaml` describe el servicio: instala sin dependencias de desarrollo y arranca `node scripts/start.mjs` con `HOST=0.0.0.0` y el `PORT` de Render. Ganache corre dentro del mismo proceso y la página lo consulta por `/rpc`, que solo deja pasar lecturas y transacciones a los dos contratos configurados (el del Nivel 1 y el reloj del proveedor). En el plan gratis el disco no es persistente: tras un reinicio o una suspensión el contrato queda sin sellar y el reloj sin casos; se vuelven a cargar desde las vistas Sellar y Reloj del proveedor. En esta modalidad la sal se entrega a quien abra la página: sirve para la demo con datos sintéticos, no para datos reales.
 
-## Ancla en Sepolia
+## Ancla en Sepolia con MetaMask
 
-El municipio sella con un script; el navegador solo lee por un RPC público, sin wallet ni credenciales.
+El municipio despliega y sella **desde la página, firmando con MetaMask**: la llave privada nunca sale de la billetera y no hace falta `.env`. El servidor no confía en el navegador: antes de guardar nada lo comprueba por un RPC público de solo lectura (por defecto `https://ethereum-sepolia-rpc.publicnode.com`; se cambia con `SEPOLIA_PUBLIC_RPC_URL`).
 
-1. Crear una wallet **de prueba** solo para esto (por ejemplo una cuenta nueva en MetaMask) y copiar su llave privada. No usar una wallet con fondos reales.
-2. Pedir Sepolia ETH para esa dirección en un faucet (por ejemplo el de Google Cloud Web3 o el de Alchemy). Con 0,05 ETH sobra.
-3. Conseguir una URL de RPC de Sepolia (Alchemy, Infura u otro) y, si se quiere verificar el código en Etherscan, una API key de etherscan.io.
-4. `copy .env.example .env` y completar `SEPOLIA_RPC_URL`, `SELLADOR_PRIVATE_KEY` y, opcional, `ETHERSCAN_API_KEY`. `.env` está en `.gitignore`.
-5. `npm.cmd run deploy:sepolia` → despliega el contrato precompilado (`contracts/RegistroIndicador.json`, no hace falta solc) y escribe `evidencias/red-sepolia.json` con dirección, transacción y enlaces a https://sepolia.etherscan.io/. Si ya hay un despliegue, no hace nada (usar `--nuevo` para otro).
-6. `npm.cmd run seal:sepolia` → crea la sal secreta en `.secreto/sal-sepolia-202607.json` **antes** de enviar la transacción, sella julio, comprueba el ancla y escribe `evidencias/sello-sepolia.json`. Repetirlo no crea otro sello. `.secreto/` no se publica: respaldarla aparte, porque sin ella nadie puede comprobar los tickets de ese sello.
-7. `npm.cmd start` y elegir **Pública (Sepolia)** en el selector de red. En este equipo la sal se carga sola; en otro, se importa en la vista Verificar.
+**Una sola vez:** instalar MetaMask, crear una cuenta **de prueba** para el municipio y pedir Sepolia ETH en un faucet (con 0,05 ETH sobra). Para la presentación la app corre en la computadora del municipio con `npm.cmd start`.
 
-Sin internet, la demo funciona igual en la red local.
+**Antes de cada presentación** (deja julio sin sellar):
+
+1. Vista **Sellar** → desplegable **Administración** → **Preparar nuevo período en Sepolia**. MetaMask pide cambiar a Sepolia si hace falta y firmar el despliegue de `RegistroIndicador` (bytecode de `contracts/RegistroIndicador.json`, con el `rulesHash` de estas reglas).
+2. El servidor comprueba en la red pública que el código desplegado es `RegistroIndicador`, que el `rulesHash` es el correcto y que el owner es quien lo desplegó. Solo entonces escribe `evidencias/red-sepolia.json`. El período anterior pasa a `evidencias/sepolia-historial/`; no se borra.
+
+**En vivo:**
+
+3. Con la red **Pública (Sepolia)** elegida: **Cargar los originales entregados** → **Sellar julio en blockchain**. Antes de firmar se comprueba que la cuenta de MetaMask sea el `owner()`; si no, se explica que solo el municipio puede sellar.
+4. La sal secreta se genera en el navegador y se guarda en el servidor **antes** de firmar, en `.secreto/sal-sepolia-<dirección del contrato>.json` (un archivo por contrato, para que un período nuevo no choque con el anterior). Nunca va a la cadena ni a `evidencias/`. Tras el sello, el botón **Descargar sal secreta (respaldo)** guarda una copia.
+5. El servidor lee la transacción por RPC público, comprueba ancla, evidencia y sal, y guarda `evidencias/sello-sepolia.json` y el bloque del sello (`sealBlock`) en la configuración. La vista muestra «✓ Julio ya está sellado» y enlaces a sepolia.etherscan.io de la transacción y del contrato; la tarjeta de red también enlaza el contrato.
+6. Recalcular, Verificar (incluida la edición manual del CSV que da ROJO), Comparar y Privacidad leen Sepolia por RPC público, sin MetaMask. Privacidad revisa la calldata y los eventos reales.
+
+Opcional: con `SEPOLIA_MUNICIPIO=0x…` en el entorno del servidor, solo esa cuenta puede preparar períodos.
+
+**Alternativa por script** (con llave en `.env`, sin MetaMask): `copy .env.example .env`, completar `SEPOLIA_RPC_URL` y `SELLADOR_PRIVATE_KEY`, y luego `npm.cmd run deploy:sepolia` (con `--nuevo` archiva el período anterior y despliega otro) y `npm.cmd run seal:sepolia`. Usa el mismo archivo de sal por contrato.
+
+**Render y Sepolia:** en Render el disco no es persistente. Si se sella Sepolia desde Render, la sal (`.secreto/`) y la configuración se pierden al reiniciar el servicio: el sello sigue en Sepolia, pero ya nadie podría comprobar los tickets sin la sal. Por eso, para Sepolia, usar la app en la propia computadora y descargar siempre el respaldo de la sal.
+
+Sin internet, todo funciona igual en la red local. El reloj del proveedor usa siempre la red local.
 
 ## Delimitación
 
 - **En cadena**, solo el indicador público: quien emite el número es el mismo que se mide con él. Van período, raíz Merkle, compromiso, cantidad, fecha y hash de reglas.
 - **Fuera de cadena**: asignaciones, escalamientos, la bitácora y el contenido de los tickets. La operación interna se resuelve mejor con logs firmados. La bitácora y las reaperturas entran al sello solo por su SHA-256.
-- **Sal secreta del manifiesto**: `evidencias/sello-original.json` es público y guarda un hash por ticket y por campo. Sin sal, bastaría una lista de nombres para saber quién reportó cada ticket. Por eso cada sello usa una sal aleatoria de 32 bytes: entra en cada hash junto con el ID del ticket, y el manifiesto solo lleva su compromiso (`saltCommitment`). La sal nunca va en `evidencias/` ni en la cadena. En la red local vive en `.instances/<instancia>/secreto/sal-202607.json`; en Sepolia, en `.secreto/sal-sepolia-202607.json`. Las dos rutas están en `.gitignore`. Quien verifica necesita la sal: el servidor local se la entrega a su propia página, o se importa en la vista Verificar.
+- **Sal secreta del manifiesto**: `evidencias/sello-original.json` es público y guarda un hash por ticket y por campo. Sin sal, bastaría una lista de nombres para saber quién reportó cada ticket. Por eso cada sello usa una sal aleatoria de 32 bytes: entra en cada hash junto con el ID del ticket, y el manifiesto solo lleva su compromiso (`saltCommitment`). La sal nunca va en `evidencias/` ni en la cadena. En la red local vive en `.instances/<instancia>/secreto/sal-202607.json`; en Sepolia, en `.secreto/sal-sepolia-<dirección del contrato>.json`, un archivo por contrato. Las dos rutas están en `.gitignore`. Quien verifica necesita la sal: el servidor local se la entrega a su propia página, o se importa en la vista Verificar.
 - **Reloj del proveedor (Nivel 2), implementado**: la segunda frontera de confianza. Dos organizaciones, un contrato y penalidades en dólares; cada parte firma con su llave.
 - **Lo que la cadena no hace**: no prueba que los datos fueran verdaderos antes de sellarlos ni mejora los tiempos de respuesta. En el reloj, registra lo que cada parte firma y rechaza lo imposible, pero no sabe si la hora firmada es la real.
 

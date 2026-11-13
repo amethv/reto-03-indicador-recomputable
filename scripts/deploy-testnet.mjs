@@ -3,6 +3,7 @@
 import fs from 'node:fs/promises';
 import {JsonRpcProvider,Wallet,formatEther} from 'ethers';
 import {SEPOLIA,CONFIG_PATH,loadSettings,requireNetwork,requireBalance,deployContract,writeJson,verifyOnEtherscan} from './testnet.mjs';
+import {archivarPeriodo} from './sepolia-web.mjs';
 
 const settings = loadSettings();
 const provider = new JsonRpcProvider(settings.rpcUrl);
@@ -18,6 +19,9 @@ if (previous?.address && !process.argv.includes('--nuevo')) {
 
 console.log('Desplegando RegistroIndicador… (espera 2 confirmaciones)');
 const {config, artifact} = await deployContract({signer, publicRpc: settings.publicRpc});
+// El período anterior (si lo hay) pasa a evidencias/sepolia-historial/; no se borra.
+const archivo = await archivarPeriodo();
+if (archivo) console.log(`Período anterior archivado en ${archivo}`);
 await writeJson(CONFIG_PATH, config);
 console.log(`Contrato: ${config.address}\nTransacción: ${config.links.deployment}\nGuardado en evidencias/red-sepolia.json`);
 

@@ -5,10 +5,12 @@ Hilo conductor: julio de 2026. Los cinco criterios del Nivel 1, en su orden, y d
 ## Preparación (antes del cronómetro)
 
 1. `npm.cmd ci --no-audit --no-fund` y `npm.cmd test` (todo en verde).
-2. Cerrar cualquier proceso en los puertos 8080 y 8545. Ejecutar `npm.cmd run demo` (o doble clic en `INICIAR_DEMO.cmd`): crea una instancia nueva con el contrato **sin sellar** y el reloj del proveedor **sin casos**. Abrir http://127.0.0.1:8080. En Render: reiniciar el servicio antes de presentar, porque el sello y los casos duran hasta el siguiente reinicio.
-3. Abrir en el Bloc de notas una **copia** de `datos/tickets.csv` (por ejemplo en el Escritorio). No editar el original y no usar un editor con autoguardado: guardaría el cambio a medio escribir. Dejar el cursor en TK-2026-04201, primera fila.
-4. Abrir en otra pestaña el contrato de Sepolia (enlace en `evidencias/red-sepolia.json` o en el README) y las dos láminas de `presentacion/`.
-5. Sin internet: usar solo la red «Local (Ganache)». Todo funciona igual salvo el paso de Sepolia.
+2. Cerrar cualquier proceso en los puertos 8080 y 8545 y ejecutar `npm.cmd start` en la computadora del municipio. Abrir http://127.0.0.1:8080. (Para Sepolia no usar Render: su disco no guarda la sal entre reinicios.)
+3. MetaMask: cuenta del municipio, red Sepolia, con Sepolia ETH de prueba.
+4. **Preparar nuevo período**: vista Sellar → «Administración» → «Preparar nuevo período en Sepolia» → firmar en MetaMask. Esperar «Período preparado… sin sellar, comprobado en Sepolia». El selector de red queda en «Pública (Sepolia)» y julio sin sellar.
+5. Abrir en el Bloc de notas una **copia** de `datos/tickets.csv` (por ejemplo en el Escritorio). No editar el original y no usar un editor con autoguardado: guardaría el cambio a medio escribir. Dejar el cursor en TK-2026-04201, primera fila.
+6. Tener a mano las dos láminas de `presentacion/`.
+7. Sin internet: usar la red «Local (Ganache)» con `npm.cmd run demo` (o `INICIAR_DEMO.cmd`), que crea una instancia nueva sin sellar. Todo funciona igual, sellando sin MetaMask.
 
 ## Guion
 
@@ -17,17 +19,17 @@ La demo sigue el menú lateral de arriba hacia abajo: **Panel → 1 Sellar → 2
 | Tiempo | Vista (criterio) | Acción visible | Mensaje |
 |---|---|---|---|
 | 0:00–0:15 | Panel | Mostrar el titular, las cuatro tarjetas en pendiente y el guion sin checks. | Esto es lo que vamos a demostrar en cinco minutos. |
-| 0:15–0:50 | Sellar (1) | «Cargar los originales entregados» → 187/187. «Sellar julio en blockchain» → TX confirmada. El punto de Sellar se pone verde. «Siguiente: Recalcular →». | Anclamos los 187 tickets con sus tiempos y su SLA. En cadena solo van hashes, conteos y período. |
+| 0:15–0:50 | Sellar (1) | Red «Pública (Sepolia)». «Cargar los originales entregados» → 187/187. «Sellar julio en blockchain» → firmar en MetaMask → «Esperando confirmación de la red…» → SELLADO CONFIRMADO y «✓ Julio ya está sellado». Abrir el enlace «Transacción del sello en Etherscan». | El municipio firma con su propia llave, que nunca sale de MetaMask. Anclamos los 187 tickets con sus tiempos y su SLA; en cadena solo van hashes, conteos y período. |
 | 0:50–2:00 | Recalcular (2) | «Recalcular desde lo sellado» → VERDE. Mostrar la cascada, la tabla de cuatro indicadores, la tarjeta de TK-2026-04228 y la de reaperturas. | **Publicado 98,25 %; solo confirmados por el usuario 55,61 %.** El 171 publicado sale de 187 − 7 reaperturas − 9 casos del proveedor. TK-2026-04228 se resolvió en 5,80 h y alguien lo editó a 3,80 h dos días después: solo la bitácora lo revela. Cinco reaperturas debieron conservar su número. Cada exclusión o edición mejora el número publicado. |
 | 2:00–3:00 | Verificar (3) | En la copia del CSV cambiar `fecha_resolucion` de TK-2026-04201 de `2026-08-03T12:03:55-05:00` a `2026-08-03T12:04:55-05:00`. Guardar, elegirla en «CSV que se va a verificar» y pulsar «Verificar nuevamente contra blockchain». Los puntos de Verificar, Recalcular y Comparar se ponen rojos. | ROJO con el ticket y el campo, el valor sellado frente al editado, y el sello no cambió. Un minuto de diferencia basta. |
 | 3:00–3:45 | Comparar (4) | Ir a Comparar y pulsar «Recalcular para comparar»: descarta la copia y verifica el original (VERDE). En «Mostrar», elegir «Los que no cuentan en B». | 100 % contando todos los cierres; 55,61 % contando solo los confirmados. Los 83 cierres automáticos (44 %) explican 44,39 puntos: el hallazgo. |
-| 3:45–4:40 | Privacidad (5) | «Consultar contrato y transacción» → lo que sí hay en la cadena. «Buscar datos personales en la cadena» → 0 / 0 / 0. Si Sepolia está desplegado, cambiar antes la red a «Pública (Sepolia)». | Cualquiera lo verifica sin wallet. **0 coincidencias de 174 valores buscados**: usuarios, técnicos, unidades y actores, en texto y como hash. Lo único en cadena es período, raíz, compromiso, cantidad, fecha y hash de reglas. |
-| 4:40–5:40 | Reloj del proveedor (Nivel 2) | Ir a «6 · Reloj del proveedor» y pulsar «Cargar los 9 casos»: se ve qué cuenta firma cada paso. Señalar la fila roja de PVT-04226 y el total de **2.592 USD**. Pulsar «Recalcular como tercero» → «coincide». | Aquí hay dos organizaciones, un contrato y dinero. El municipio firma la apertura y el proveedor su respuesta, cada uno con su llave. El CSV daba PVT-04226 como cumplido con −1,42 h; el contrato lo rechaza. Cualquiera recalcula las penalidades desde los eventos, sin llaves. |
+| 3:45–4:40 | Privacidad (5) | «Consultar contrato y transacción» → lo que sí hay en la cadena de Sepolia. «Buscar datos personales en la cadena» → 0 / 0 / 0, revisando la calldata y los eventos reales. | Cualquiera lo verifica sin wallet. **0 coincidencias de 174 valores buscados**: usuarios, técnicos, unidades y actores, en texto y como hash. Lo único en cadena es período, raíz, compromiso, cantidad, fecha y hash de reglas. |
+| 4:40–5:40 | Reloj del proveedor (Nivel 2, red local) | «Reiniciar simulación» si ya se usó. «Como municipio» → «Firmar apertura de 9 casos». «Como proveedor 1» → «Firmar respuestas»: PVT-04226 en rojo. «Como auditor externo» → «Recalcular sin llaves» → «coincide» y **2.592 USD**. | Aquí hay dos organizaciones, un contrato y dinero. El municipio firma la apertura y el proveedor su respuesta, cada uno con su llave. El CSV daba PVT-04226 como cumplido con −1,42 h; el contrato lo rechaza. Cualquiera recalcula las penalidades desde los eventos, sin llaves. |
 | 5:40–6:00 | Panel y cierre | Volver al Panel: los seis pasos con check y la brecha de 44,39 pp. Lámina 2. | La cadena solo donde hay una frontera de confianza: el indicador público y el reloj con el proveedor. Lo interno, con logs firmados. |
 
-Si Sepolia aún no está desplegado, el selector lo dice («Sepolia pendiente»): en ese caso hacer el paso de Privacidad en la red local y mostrar `scripts/seal-testnet.mjs`. Al cambiar de red se reinicia el estado de la sesión (puntos y guion), porque cada red tiene su propio sello.
+Los criterios 2 a 5 leen Sepolia por RPC público, sin MetaMask. Si MetaMask o la red pública fallan en vivo, cambiar a «Local (Ganache)» y repetir desde Sellar: todo funciona igual sin internet. Al cambiar de red se reinicia el estado de la sesión (puntos y guion), porque cada red tiene su propio sello.
 
-«Simular feriado», bajo «Herramientas», queda fuera del cronómetro: sirve para la pregunta sobre feriados.
+«Calendario de feriados», bajo «Herramientas», queda fuera del cronómetro: sirve para la pregunta sobre feriados.
 
 En pantallas de menos de 900 px el menú se abre con el botón «Menú» de la barra superior.
 
@@ -47,7 +49,7 @@ En pantallas de menos de 900 px el menú se abre con el botón «Menú» de la b
 
 **¿El hash prueba que la fecha era verdadera?** No: prueba que no cambió después del sello. TK-2026-04228 ya venía editado antes; lo detectamos porque la bitácora también está comprometida en el sello.
 
-**¿Quién tiene la llave?** El municipio, en `.env` del equipo que sella. El navegador nunca la recibe: solo lee por un RPC público.
+**¿Quién tiene la llave?** El municipio, en su MetaMask. La página solo le pide firmar; la llave nunca sale de la billetera. El servidor no la tiene: comprueba cada despliegue y cada sello leyendo Sepolia por un RPC público. Los demás criterios se verifican sin billetera.
 
 **¿Por qué el reloj del proveedor sí va en cadena?** Porque cruza una frontera de confianza: son dos organizaciones con intereses opuestos, un contrato y penalidades en dólares. Si el municipio llevara el reloj, el proveedor podría decir que lo manipuló; si lo llevara el proveedor, al revés. Con el contrato, cada uno firma solo su parte y nadie puede cambiar la del otro.
 

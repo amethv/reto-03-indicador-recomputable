@@ -10,6 +10,12 @@ import {readAnchor} from '../src/chain.mjs';
 import {authenticateEvidence,validSalt,saltCommitment} from '../src/core.mjs';
 import {verifySource} from './verify-source.mjs';
 import {ensureReloj,reiniciarReloj} from './reloj.mjs';
+import {JsonRpcProvider} from 'ethers';
+import {registrarPeriodo,guardarSal,leerSal,registrarSello} from './sepolia-web.mjs';
+// Sepolia con MetaMask: el servidor verifica por un RPC público de solo lectura (nunca con llaves).
+const SEPOLIA_PUBLIC_RPC=process.env.SEPOLIA_PUBLIC_RPC_URL||'https://ethereum-sepolia-rpc.publicnode.com';
+let sepoliaReader=null;const sepolia=()=>(sepoliaReader??=new JsonRpcProvider(SEPOLIA_PUBLIC_RPC,undefined,{cacheTimeout:-1}));
+const readJsonBody=async(req,limit)=>{let body='';for await(const chunk of req){body+=chunk;if(body.length>limit)throw new Error('Petición demasiado grande');}return JSON.parse(body||'{}');};
 // En el equipo: 127.0.0.1:8080. En un servicio como Render: HOST=0.0.0.0 y el PORT que asigne la plataforma.
 const PORT=Number(process.env.PORT)||8080,HOST=process.env.HOST||'127.0.0.1';
 // Hosts que pueden usar la API (defensa ante DNS rebinding). Render publica su dominio en RENDER_EXTERNAL_HOSTNAME.
@@ -78,6 +84,17 @@ export async function startApp(){
     try{await fs.writeFile(file,JSON.stringify(evidence,null,2),{flag:'wx'});}catch(e){if(e.code!=='EEXIST')throw e;const old=JSON.parse(await fs.readFile(file,'utf8'));if(JSON.stringify(old)!==JSON.stringify(evidence))throw new Error('No se puede reemplazar la evidencia original');}
     res.writeHead(200,{'Content-Type':'application/json'});res.end(JSON.stringify({saved:true}));return;
    }
+   // Sepolia con MetaMask: preparar período, guardar la sal antes de firmar y registrar el sello.
+   // Cada paso se comprueba contra la red pública; lo que diga el navegador no basta.
+   if(req.method==='POST'&&url.pathname.startsWith('/api/sepolia/')){
+    if(!req.headers.origin||!sameSite(req)){res.writeHead(403);res.end();return;}
+    const body=await readJsonBody(req,3_000_000);let result;
+    if(url.pathname==='/api/sepolia/periodo')result=await registrarPeriodo({provider:sepolia(),address:body.address,deploymentTransaction:body.deploymentTransaction,publicRpc:SEPOLIA_PUBLIC_RPC,admin:process.env.SEPOLIA_MUNICIPIO||null,intentos:10});
+    else if(url.pathname==='/api/sepolia/sal')result=await guardarSal({address:body.address,salt:body.salt});
+    else if(url.pathname==='/api/sepolia/sello')result=await registrarSello({provider:sepolia(),transactionHash:body.transactionHash,evidence:body.evidence});
+    else{res.writeHead(404);res.end('No disponible');return;}
+    res.writeHead(200,{'Content-Type':'application/json'});res.end(JSON.stringify(result));return;
+   }
    if(req.method==='POST'&&url.pathname==='/api/reloj/reiniciar'){
     // Solo desde esta misma página. Despliega un RelojProveedor nuevo en la red local; el del Nivel 1 no se toca.
     if(!req.headers.origin||!sameSite(req)){res.writeHead(403);res.end();return;}
@@ -88,8 +105,9 @@ export async function startApp(){
    if(url.pathname==='/api/sal'){
     // Solo para esta misma página: sin CORS y rechazando peticiones desde otros sitios.
     if(!sameSite(req)){res.writeHead(403);res.end();return;}
-    const file=SALT_FILES[url.searchParams.get('red')];if(!file){res.writeHead(400);res.end('Red desconocida');return;}
-    const salt=await readSalt(file);if(!salt){res.writeHead(404,{'Content-Type':'text/plain; charset=utf-8'});res.end('Sin sal guardada para esta red');return;}
+    const red=url.searchParams.get('red'),file=SALT_FILES[red];if(!file){res.writeHead(400);res.end('Red desconocida');return;}
+    // Sepolia: un archivo de sal por contrato (el vigente); si no existe, el archivo del flujo por script.
+    const salt=red==='sepolia'?(await leerSal())??await readSalt(file):await readSalt(file);if(!salt){res.writeHead(404,{'Content-Type':'text/plain; charset=utf-8'});res.end('Sin sal guardada para esta red');return;}
     res.writeHead(200,{'Content-Type':'application/json'});res.end(JSON.stringify({salt}));return;
    }
    const vendors={'/vendor/papaparse.mjs':null,'/vendor/papaparse.umd.js':'node_modules/papaparse/papaparse.min.js','/vendor/ethers.mjs':'node_modules/ethers/dist/ethers.min.js'};
@@ -116,7 +134,7 @@ export async function startApp(){
  });
  await new Promise((resolve,reject)=>{server.once('error',reject);server.listen(PORT,HOST,resolve);});
  console.log(`Instancia: ${INSTANCE}`);console.log(`Aplicación: http://${HOST==='0.0.0.0'?'127.0.0.1':HOST}:${PORT}`);console.log(`Blockchain: ${config.rpc} | contrato ${config.address}`);console.log(`Nivel 2: RelojProveedor ${reloj.address}`);
- return {config,get reloj(){return reloj;},provider,close:async()=>{provider.destroy();await new Promise(resolve=>server.close(resolve));await chain.close();}};
+ return {config,get reloj(){return reloj;},provider,close:async()=>{provider.destroy();sepoliaReader?.destroy();sepoliaReader=null;await new Promise(resolve=>server.close(resolve));await chain.close();}};
 }
 if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href){
  const app=await startApp();for(const signal of ['SIGINT','SIGTERM'])process.on(signal,async()=>{await app.close();process.exit(0);});
