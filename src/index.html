@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>ATENEA · Indicador recomputable · Nivel 1</title>
+<title>ATENEA · Indicador recomputable</title>
 <link rel="icon" type="image/png" href="/src/logo.png">
 <link rel="preload" href="/src/inter-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/src/montserrat-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin>
@@ -45,7 +45,7 @@
     <button id="menuClose" class="iconbutton close" type="button" data-ui aria-label="Cerrar menú"><svg class="icon"><use href="#i-close"/></svg></button>
   </div>
 
-  <nav aria-label="Procesos de la demostración">
+  <nav aria-label="Procesos del indicador">
     <ul class="menu">
       <li><a href="#/panel" data-route="panel"><svg class="icon"><use href="#i-panel"/></svg><span class="item"><strong>Panel</strong><small>Resumen del mes</small></span></a></li>
       <li><a href="#/sellar" data-route="sellar"><span class="menu-ico"><svg class="icon"><use href="#i-lock"/></svg><span class="menu-num" aria-hidden="true">1</span></span><span class="item"><strong>Sellar</strong><small>Anclar los 187 tickets</small></span><span class="dot" data-dot="sellar" role="img" aria-label="Estado: pendiente"></span></a></li>
@@ -53,14 +53,11 @@
       <li><a href="#/verificar" data-route="verificar"><span class="menu-ico"><svg class="icon"><use href="#i-search"/></svg><span class="menu-num" aria-hidden="true">3</span></span><span class="item"><strong>Verificar</strong><small>Detectar alteraciones</small></span><span class="dot" data-dot="verificar" role="img" aria-label="Estado: pendiente"></span></a></li>
       <li><a href="#/comparar" data-route="comparar"><span class="menu-ico"><svg class="icon"><use href="#i-compare"/></svg><span class="menu-num" aria-hidden="true">4</span></span><span class="item"><strong>Comparar</strong><small>Todos vs. confirmados</small></span><span class="dot" data-dot="comparar" role="img" aria-label="Estado: pendiente"></span></a></li>
       <li><a href="#/privacidad" data-route="privacidad"><span class="menu-ico"><svg class="icon"><use href="#i-eye"/></svg><span class="menu-num" aria-hidden="true">5</span></span><span class="item"><strong>Privacidad</strong><small>Qué hay en la cadena</small></span><span class="dot" data-dot="privacidad" role="img" aria-label="Estado: pendiente"></span></a></li>
-    </ul>
-    <p class="menu-sep">Nivel 2</p>
-    <ul class="menu">
       <li><a href="#/proveedor" data-route="proveedor"><span class="menu-ico"><svg class="icon"><use href="#i-clock"/></svg><span class="menu-num" aria-hidden="true">6</span></span><span class="item"><strong>Reloj del proveedor</strong><small>Municipio y proveedor firman</small></span><span class="dot" data-dot="proveedor" role="img" aria-label="Estado: pendiente"></span></a></li>
     </ul>
     <p class="menu-sep">Herramientas</p>
     <ul class="menu">
-      <li><a href="#/feriado" data-route="feriado"><svg class="icon"><use href="#i-calendar"/></svg><span class="item"><strong>Simular feriado</strong><small>Sin tocar el sello</small></span></a></li>
+      <li><a href="#/feriado" data-route="feriado"><svg class="icon"><use href="#i-calendar"/></svg><span class="item"><strong>Calendario de feriados</strong><small>Plazos con feriados</small></span></a></li>
     </ul>
   </nav>
 
@@ -69,7 +66,7 @@
     <select id="network"><option value="local">Local (Ganache)</option><option value="sepolia">Pública (Sepolia)</option></select>
     <p class="netline"><span id="rpcDot" class="dot gray" role="img" aria-label="RPC: sin comprobar"></span><span id="netName">Conectando…</span></p>
     <p class="netmeta">Bloque <span id="netBlock">—</span> · <span id="netContract" class="hash">—</span></p>
-    <p class="netnote">Datos sintéticos · Niveles 1 y 2</p>
+    <p class="netnote">Caso San Ramón de Altamira · datos de prueba</p>
   </div>
 </aside>
 
@@ -85,17 +82,17 @@
     <article class="card stat"><h2>Brecha A − B</h2><p class="stat-value" id="sumGap">—</p><p class="small">Puntos porcentuales entre todos los cierres y los confirmados.</p></article>
   </div>
   <div class="card">
-    <h2>Guion de la demo</h2>
+    <h2>Verificación del mes</h2>
     <ol id="demoScript" class="script">
       <li data-step="1"><span class="check" role="img" aria-label="Pendiente"><svg class="icon"><use href="#i-check"/></svg></span><span><a href="#/sellar">Sellar julio</a><small>Los <strong>187</strong> tickets quedan anclados en la blockchain.</small></span></li>
       <li data-step="2"><span class="check" role="img" aria-label="Pendiente"><svg class="icon"><use href="#i-check"/></svg></span><span><a href="#/recalcular">Recalcular</a><small>Desde lo sellado: <strong>no da 98,25 %</strong>.</small></span></li>
       <li data-step="3"><span class="check" role="img" aria-label="Pendiente"><svg class="icon"><use href="#i-check"/></svg></span><span><a href="#/verificar">Detectar una alteración</a><small>Un CSV editado a mano da <strong>ROJO</strong> y señala el ticket.</small></span></li>
       <li data-step="4"><span class="check" role="img" aria-label="Pendiente"><svg class="icon"><use href="#i-check"/></svg></span><span><a href="#/comparar">Comparar</a><small>Todos los cierres frente a solo los confirmados.</small></span></li>
       <li data-step="5"><span class="check" role="img" aria-label="Pendiente"><svg class="icon"><use href="#i-check"/></svg></span><span><a href="#/privacidad">Privacidad</a><small>Ningún nombre ni contenido de ticket en la cadena.</small></span></li>
-      <li data-step="6"><span class="check" role="img" aria-label="Pendiente"><svg class="icon"><use href="#i-check"/></svg></span><span><a href="#/proveedor">Reloj del proveedor · Nivel 2</a><small>Penalidades de <strong>2.592 USD</strong> y el caso con tiempo negativo <strong>RECHAZADO</strong>.</small></span></li>
+      <li data-step="6"><span class="check" role="img" aria-label="Pendiente"><svg class="icon"><use href="#i-check"/></svg></span><span><a href="#/proveedor">Reloj del proveedor</a><small>Penalidades de <strong>2.592 USD</strong> y el caso con tiempo negativo <strong>RECHAZADO</strong>.</small></span></li>
     </ol>
   </div>
-  <aside class="notice"><strong>Universo del reto: los 187 tickets originales.</strong> <span id="scopeNote">El lote incluye reportes fuera de julio. Los conteos se muestran al validar los originales. Se usa el estado final del lote, no un corte calendario estricto.</span></aside>
+  <aside class="notice"><strong>Universo: los 187 tickets del lote de julio.</strong> <span id="scopeNote">El lote incluye reportes fuera de julio. Los conteos se muestran al validar los originales. Se usa el estado final del lote, no un corte calendario estricto.</span></aside>
 </section>
 
 <section id="s1" class="view" data-route="sellar" aria-labelledby="t-sellar" hidden>
@@ -103,14 +100,15 @@
   <div class="card">
     <p>Se valida cada archivo contra la huella de la carpeta fuente verificada. Cada columna de los tickets participa en el compromiso; del catálogo, el reporte publicado, la bitácora y las reaperturas solo entra su SHA-256. Una verificación posterior no puede cambiar el sello.</p>
     <div class="actions"><button id="load">Cargar los originales entregados</button><button id="seal" disabled>Sellar julio en blockchain</button></div>
+    <p id="sealHint" class="small seal-hint" aria-live="polite">Primero carga los originales.</p>
     <details><summary>Seleccionar los originales a mano</summary>
       <p class="small">Sus huellas deben coincidir con las de la carpeta fuente verificada.</p>
       <div class="inputs">
-        <label>tickets.csv<input id="originalTickets" type="file" accept=".csv"></label>
-        <label>catalogo_servicios.csv<input id="originalCatalog" type="file" accept=".csv"></label>
-        <label>indicador_mensual.csv<input id="originalReport" type="file" accept=".csv"></label>
-        <label>bitacora_eventos.csv<input id="originalBitacora" type="file" accept=".csv"></label>
-        <label>reaperturas.csv<input id="originalReopenings" type="file" accept=".csv"></label>
+        <label>Tickets<input id="originalTickets" type="file" accept=".csv"></label>
+        <label>Catálogo de servicios<input id="originalCatalog" type="file" accept=".csv"></label>
+        <label>Reporte mensual publicado<input id="originalReport" type="file" accept=".csv"></label>
+        <label>Bitácora de eventos<input id="originalBitacora" type="file" accept=".csv"></label>
+        <label>Reaperturas<input id="originalReopenings" type="file" accept=".csv"></label>
       </div>
       <button id="prepareFiles">Validar originales seleccionados</button>
     </details>
@@ -159,7 +157,7 @@
     <p id="saltStatus" class="small">Sal secreta: pendiente.</p>
     <details><summary>Verificar desde otro equipo</summary>
       <p class="small">En el equipo donde se selló, la evidencia y la sal se cargan solas. En otro equipo o navegador, impórtalas aquí.</p>
-      <div class="inputs"><label>Importar evidencia original (respaldo del sellado)<input id="evidenceFile" type="file" accept=".json"></label><label>Importar la sal secreta del sello (sal-202607.json)<input id="saltFile" type="file" accept=".json,.txt"></label></div>
+      <div class="inputs"><label>Importar evidencia original (respaldo del sellado)<input id="evidenceFile" type="file" accept=".json"></label><label>Importar la sal secreta del sello<input id="saltFile" type="file" accept=".json,.txt"></label></div>
     </details>
     <button id="verify">Verificar nuevamente contra blockchain</button>
     <div class="slot" data-slot="verification"></div>
@@ -183,8 +181,8 @@
     <h2>Auditoría de tickets incluidos y excluidos</h2>
     <div class="inputs"><label>Buscar ticket<input id="search" type="search" list="ticketIds" placeholder="Escribe o elige un ID, p. ej. TK-2026-04201"></label><datalist id="ticketIds"></datalist><label>Mostrar<select id="filter"><option value="all">Todos los tickets</option><option value="a">Los que cuentan en A (todos los cierres)</option><option value="notA">Los que no cuentan en A</option><option value="b">Los que cuentan en B (confirmados por el usuario)</option><option value="notB">Los que no cuentan en B (sin confirmación del usuario)</option><option value="sla">Los que tienen diferencias en el SLA</option></select></label></div>
     <p id="tableCount"></p>
-    <div class="tablewrap"><table><thead><tr><th>ID / integridad</th><th>Prioridad</th><th>Reporte / resolución</th><th>Horas calculadas / SLA</th><th>Cumplimiento</th><th>Cierre / confirmación</th><th>Cuenta en B</th></tr></thead><tbody id="tickets"></tbody></table></div>
-    <details><summary>Reglas del cálculo y límites</summary><div id="policy" class="rules"></div><p>Un cierre automático cuenta como gestionado en A, pero no demuestra una solución confirmada. El cumplimiento de SLA se audita por separado: incumplir el plazo no elimina un cierre del indicador de gestión.</p><p>Las horas se calculan de lunes a viernes entre 08:00 y 17:00 en UTC-05:00. Las horas declaradas se comparan con una tolerancia de ±0,02 h para absorber el redondeo a dos decimales. El motor descuenta los feriados configurados en src/calendar.mjs. El caso no entrega calendario oficial: se usa el supuesto explícito de cero feriados adicionales. Cambiarlo exige una nueva instancia y un nuevo sello.</p></details>
+    <div class="tablewrap"><table><thead><tr><th>ID / integridad</th><th>Prioridad</th><th>Reporte / resolución</th><th>Horas calculadas / SLA</th><th>Plazo (SLA) <span class="info-tip" tabindex="0" role="img" aria-label="Calculado: horas hábiles reales entre el reporte y la resolución. Declarado: lo que la mesa de ayuda registró en su archivo." title="Calculado: horas hábiles reales entre el reporte y la resolución. Declarado: lo que la mesa de ayuda registró en su archivo.">ⓘ</span></th><th>Cierre / confirmación</th><th>Cuenta en B</th></tr></thead><tbody id="tickets"></tbody></table></div>
+    <details><summary>Reglas del cálculo y límites</summary><div id="policy" class="rules"></div><p>Un cierre automático cuenta como gestionado en A, pero no demuestra una solución confirmada. El cumplimiento de SLA se audita por separado: incumplir el plazo no elimina un cierre del indicador de gestión.</p><p>Las horas se calculan de lunes a viernes entre 08:00 y 17:00 (UTC−05:00). Las horas declaradas se comparan con una tolerancia de ±0,02 h para absorber el redondeo a dos decimales. Los feriados se descuentan según el calendario de las reglas; hoy no incluye feriados adicionales porque no se recibió un calendario oficial. Cambiarlo exige un sello nuevo.</p></details>
   </div>
   <a class="next" href="#/privacidad" data-next="comparar" hidden>Siguiente: Privacidad <svg class="icon"><use href="#i-arrow"/></svg></a>
 </section>
@@ -194,7 +192,7 @@
   <div class="card">
     <h2>¿Qué almacenamos en blockchain?</h2>
     <p>Solo los datos técnicos del sello. Los nombres de usuarios y técnicos, las unidades y el contenido de los tickets quedan fuera de la cadena.</p>
-    <p id="networkNote" class="small">Local: EVM de desarrollo en este equipo, sirve de respaldo sin internet. Sepolia: lectura pública sin wallet ni credenciales.</p>
+    <p id="networkNote" class="small">Local: red propia de este servidor, funciona sin internet. Sepolia: lectura pública sin wallet ni credenciales.</p>
     <div class="actions"><button id="inspect" class="secondary">Consultar contrato y transacción</button><button id="searchPersonal">Buscar datos personales en la cadena</button></div>
     <div id="personal" aria-live="polite"></div>
     <div id="privacy" class="factbox"><p class="small">Pendiente de consulta real.</p></div>
@@ -202,12 +200,12 @@
     <p id="explorer" class="explorer"></p>
     <details><summary>Ver calldata, evento y almacenamiento consultados</summary><div id="onchain" class="factbox"><p class="small">Sin consulta.</p></div></details>
     <p>Un hash demuestra que un archivo coincide con lo sellado; no demuestra que sus datos fueran verdaderos antes del sellado.</p>
-    <p><a href="/contracts/RegistroIndicador.sol" target="_blank" rel="noopener">Código fuente del contrato</a> · <a id="configLink" href="/evidencias/red-local.json" target="_blank" rel="noopener">Configuración y despliegue</a> · <a href="/docs/AUDITORIA.md" target="_blank" rel="noopener">Auditoría de aceptación</a> · <a href="/docs/HALLAZGOS.md" target="_blank" rel="noopener">Hallazgos</a></p>
+    <p><a href="/contracts/RegistroIndicador.sol" target="_blank" rel="noopener">Código fuente del contrato</a> · <a id="configLink" href="/evidencias/red-local.json" target="_blank" rel="noopener">Configuración y despliegue</a></p>
   </div>
 </section>
 
 <section id="s6" class="view" data-route="proveedor" aria-labelledby="t-proveedor" hidden>
-  <header class="viewhead"><h1 id="t-proveedor" tabindex="-1">Reloj del proveedor</h1><p>Nivel 2: el municipio firma la apertura de cada caso y el proveedor su respuesta, cada uno con su propia llave. Cualquiera puede recalcular el tiempo y la penalidad.</p></header>
+  <header class="viewhead"><h1 id="t-proveedor" tabindex="-1">Reloj del proveedor</h1><p>El municipio firma la apertura de cada caso y el proveedor su respuesta, cada uno con su propia llave. Cualquiera puede recalcular el tiempo y la penalidad.</p></header>
   <div class="card">
     <div id="signers" class="signers"></div>
     <div class="actions"><button id="loadCases" type="button">Cargar los 9 casos</button><button id="thirdParty" type="button" class="secondary" hidden>Recalcular como tercero</button></div>
@@ -217,24 +215,29 @@
     <div id="caseTotal" class="verdict" aria-live="polite"></div>
     <div id="caseRejected"></div>
     <div class="card">
-      <h2>Casos de tickets_proveedor.csv</h2>
+      <h2>Casos del proveedor</h2>
       <div class="tablewrap"><table class="cases"><thead><tr><th>Caso</th><th>Abre → responde</th><th>Apertura</th><th>Respuesta</th><th>Horas</th><th>SLA (h)</th><th>Cumple</th><th>Penalidad del contrato</th><th>Penalidad que declaraba el CSV</th><th>Tercero</th></tr></thead><tbody id="cases"></tbody></table></div>
-      <p class="small">Supuesto: el SLA contractual se mide en horas corridas, no hábiles, porque así vienen los datos. Fechas en UTC−05:00.</p>
+      <p class="small">El plazo contractual se mide en horas corridas, no hábiles, tal como lo registran el municipio y el proveedor. Fechas en UTC−05:00.</p>
     </div>
   </div>
 </section>
 
 <section id="holiday" class="view" data-route="feriado" aria-labelledby="t-feriado" hidden>
-  <header class="viewhead"><h1 id="t-feriado" tabindex="-1">Simular feriado</h1><p>Sin tocar el sello: el efecto de una fecha concreta sobre los tickets ya verificados.</p></header>
+  <header class="viewhead"><h1 id="t-feriado" tabindex="-1">Calendario de feriados</h1><p>Agrega feriados y observa cómo cambian los plazos de atención. El registro sellado no se modifica.</p></header>
   <div class="card">
-    <p>El brief exige descontar feriados, pero el caso no entrega un calendario oficial: el sello usa una lista vacía como supuesto declarado (<a href="/docs/CALENDARIO.md" target="_blank" rel="noopener">docs/CALENDARIO.md</a>). Aquí puedes ver qué pasaría con una fecha concreta. Se recalcula en el navegador sobre los tickets verificados.</p>
-    <div class="inputs"><label>Fecha del feriado<input id="holidayDate" type="date" value="2026-07-24" min="2026-07-01" max="2026-08-31"></label></div>
-    <button id="simulate">Simular feriado</button>
+    <p>El cálculo sellado no descuenta feriados adicionales, porque no se recibió un calendario oficial. Aquí puedes probar uno o varios feriados sobre los tickets verificados; el cálculo se hace en el navegador.</p>
+    <div class="holiday-form">
+      <label>Fecha del feriado<input id="holidayDate" type="date" value="2026-07-24" min="2026-07-01" max="2026-08-31" aria-describedby="holidayRange"></label>
+      <button id="addHoliday" type="button" class="secondary">Agregar feriado</button>
+    </div>
+    <p id="holidayRange" class="small">Fechas permitidas: del 1 de julio al 31 de agosto de 2026, el período en que se reportaron y resolvieron los tickets. Los sábados y domingos ya no cuentan como horas hábiles, así que no cambian los plazos.</p>
+    <ul id="holidayList" class="holiday-list" aria-live="polite"></ul>
+    <button id="simulate">Calcular plazos con estos feriados</button>
     <div id="holidayResult" aria-live="polite"></div>
   </div>
 </section>
 
-<footer class="footer">Datos sintéticos · Nivel 1 completo y Nivel 2: reloj del proveedor con penalidades · Sin funciones del Nivel 3</footer>
+<footer class="footer">Caso San Ramón de Altamira · datos de prueba</footer>
 </main>
 </div>
 </body>

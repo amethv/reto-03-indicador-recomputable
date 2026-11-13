@@ -473,7 +473,7 @@ table.summary td.num { font-family: var(--font-display); font-size: 18px; font-w
 /* ---------- Nivel 2 · Reloj del proveedor ---------- */
 .info { background: var(--surface-soft); color: var(--ink); border: 1px solid var(--border); }
 .signer-list { list-style: none; margin: 0 0 var(--space-3); padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr)); gap: var(--space-3); line-height: 1.4; }
-.signer-list li { display: flex; flex-direction: column; gap: 2px; padding: var(--space-3) var(--space-4); border-radius: var(--radius); background: var(--surface-soft); border: 1px solid var(--border); color: var(--text); }
+.signer-list li { display: flex; flex-direction: column; gap: 3px; padding: var(--space-3) var(--space-4); border-radius: var(--radius); background: var(--surface-soft); border: 1px solid var(--border); color: var(--text); }
 .signer-list strong { font-family: var(--font-display); font-size: 17px; color: var(--ink); }
 .signer-list .hash { color: var(--muted); }
 .verdict-main.case-total strong { font-size: clamp(40px, 6vw, 60px); line-height: 1.1; }
@@ -484,6 +484,31 @@ table.cases tr.rejected td { background: var(--red-bg); color: var(--red); }
 table.cases tr.rejected strong { color: var(--red); }
 .match { font-weight: 700; color: var(--green); }
 .nomatch { font-weight: 700; color: var(--red); }
+
+.razon { display: block; font-size: 12px; font-weight: 400; color: var(--muted); line-height: 1.35; }
+table.cases td.small { white-space: normal; min-width: 190px; }
+
+/* ---------- Pulido de producto ---------- */
+/* Sellar: julio ya sellado se muestra como estado completado, no como botón gris deshabilitado. */
+button.sealed-done:disabled { background: #eee6fb; color: var(--ink); border: 1px solid var(--border-strong); cursor: default; }
+.seal-hint { margin: 0 0 var(--space-2); color: var(--text); }
+.seal-hint:empty { display: none; }
+/* Comparar: filas donde lo calculado y lo declarado no coinciden. */
+tr.sla-mismatch td { background: var(--amber-bg); }
+tr.sla-mismatch td:first-child { box-shadow: inset 4px 0 0 var(--amber); }
+.mismatch-tag { display: inline-block; margin-top: 2px; font-weight: 700; color: var(--amber-ink); }
+.info-tip { display: inline-grid; place-items: center; width: 18px; height: 18px; margin-left: 2px; border-radius: 50%; font-size: 13px; font-weight: 700; color: var(--teal); cursor: help; vertical-align: middle; }
+/* Calendario de feriados: campo, botón para agregar y lista de fechas elegidas. */
+.holiday-form { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--space-3); margin: var(--space-3) 0 var(--space-2); }
+.holiday-form label { flex: 0 1 260px; }
+.holiday-form button { margin: 0; }
+.holiday-list { list-style: none; margin: var(--space-2) 0 var(--space-4); padding: 0; display: flex; flex-wrap: wrap; gap: var(--space-2); line-height: 1.4; }
+.holiday-list li { display: inline-flex; align-items: center; gap: var(--space-2); padding: 6px 6px 6px 14px; border-radius: 999px; background: var(--surface-soft); border: 1px solid var(--border-strong); color: var(--ink); font-size: 14px; }
+.holiday-list li.weekend { background: var(--amber-bg); border-color: var(--amber-line); color: var(--amber-ink); }
+.holiday-list li.empty { padding: 6px 14px; border-style: dashed; color: var(--text); }
+.chip-remove { width: 26px; height: 26px; padding: 0; margin: 0; border-radius: 50%; background: #fff; color: var(--ink); border: 1px solid var(--border-strong); font-size: 16px; line-height: 1; }
+.chip-remove:hover { background: var(--surface-soft); }
+.holiday-notes { margin: var(--space-3) 0; padding-left: 20px; line-height: 1.7; color: var(--text); }
 
 /* Comparar vacío: un aviso y el botón para recalcular ahí mismo. */
 .compare-start { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-3); border-left: 6px solid var(--action); }

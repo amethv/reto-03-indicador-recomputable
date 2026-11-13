@@ -1,6 +1,6 @@
 # Auditoría Nivel 1 — Reto 03
 
-Ejecución UTC: 2026-11-12T23:20:14.450Z → 2026-11-12T23:24:58.033Z. Zona de presentación: America/Guayaquil.
+Ejecución UTC: 2026-11-13T02:08:26.865Z → 2026-11-13T02:09:41.278Z. Zona de presentación: America/Guayaquil.
 
 Resultado: **NIVEL 1 COMPLETO**.
 
@@ -80,7 +80,7 @@ Resultado: **NIVEL 2 COMPLETO**.
 - Edición manual realizada y confirmada por el usuario; CSV y transacción autenticados nuevamente. Las pruebas automáticas y la edición manual se ejecutaron en sesiones distintas. El guion completo debe ensayarse por el expositor.
 - Las pruebas unitarias se ejecutan con npm test; sus resultados se conservan por separado en evidencias/pruebas-unitarias.txt. No se confunden los anclajes de pruebas unitarias con el sello real de aceptación.
 - La EVM local (Ganache) es el respaldo sin internet; no es una red pública. Ganache conserva bloques y estado por instancia en .instances/. Es necesario npm start para consultar las evidencias por RPC; el JSON y las capturas por sí solos no reemplazan esa consulta.
-- El motor descuenta feriados configurados. Se usa lista vacía como supuesto explícito porque no se entregó calendario oficial. Ver docs/CALENDARIO.md. El panel «Simular feriado» muestra el efecto sin sellar.
+- El motor descuenta feriados configurados. Se usa lista vacía como supuesto explícito porque no se entregó calendario oficial. Ver docs/CALENDARIO.md. La vista «Calendario de feriados» muestra el efecto sin sellar.
 - El ancla pública en Sepolia se despliega con npm run deploy:sepolia y npm run seal:sepolia; sin evidencias/red-sepolia.json la auditoría solo comprueba que la interfaz lo declara pendiente.
 - Un sello acredita integridad posterior al anclaje, no veracidad ni cumplimiento institucional anterior.
 - Nivel 2: en la demo las llaves del municipio y de los proveedores están en el mismo servidor (cuentas de Ganache). En la realidad cada organización guarda la suya y firma desde su propio equipo; el contrato ya exige que cada paso lo firme la cuenta correcta.

@@ -31,7 +31,14 @@ function clearResults(message='VERIFICACIÓN INCOMPLETA · ejecuta la verificaci
  $('tickets').replaceChildren();$('tableCount').textContent='';$('changes').replaceChildren();$('holidayResult').replaceChildren();$('personal').replaceChildren();
 }
 // Los controles de la interfaz (menú, copiar) quedan fuera del bloqueo mientras corre una acción.
-function controls(){for(const el of document.querySelectorAll('button:not([data-ui]),input,select'))el.disabled=busy;$('seal').disabled=busy||!prepared||sealed;$('export').disabled=busy||!evidence;}
+function controls(){for(const el of document.querySelectorAll('button:not([data-ui]),input,select'))el.disabled=busy;$('seal').disabled=busy||!prepared||sealed;$('export').disabled=busy||!evidence;sealUi();}
+// Estado visible del botón de sellado. No cambia cuándo se habilita: solo su texto y la línea de ayuda.
+function sealUi(){
+ const b=$('seal');b.classList.toggle('sealed-done',sealed);b.textContent=sealed?'✓ Julio ya está sellado':'Sellar julio en blockchain';
+ $('sealHint').textContent=sealed?'El sello de julio es único e inmutable: el contrato no permite reemplazarlo ni volver a sellar el período.':prepared?'':'Primero carga los originales.';
+}
+// Nombre de la red para mostrar: sin la anotación técnica que guarda la configuración local.
+const redVisible=n=>String(n??'').replace(/\s*\(red de desarrollo real\)/i,'');
 async function run(task){if(busy)return;busy=true;controls();try{await task();}catch(error){clearResults(`${error.code==='CHAIN_CONNECTION'?'ERROR DE CONEXIÓN':'VERIFICACIÓN INCOMPLETA'} · ${error.message}`);status('sealStatus',error.message,'pending');console.error(error);}finally{busy=false;controls();renderNav();refreshNetwork();}}
 
 async function texts(){
@@ -68,7 +75,7 @@ function showExplorer(anchor){
 function showAnchor(anchor){
  lastAnchor=anchor;showExplorer(anchor);
  // Solo la transacción: lo que el sello guarda se lista una vez, en «Lo que sí hay en la cadena» y en el detalle técnico.
- $('privacy').innerHTML=facts([['Contrato',anchor.address],['Red',config.network],['Chain ID',anchor.chainId],['Transacción del sello',anchor.transactionHash],['Bloque',anchor.blockNumber]]);
+ $('privacy').innerHTML=facts([['Contrato',anchor.address],['Red',redVisible(config.network)],['Chain ID',anchor.chainId],['Transacción del sello',anchor.transactionHash],['Bloque',anchor.blockNumber]]);
  const k=(label,key,value,show)=>[label,value,{key,show}];
  $('onchain').innerHTML=`<h3>Almacenamiento del contrato (getSeal)</h3>${facts([
   k('Raíz Merkle','root',anchor.root),k('Compromiso de evidencia','evidenceHash',anchor.evidenceHash),k('Cantidad de tickets','count',anchor.count),
@@ -90,7 +97,7 @@ function renderFindings(result){
  $('cascade').innerHTML=`
   <div class="step"><strong>${d.total}</strong><span>tickets reales en el lote sellado</span></div>
   <div class="step minus"><strong>− ${d.reopened.length}</strong><span>nacidos de una reapertura (tienen ticket_origen)</span>${idList(d.reopened)}</div>
-  <div class="step minus"><strong>− ${d.level3.length}</strong><span>resueltos en Nivel 3 por el proveedor</span>${idList(d.level3)}</div>
+  <div class="step minus"><strong>− ${d.level3.length}</strong><span>escalados al proveedor externo (tercer nivel de soporte)</span>${idList(d.level3)}</div>
   <div class="step total"><strong>= ${d.derived}</strong><span>recibidos publicados (${d.matches?'coincide exacto con el reporte':'no coincide con el reporte: '+d.published})</span></div>`;
  $('managedNote').textContent=`Los dos grupos no se solapan (${d.overlap.length} en común). Los ${d.publishedManaged} gestionados publicados no se pueden reconstruir desde los datos: son ${d.published} − ${d.managedGapUnexplained}, y el lote no dice qué ${d.managedGapUnexplained} tickets quedaron fuera.`;
  const rows=[
@@ -123,7 +130,7 @@ async function renderChanges(result){
 async function doVerify(){
  clearResults('VERIFICACIÓN INCOMPLETA · consultando blockchain y comprobando evidencias…');
  if(!evidence)throw new Error('Falta la evidencia original; importa el manifiesto del sellado confirmado.');
- if(!salt)throw new Error('Falta la sal secreta del sello: impórtala en la vista Verificar (archivo sal-202607.json).');
+ if(!salt)throw new Error('Falta la sal secreta del sello: impórtala en la vista Verificar, en «Verificar desde otro equipo».');
  const t=await texts(),file=$('verifyFile').files[0],text=file?await file.text():t.tickets;
  const anchor=await readAnchor(provider,config);showAnchor(anchor);sealed=true;
  const result=await verifyText(text,evidence,anchor,t,salt);
@@ -151,7 +158,11 @@ function renderTable(){
  $('tableCount').textContent=`${rows.length} tickets visibles de ${verified.result.denominator} verificados.`;
  $('tickets').innerHTML=rows.map(r=>{
   const edit=r.logEdit?`<br><strong>Bitácora ${esc(r.logEdit.event)}:</strong> ${fmt(r.logEdit.hoursBefore)} h → ${fmt(r.logEdit.hoursAfter)} h; real: ${r.logEdit.realWithin?'cumple':'no cumple'}`:'';
-  return `<tr><td>${esc(r.id)}<br>Verificado</td><td>${esc(r.priority)}</td><td>${esc(r.reported)}<br>${esc(r.resolved)}</td><td>${r.hours===null?'—':fmt(r.hours)} h / ${r.sla} h<br>Declaradas: ${fmt(r.declaredHours)} h / ${r.declaredSLA} h</td><td>${r.within===null?'Pendiente':r.within?'Cumple':'No cumple'}<br>Declarado: ${esc(r.declaredWithin)}${r.discrepancies.length?'<br>Discrepancias: '+esc(r.discrepancies.join(', ')):''}${edit}</td><td>${esc(r.type)}<br>Confirmación: ${esc(r.confirmation)}</td><td class="inb" title="${esc(r.reasonB)}">${r.confirmed?'<svg class="icon" role="img" aria-label="Sí cuenta en B"><use href="#i-check"/></svg>':'<span role="img" aria-label="No cuenta en B">—</span>'}</td></tr>`;
+  // Plazo (SLA): lo calculado desde las fechas frente a lo que declaró la mesa de ayuda. Si no coinciden, la fila se marca.
+  const noCoincide=r.discrepancies.length>0,declarado=r.declaredWithin==='SI'?'Sí':r.declaredWithin==='NO'?'No':esc(r.declaredWithin);
+  const CAMPOS={'horas declaradas':'horas','SLA declarado':'SLA','cumple_sla':'cumplimiento'},propias=r.discrepancies.filter(x=>CAMPOS[x]),otras=r.discrepancies.filter(x=>!CAMPOS[x]);
+  const etiquetas=[propias.length?`Calculado y declarado no coinciden: ${propias.map(x=>CAMPOS[x]).join(', ')}`:'',...otras.map(x=>`Diferencia con la bitácora: ${x.replace(/\s*\(bitácora\)$/,'')}`)].filter(Boolean);
+  return `<tr${noCoincide?' class="sla-mismatch"':''}><td>${esc(r.id)}<br>Verificado</td><td>${esc(r.priority)}</td><td>${esc(r.reported)}<br>${esc(r.resolved)}</td><td>${r.hours===null?'—':fmt(r.hours)} h / ${r.sla} h<br>Declaradas: ${fmt(r.declaredHours)} h / ${r.declaredSLA} h</td><td>Calculado: <strong>${r.within===null?'pendiente':r.within?'Cumple':'No cumple'}</strong><br>Declarado: ${declarado}${etiquetas.map(e=>`<br><span class="mismatch-tag">${esc(e)}</span>`).join('')}${edit}</td><td>${esc(r.type)}<br>Confirmación: ${esc(r.confirmation)}</td><td class="inb" title="${esc(r.reasonB)}">${r.confirmed?'<svg class="icon" role="img" aria-label="Sí cuenta en B"><use href="#i-check"/></svg>':'<span role="img" aria-label="No cuenta en B">—</span>'}</td></tr>`;
  }).join('');
 }
 
@@ -172,18 +183,53 @@ $('seal').onclick=()=>run(async()=>{
  const anchor=await readAnchor(provider,config);if(anchor.root!==prepared.root||anchor.evidenceHash!==await evidenceHash(prepared))throw new Error('Recibo no corresponde a las evidencias preparadas');
  evidence=prepared;salt=preparedSalt;sealed=true;showAnchor(anchor);showSalt();
  const saved=await fetch('/api/evidence',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({evidence,salt})});
- status('sealStatus',`SELLADO CONFIRMADO · 187 tickets · bloque ${receipt.blockNumber}\nTX: ${anchor.transactionHash}${saved.ok?'\nEvidencia guardada en evidencias/sello-original.json; la sal secreta, aparte en la carpeta secreto/ de la instancia.':'\nNo se pudo guardar la evidencia ni la sal en disco; descárgalas antes de cerrar.'}`,'green');
+ status('sealStatus',`SELLADO CONFIRMADO · 187 tickets · bloque ${receipt.blockNumber}\nTX: ${anchor.transactionHash}${saved.ok?'\nLa evidencia y la sal secreta quedaron guardadas en el servidor, por separado.':'\nNo se pudo guardar la evidencia ni la sal en el servidor; descarga el respaldo del sellado antes de cerrar.'}`,'green');
 });
 $('verify').onclick=()=>run(doVerify);
+// ---------- Calendario de feriados: uno o varios feriados simulados, sin tocar el registro sellado ----------
+const DIAS=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+const diaDe=d=>new Date(`${d}T12:00:00-05:00`).getUTCDay();
+const fechaCorta=d=>`${d.slice(8,10)}/${d.slice(5,7)}/${d.slice(0,4)}`;
+let feriados=[];
+function avisoFeriado(texto){$('holidayResult').innerHTML=`<div class="status pending">${esc(texto)}</div>`;}
+// Valida una fecha del campo: formato y rango permitido. Devuelve el mensaje de error o null.
+function fechaInvalida(d){const {min,max}=$('holidayDate');if(!/^\d{4}-\d{2}-\d{2}$/.test(d)||Number.isNaN(Date.parse(d)))return 'Elige una fecha válida.';if(d<min||d>max)return `La fecha debe estar entre el ${fechaCorta(min)} y el ${fechaCorta(max)}.`;return null;}
+function pintarFeriados(){
+ $('holidayList').innerHTML=feriados.length?feriados.map(d=>{const w=diaDe(d),finde=w===0||w===6;return `<li${finde?' class="weekend"':''}><span><strong>${fechaCorta(d)}</strong> · ${DIAS[w]}${finde?' · fin de semana: no cambia plazos':''}</span><button type="button" class="chip-remove" data-ui data-remove="${d}" aria-label="Quitar el feriado del ${fechaCorta(d)}">×</button></li>`;}).join('')
+  :'<li class="empty">Aún no agregas feriados: se calculará con la fecha del campo.</li>';
+}
+$('addHoliday').onclick=()=>{
+ const d=$('holidayDate').value,error=fechaInvalida(d);
+ if(error)return avisoFeriado(error);
+ if(feriados.includes(d))return avisoFeriado(`El ${fechaCorta(d)} ya está en la lista.`);
+ feriados=[...feriados,d].sort();pintarFeriados();$('holidayResult').replaceChildren();
+};
+$('holidayList').onclick=e=>{const b=e.target.closest('[data-remove]');if(!b)return;feriados=feriados.filter(x=>x!==b.dataset.remove);pintarFeriados();$('holidayResult').replaceChildren();};
+pintarFeriados();
 $('simulate').onclick=()=>run(async()=>{
- if(!verified)throw new Error('Primero verifica el CSV original (vista Recalcular) para simular sobre tickets verificados.');
- const date=$('holidayDate').value;if(!/^\d{4}-\d{2}-\d{2}$/.test(date))throw new Error('Elige una fecha válida.');
- const sim=simulateHolidays(verified.result.details,[date],businessHours),base=verified.findings.sla.corrected;
- const rows=sim.changed.map(c=>`<tr${c.statusChanged?' class="flip"':''}><td>${esc(c.id)}</td><td>${fmt(c.hoursBefore)} h → ${fmt(c.hoursAfter)} h</td><td>${c.sla} h</td><td>${c.withinBefore?'Cumple':'No cumple'} → ${c.withinAfter?'Cumple':'No cumple'}</td></tr>`).join('');
- $('holidayResult').innerHTML=`<div class="status pending">SIMULACIÓN NO SELLADA · ${esc(date)} como feriado. El sello y el calendario oficial (vacío) no cambian.</div>
-  <p><strong>${sim.changed.length}</strong> tickets cambian de horas y <strong>${sim.statusChanged.length}</strong> cambian de estado de SLA. Dentro de SLA: ${base.numerator}/${base.denominator} (${pct(base)}) → ${sim.within.numerator}/${sim.within.denominator} (${pct(sim.within)}).</p>
-  ${sim.changed.length?`<div class="tablewrap"><table><thead><tr><th>Ticket</th><th>Horas hábiles</th><th>SLA</th><th>Estado</th></tr></thead><tbody>${rows}</tbody></table></div>`:'<p>Ese día no afecta a ningún ticket.</p>'}
-  <p class="small">Para adoptar un feriado oficial hay que registrarlo con su fuente en src/calendar.mjs, cambiar la versión de las reglas y sellar una instancia nueva.</p>`;
+ const campo=$('holidayDate').value,fechas=feriados.length?feriados:[campo];
+ if(!feriados.length){const error=fechaInvalida(campo);if(error)return avisoFeriado(error);}
+ // Sin tickets verificados no hay sobre qué simular: se recalcula primero, desde lo sellado.
+ if(!verified){
+  $('holidayResult').innerHTML='<div class="status info">Recalculando el indicador desde lo sellado…</div>';
+  try{$('verifyFile').value='';await doVerify();}catch(error){status('verification',`VERIFICACIÓN INCOMPLETA · ${error.message}`);}
+  if(!verified){
+   $('holidayResult').innerHTML=`<div class="status pending">Primero recalcula el indicador: los plazos se simulan sobre los tickets verificados.</div><a class="next" href="${sealed?'#/recalcular':'#/sellar'}">${sealed?'Ir a Recalcular':'Ir a Sellar'} <svg class="icon"><use href="#i-arrow"/></svg></a>`;return;
+  }
+ }
+ try{
+  const detalles=verified.result.details,sim=simulateHolidays(detalles,fechas,businessHours),base=verified.findings.sla.corrected;
+  const notas=fechas.map(d=>{const w=diaDe(d);if(w===0||w===6)return `<li><strong>${fechaCorta(d)}</strong> es ${DIAS[w]}: ya no era día hábil, así que no cambia ningún plazo.</li>`;
+   const n=simulateHolidays(detalles,[d],businessHours).changed.length;
+   return `<li><strong>${fechaCorta(d)}</strong> (${DIAS[w]}): ${n?`cambia las horas de <strong>${n}</strong> ${n===1?'ticket':'tickets'}.`:'no afecta a ningún ticket: ninguno estaba en curso ese día.'}</li>`;}).join('');
+  const rows=sim.changed.map(c=>`<tr${c.statusChanged?' class="flip"':''}><td>${esc(c.id)}</td><td>${fmt(c.hoursBefore)} h → ${fmt(c.hoursAfter)} h</td><td>${c.sla} h</td><td>${c.withinBefore?'Cumple':'No cumple'} → ${c.withinAfter?'Cumple':'No cumple'}</td></tr>`).join('');
+  $('holidayResult').innerHTML=`<div class="status pending">SIMULACIÓN NO SELLADA · ${fechas.length===1?'Feriado':'Feriados'}: ${fechas.map(fechaCorta).join(', ')}. El registro sellado no cambia.</div>
+   <ul class="holiday-notes">${notas}</ul>
+   ${sim.changed.length?`<p><strong>${sim.changed.length}</strong> tickets cambian de horas y <strong>${sim.statusChanged.length}</strong> cambian de estado de SLA. Dentro de SLA: ${base.numerator}/${base.denominator} (${pct(base)}) → <strong>${sim.within.numerator}/${sim.within.denominator} (${pct(sim.within)})</strong>.</p>
+   <div class="tablewrap"><table><thead><tr><th>Ticket</th><th>Horas hábiles</th><th>SLA</th><th>Estado</th></tr></thead><tbody>${rows}</tbody></table></div>`
+   :`<p><strong>Con ${fechas.length===1?'este feriado':'estos feriados'} no cambia el plazo de ningún ticket.</strong> Dentro de SLA sigue en ${base.numerator}/${base.denominator} (${pct(base)}).</p>`}
+   <p class="small">Para adoptar un feriado oficial se incorpora a las reglas del cálculo y se sella un período nuevo.</p>`;
+ }catch(error){avisoFeriado(`No se pudo calcular · ${error.message}`);}
 });
 $('searchPersonal').onclick=()=>run(async()=>{
  const anchor=await readAnchor(provider,config);showAnchor(anchor);
@@ -226,7 +272,9 @@ $('search').oninput=renderTable;$('filter').onchange=renderTable;renderPolicy();
 
 // Reglas del cálculo (POLICY) en fichas legibles, agrupadas por tema. Su hash es el que guarda el contrato.
 function renderPolicy(){
- const fmtValue=(key,value)=>key==='hoursTolerance'?`±${String(value).replace('.',',')} h`:key==='holidays'?(value.length?value.join(', '):'Ninguno (lista vacía)'):String(value);
+ // Solo presentación: los valores de POLICY no cambian (su hash es el sellado); se muestran en lenguaje de operación.
+ const VISTA={version:v=>String(v).replace(/^nivel\d+-/,''),calendarVersion:v=>String(v).replace(/-supuesto/,''),holidayNote:()=>'Sin feriados adicionales: no se recibió un calendario oficial.'};
+ const fmtValue=(key,value)=>key==='hoursTolerance'?`±${String(value).replace('.',',')} h`:key==='holidays'?(value.length?value.join(', '):'Ninguno'):VISTA[key]?VISTA[key](value):String(value);
  const groups=[
   ['Qué se cuenta',[['period','Período'],['universe','Universo'],['denominator','Denominador'],['managed','Gestionado (A)'],['confirmed','Confirmado por el usuario (B)'],['cutoff','Corte']]],
   ['Horas y SLA',[['timezone','Zona horaria'],['hours','Horario hábil'],['sla','SLA'],['hoursTolerance','Tolerancia de horas'],['holidays','Feriados'],['calendarVersion','Calendario'],['holidayNote','Nota sobre feriados']]],
@@ -243,7 +291,7 @@ async function useNetwork(name){
  const response=await fetch(`/evidencias/${CONFIG_FILES[name]}`);
  if(!response.ok){
   $('network').value=network;
-  throw new Error(name==='sepolia'?'Sepolia pendiente: todavía no hay contrato desplegado (falta evidencias/red-sepolia.json). Ver README, sección «Ancla en Sepolia».':`Falta la configuración de la red ${name}`);
+  throw new Error(name==='sepolia'?'Sepolia pendiente: todavía no hay un contrato desplegado en la red pública.':`Falta la configuración de la red ${name}`);
  }
  const next=await response.json();
  provider?.destroy();
@@ -254,15 +302,15 @@ async function useNetwork(name){
  provider=new JsonRpcProvider(rpcUrl,undefined,{cacheTimeout:-1});provider.pollingInterval=config.local?100:4000;
  reloj=null;if(config.local){const r=await fetch('/evidencias/reloj-local.json');if(r.ok)reloj=await r.json();}proveedorUI.reset();
  refreshNetwork();
- $('privacy').innerHTML=facts([['Contrato configurado',config.address],['Red',config.network],['RPC de lectura',rpcUrl],['Transacción de despliegue',config.deploymentTransaction],['Sello','Falta consultar el sellado.']]);
+ $('privacy').innerHTML=facts([['Contrato configurado',config.address],['Red',redVisible(config.network)],['RPC de lectura',rpcUrl],['Transacción de despliegue',config.deploymentTransaction],['Sello','Falta consultar el sellado.']]);
  $('onchain').innerHTML='<p class="small">Sin consulta.</p>';$('chainData').replaceChildren();
  showExplorer(null);
- $('networkNote').textContent=config.local?'Local: EVM de desarrollo en este equipo, sirve de respaldo sin internet. El sellado se hace desde esta página.':`Pública: ${config.network}. El navegador solo lee por un RPC público, sin wallet ni credenciales. El municipio selló con scripts/seal-testnet.mjs.`;
+ $('networkNote').textContent=config.local?'Local: red propia de este servidor, funciona sin internet. El sellado se hace desde esta página.':`Pública: ${redVisible(config.network)}. El navegador solo lee por un RPC público, sin wallet ni credenciales. El municipio selló con su propia llave.`;
  status('sealStatus','Sin sellado comprobado en esta red.');
  const file=config.evidenceFile??'sello-original.json',stored=await fetch(`/evidencias/${file}`);
  if(stored.ok){
   const candidate=await stored.json(),anchor=await readAnchor(provider,config),auth=await authenticateEvidence(candidate,anchor);if(!auth.ok)throw new Error(auth.error);
-  evidence=candidate;sealed=true;showAnchor(anchor);status('sealStatus',`Sello existente confirmado en ${config.network}. No se reemplazará. TX ${anchor.transactionHash}`,'green');
+  evidence=candidate;sealed=true;showAnchor(anchor);status('sealStatus',`Sello existente confirmado en ${redVisible(config.network)}. No se reemplazará. TX ${anchor.transactionHash}`,'green');
   // La sal la entrega solo el servidor local de quien selló; si no la tiene, se importa a mano.
   const r=await fetch(`/api/sal?red=${name}`);
   if(r.ok){const {salt:s}=await r.json();if(validSalt(s)&&await saltCommitment(s)===evidence.saltCommitment)salt=s;}
@@ -270,12 +318,12 @@ async function useNetwork(name){
  }
 }
 function showSalt(){
- $('saltStatus').textContent=salt?'Sal secreta: cargada y coincide con el compromiso del manifiesto.':evidence?'Sal secreta: falta. Sin ella no se pueden comprobar los tickets; impórtala en la vista Verificar (sal-202607.json).':'Sal secreta: pendiente.';
+ $('saltStatus').textContent=salt?'Sal secreta: cargada y coincide con el compromiso del manifiesto.':evidence?'Sal secreta: falta. Sin ella no se pueden comprobar los tickets; impórtala en «Verificar desde otro equipo».':'Sal secreta: pendiente.';
 }
 // ---------- Navegación por vistas, estado del menú y tarjeta de red ----------
 // Cada vista es un <section> que se muestra u oculta: el estado en memoria se conserva.
 const ROUTES={panel:'panel',sellar:'s1',recalcular:'s2',verificar:'s3',comparar:'s4',privacidad:'s5',proveedor:'s6',feriado:'holiday'};
-const TITLES={panel:'Panel',sellar:'Sellar',recalcular:'Recalcular',verificar:'Verificar',comparar:'Comparar',privacidad:'Privacidad',feriado:'Simular feriado'};
+const TITLES={panel:'Panel',sellar:'Sellar',recalcular:'Recalcular',verificar:'Verificar',comparar:'Comparar',privacidad:'Privacidad',proveedor:'Reloj del proveedor',feriado:'Calendario de feriados'};
 let route=null;
 const short=h=>h?`${h.slice(0,6)}…${h.slice(-4)}`:'—';
 function routeFromHash(){const m=/^#\/([a-z]+)$/.exec(location.hash);return m&&ROUTES[m[1]]?m[1]:null;}

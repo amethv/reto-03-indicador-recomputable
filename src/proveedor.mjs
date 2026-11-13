@@ -1,7 +1,11 @@
-// Nivel 2 · Vista #/proveedor. El municipio abre cada caso y el proveedor responde, cada uno con su cuenta.
+// Vista #/proveedor (reloj del proveedor). El municipio abre cada caso y el proveedor responde, cada uno con su cuenta.
 // «Recalcular como tercero» no usa llaves ni el CSV: lee los eventos y compara con penalidad() del contrato.
 import {Contract,JsonRpcProvider,keccak256} from 'ethers';
 import {ABI_RELOJ,parseCasos,cargarCasos,recalcularComoTercero,usd} from './reloj.mjs';
+import {csv} from './core.mjs';
+
+// En pantalla: «Proveedor 1», «Proveedor 2». En la cadena siguen los ids hasheados; la razón social nunca va a la cadena.
+const nombreProveedor=id=>`Proveedor ${Number(String(id).replace(/\D/g,''))}`;
 
 const short=a=>a?`${a.slice(0,6)}…${a.slice(-4)}`:'—';
 const horas=s=>(s/3600).toLocaleString('es-EC',{minimumFractionDigits:2,maximumFractionDigits:2});
@@ -12,19 +16,21 @@ const fecha=s=>new Date(s*1000).toLocaleString('es-EC',{timeZone:'America/Guayaq
  * Devuelve {reset()} para limpiar la vista al cambiar de red.
  */
 export function initProveedor(ctx){
- const {$,esc}=ctx;let filas=null;
+ const {$,esc}=ctx;let filas=null,razones=new Map();
  const status=(text,kind='info')=>{$('caseStatus').className=`status ${kind}`;$('caseStatus').textContent=text;};
- const etiqueta=(reloj,cuenta)=>cuenta?.toLowerCase()===reloj.municipio.toLowerCase()?'Municipio':reloj.proveedores.find(p=>p.cuenta.toLowerCase()===cuenta?.toLowerCase())?.id??short(cuenta);
+ const etiqueta=(reloj,cuenta)=>{if(cuenta?.toLowerCase()===reloj.municipio.toLowerCase())return 'Municipio';const p=reloj.proveedores.find(x=>x.cuenta.toLowerCase()===cuenta?.toLowerCase());return p?nombreProveedor(p.id):short(cuenta);};
+ // Razón social solo para mostrarla debajo del nombre; se lee del archivo de proveedores del servidor.
+ async function cargarRazones(){if(razones.size)return;try{const r=await fetch('/datos/proveedores.csv');if(r.ok)razones=new Map(csv(await r.text()).rows.map(x=>[x.proveedor_id,x.razon_social]));}catch{}}
 
  function firmantes(reloj){
   $('signers').innerHTML=`<p class="verdict-label">Quién firma cada paso</p><ul class="signer-list">
-   <li><strong>Municipio</strong> abre los casos<span class="hash" title="${esc(reloj.municipio)}">cuenta 0 · ${esc(short(reloj.municipio))}</span></li>
-   ${reloj.proveedores.map((p,i)=>`<li><strong>${esc(p.id)}</strong> responde los suyos<span class="hash" title="${esc(p.cuenta)}">cuenta ${i+1} · ${esc(short(p.cuenta))}</span></li>`).join('')}</ul>`;
+   <li><strong>Municipio</strong><span>abre los casos</span><span class="hash" title="${esc(reloj.municipio)}">cuenta 0 · ${esc(short(reloj.municipio))}</span></li>
+   ${reloj.proveedores.map((p,i)=>`<li><strong>${esc(nombreProveedor(p.id))}</strong>${razones.has(p.id)?`<span class="razon">${esc(razones.get(p.id))}</span>`:''}<span>responde sus casos</span><span class="hash" title="${esc(p.cuenta)}">cuenta ${i+1} · ${esc(short(p.cuenta))}</span></li>`).join('')}</ul>`;
  }
  function reset(){
   filas=null;$('caseResults').hidden=true;$('thirdParty').hidden=true;$('cases').replaceChildren();$('caseTotal').replaceChildren();$('caseRejected').replaceChildren();
   const reloj=ctx.getReloj();
-  if(reloj){firmantes(reloj);status('Sin casos cargados en esta sesión.');$('loadCases').hidden=false;}
+  if(reloj){firmantes(reloj);cargarRazones().then(()=>{if(ctx.getReloj()===reloj)firmantes(reloj);});status('Sin casos cargados en esta sesión.');$('loadCases').hidden=false;}
   else{$('signers').replaceChildren();status('El reloj del proveedor corre en la red local. Cambia a «Local (Ganache)» para usarlo.');$('loadCases').hidden=true;}
  }
 
@@ -35,7 +41,8 @@ export function initProveedor(ctx){
    <p class="verdict-sub"><strong>${aceptados.length}</strong> casos aceptados · <strong>${rechazados.length}</strong> rechazado · <strong>${conPenalidad}</strong> con penalidad</p><p id="thirdTotal" class="verdict-sub"></p>`;
   $('caseRejected').innerHTML=rechazados.map(f=>`<div class="status red"><strong>${esc(f.id)}</strong> · Rechazado por el contrato: respuesta anterior a la apertura. El CSV lo reportaba como cumplido con ${esc(usd(BigInt(f.csv.declarado.penalidadCentavos)))}.</div>`).join('');
   $('cases').innerHTML=filas.map(f=>{
-   const firmas=`<td class="small" title="Abre ${esc(f.cuentaMunicipio)} · responde ${esc(f.cuentaProveedor)}">${esc(etiqueta(reloj,f.cuentaMunicipio))} → ${esc(etiqueta(reloj,f.cuentaProveedor))}${f.estado==='RECHAZADO'?'<br>(respuesta rechazada)':''}</td>`;
+   const razon=razones.get(f.csv.proveedorId);
+   const firmas=`<td class="small" title="Abre ${esc(f.cuentaMunicipio)} · responde ${esc(f.cuentaProveedor)}">${esc(etiqueta(reloj,f.cuentaMunicipio))} → ${esc(etiqueta(reloj,f.cuentaProveedor))}${razon?`<br><span class="razon">${esc(razon)}</span>`:''}${f.estado==='RECHAZADO'?'<br>(respuesta rechazada)':''}</td>`;
    const declarada=`<td>${esc(usd(BigInt(f.csv.declarado.penalidadCentavos)))}<br><span class="small">${esc(f.csv.declarado.horas.toLocaleString('es-EC'))} h · cumple ${esc(f.csv.declarado.cumple)}</span></td>`;
    if(f.estado==='RECHAZADO')return `<tr class="rejected" data-caso="${esc(f.casoId)}"><td><strong>${esc(f.id)}</strong></td>${firmas}<td>${esc(fecha(f.apertura))}</td><td>${esc(fecha(f.csv.respuesta))}<br><span class="small">(no aceptada)</span></td><td>${esc(horas(f.csv.respuesta-f.csv.apertura))}</td><td>${esc(horas(f.sla))}</td><td colspan="2"><strong>RECHAZADO</strong><br>${esc(f.motivo)}</td>${declarada}<td class="third">—</td></tr>`;
    const d=f.respuesta-f.apertura,cumple=d<=f.sla;
@@ -49,7 +56,7 @@ export function initProveedor(ctx){
   try{
    if(!reloj)throw new Error('No hay un reloj del proveedor desplegado en esta red.');
    if(keccak256(await provider.getCode(reloj.address))!==reloj.codeHash)throw new Error('El bytecode del reloj no coincide con el desplegado.');
-   const casos=parseCasos(await (await fetch('/datos/tickets_proveedor.csv')).text());
+   const casos=parseCasos(await (await fetch('/datos/tickets_proveedor.csv')).text());await cargarRazones();
    const contract=new Contract(reloj.address,ABI_RELOJ,provider),municipio=await provider.getSigner(reloj.municipio);
    const signers=new Map(await Promise.all(reloj.proveedores.map(async p=>[p.id,await provider.getSigner(p.cuenta)])));
    let paso=0;const totalPasos=casos.length*2;
