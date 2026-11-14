@@ -1,6 +1,7 @@
 // Portal del proveedor · interfaz. Programa separado del municipio: sitio estático que lee Sepolia por
 // RPC público y firma con la MetaMask del proveedor. No guarda nada en ningún servidor.
-import {BrowserProvider,JsonRpcProvider,getAddress} from 'ethers';
+import {BrowserProvider,getAddress} from 'ethers';
+import {LectorSepolia,RPC_RESPALDO} from './rpc.js';
 import {SEPOLIA_ID,SEPOLIA_HEX,RPC_PUBLICO,EXPLORADOR,esDireccion,usd,leerReloj,rolDeCuenta,estadoCasos,firmarRespuestas,transacciones,nuevoContrato,motivo} from './logica.js';
 
 const $=id=>document.getElementById(id);
@@ -15,7 +16,10 @@ const textoRechazo=m=>m==='Respuesta anterior a la apertura'?RECHAZO:`Rechazado 
 
 // RPC de lectura: el público de Sepolia. ?rpc= solo se acepta al abrir el portal en este mismo equipo (pruebas).
 const params=new URLSearchParams(location.search),local=['127.0.0.1','localhost'].includes(location.hostname);
-const lector=new JsonRpcProvider(local&&params.get('rpc')||RPC_PUBLICO,undefined,{cacheTimeout:-1});
+// Con reintentos ante errores de red y RPC públicos de respaldo; mientras reintenta, un aviso arriba.
+const avisoRed=t=>{const a=$('redAviso');a.hidden=!t;a.textContent=t??'';};
+const rpcPrueba=local&&params.get('rpc');
+const lector=new LectorSepolia(rpcPrueba?[rpcPrueba]:[RPC_PUBLICO,...RPC_RESPALDO],{avisar:avisoRed});
 let casos=[],contrato=null,reloj=null,cuenta=null,signer=null,estado=null,txs=new Map(),desde=null,ultimaTx=null,leyendo=false,ocupado=false;
 
 function aviso(texto,listo=false){const a=$('aviso');a.hidden=!texto;a.textContent=texto??'';a.classList.toggle('listo',listo);}

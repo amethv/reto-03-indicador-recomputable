@@ -2,7 +2,7 @@
 // El municipio prepara el reloj y firma la apertura con su MetaMask; el proveedor responde desde
 // OTRO programa (portal-proveedor/) con SU MetaMask. Esta vista solo lee Sepolia por RPC público
 // y se actualiza sola cuando el proveedor responde.
-import {Contract,ContractFactory,JsonRpcProvider,getAddress,isAddress} from 'ethers';
+import {Contract,ContractFactory,getAddress,isAddress} from 'ethers';
 import {ABI_RELOJ,idHash,parseCasos,parseProveedores,usd,motivoRevert} from './reloj.mjs';
 import {conectarSepolia,mensajeBilletera} from './wallet.mjs';
 
@@ -29,7 +29,7 @@ export function initRelojSepolia(ctx){
   const nuevo=r.ok?await r.json():null;
   if(nuevo?.address!==config?.address){provider?.destroy();provider=null;rechazados.clear();estado=null;}
   config=nuevo;
-  if(config&&!provider){provider=new JsonRpcProvider(config.rpc,undefined,{cacheTimeout:-1});provider.pollingInterval=4000;}
+  if(config&&!provider)provider=ctx.lectorSepolia(config.rpc);   // reintentos y RPC de respaldo
   if(!casos)casos=parseCasos(await (await fetch('/datos/tickets_proveedor.csv')).text());
  }
 

@@ -6,6 +6,7 @@ import {simulateHolidays} from './findings.mjs';
 import {personalValues,searchPersonalData,collectChainData} from './privacy.mjs';
 import {initProveedor} from './proveedor.mjs';
 import {initCatalogo} from './catalogo-ui.mjs';
+import {LectorSepolia,RPC_RESPALDO} from './rpc.mjs';
 
 const $=id=>document.getElementById(id);
 let network='local',config,provider,baseline,evidence=null,prepared=null,preparedSalt=null,salt=null,originalTexts=null,verified=null,sealed=false,busy=false;
@@ -19,6 +20,10 @@ const SIN_PERIODO='Sin período activo · prepara un nuevo período para sellar 
 const PREF_RED='atenea-red';
 const recordarRed=n=>{try{sessionStorage.setItem(PREF_RED,n);}catch{}};
 function periodo(){if(!config)throw new Error(`${SIN_PERIODO} (vista Sellar, paso 2).`);}
+// Lecturas de Sepolia con reintentos y RPC de respaldo; mientras reintenta, un aviso arriba de la vista.
+const avisoRed=t=>{const a=$('redAviso');a.hidden=!t;a.textContent=t??'';};
+const urlsSepolia=rpc=>{const principal=rpc??modo.sepoliaRpc;return [principal,...(principal===modo.sepoliaRpc?(modo.sepoliaRespaldo??RPC_RESPALDO):[])];};
+function lectorSepolia(rpc,chainId){return new LectorSepolia(urlsSepolia(rpc),{avisar:avisoRed,...(chainId?{chainId}:{})});}
 // Nivel 2: configuración del RelojProveedor de esta red (solo existe en la red local).
 // La vista usa siempre el RelojProveedor de la red local, sin importar la red elegida para el sellado.
 let proveedorUI=null,catalogoUI=null;
@@ -133,7 +138,7 @@ function showAnchor(anchor){
   k('Fecha del sello','timestamp',anchor.timestamp,when(anchor.timestamp)),k('Hash de reglas','rulesHash',anchor.rulesHash)])}
   <h3>Evento Sealed</h3>${facts([k('Período','event.period',anchor.event.period),k('Raíz Merkle','event.root',anchor.event.root),k('Compromiso de evidencia','event.evidenceHash',anchor.event.evidenceHash),k('Cantidad de tickets','event.count',anchor.event.count)])}
   <h3>Transacción y contrato</h3>${facts([
-  k('Transacción','transactionHash',anchor.transactionHash),k('Bloque','blockNumber',anchor.blockNumber),k('Calldata enviada (función seal)','calldata',anchor.calldata),
+  k('Transacción','transactionHash',anchor.transactionHash),k('Bloque','blockNumber',anchor.blockNumber),k('Calldata de la transacción del sello','calldata',anchor.calldata),
   k('Contrato','address',anchor.address),k('Chain ID','chainId',anchor.chainId),k('Hash del bytecode','codeHash',anchor.codeHash)])}`;
 }
 
@@ -397,7 +402,8 @@ async function useNetwork(name){
  $('configLink').href=`/evidencias/${CONFIG_FILES[name]}`;
  // La red local se consulta por /rpc del mismo servidor (funciona igual en el equipo y en un servicio publicado).
  const rpcUrl=!config?modo.sepoliaRpc:config.local?new URL('/rpc',location.href).href:config.rpc;
- provider=new JsonRpcProvider(rpcUrl,undefined,{cacheTimeout:-1});provider.pollingInterval=config?.local?100:4000;
+ if(config?.local){provider=new JsonRpcProvider(rpcUrl,undefined,{cacheTimeout:-1});provider.pollingInterval=100;}
+ else provider=lectorSepolia(rpcUrl,config?.chainId);
  refreshNetwork();if(wallet)comprobarOwner();
  if(!config){
   $('privacy').innerHTML=facts([['Red','Sepolia (testnet pública de Ethereum)'],['Período','Sin período activo']]);
@@ -528,13 +534,15 @@ async function redInicial(){
  if(pref==='local')return 'local';
  const cfg=await fetch('/evidencias/red-sepolia.json');
  const rpc=cfg.ok?(await cfg.json()).rpc:modo.sepoliaRpc;
- if(await rpcResponde(rpc))return 'sepolia';
+ // Principal y respaldo, dos intentos cada uno: una red inestable no manda la app a la red local por un solo fallo.
+ for(let i=0;i<2;i++)for(const u of urlsSepolia(rpc)){if(await rpcResponde(u))return 'sepolia';avisoRed('Sin conexión con Sepolia, reintentando…');}
+ avisoRed(null);
  $('netHint').textContent='Sin conexión con Sepolia: se abrió la red local. Cuando vuelva internet, elige «Pública (Sepolia)».';
  return 'local';
 }
 // Nivel 2: la vista vive en proveedor.mjs; aquí solo se le pasa el estado compartido.
-proveedorUI=initProveedor({$,esc,run,setDone:v=>{if(v)done.add(6);else done.delete(6);renderNav();},modo:()=>modo,ocupado:()=>busy});
+proveedorUI=initProveedor({$,esc,run,setDone:v=>{if(v)done.add(6);else done.delete(6);renderNav();},modo:()=>modo,ocupado:()=>busy,lectorSepolia});
 // Nivel 3: la vista vive en catalogo-ui.mjs.
-catalogoUI=initCatalogo({$,esc,run,setDone:v=>{if(v)done.add(7);else done.delete(7);renderNav();},modo:()=>modo,ocupado:()=>busy});
+catalogoUI=initCatalogo({$,esc,run,setDone:v=>{if(v)done.add(7);else done.delete(7);renderNav();},modo:()=>modo,ocupado:()=>busy,lectorSepolia});
 await run(async()=>{baseline=JSON.parse(await get('/src/originals.json'));await useNetwork(await redInicial());});
 window.__ateneaReady=true;

@@ -10,7 +10,7 @@ import {readAnchor} from '../src/chain.mjs';
 import {authenticateEvidence,validSalt,saltCommitment} from '../src/core.mjs';
 import {verifySource} from './verify-source.mjs';
 import {ensureReloj,reiniciarReloj} from './reloj.mjs';
-import {JsonRpcProvider} from 'ethers';
+import {LectorSepolia,RPC_SEPOLIA,RPC_RESPALDO} from '../src/rpc.mjs';
 import {registrarPeriodo,guardarSal,leerSal,registrarSello} from './sepolia-web.mjs';
 import {registrarReloj} from './reloj-sepolia.mjs';
 import {iniciarSinPeriodo} from './arranque.mjs';
@@ -21,8 +21,11 @@ import {registrarCatalogo} from './catalogo-sepolia.mjs';
 const portalEnv=(process.env.PORTAL_PROVEEDOR_URL||'').trim();
 const PORTAL_PROVEEDOR=!portalEnv?'http://127.0.0.1:8081/':/^https?:\/\//.test(portalEnv)?portalEnv:`https://${portalEnv}/`;
 // Sepolia con MetaMask: el servidor verifica por un RPC público de solo lectura (nunca con llaves).
-const SEPOLIA_PUBLIC_RPC=process.env.SEPOLIA_PUBLIC_RPC_URL||'https://ethereum-sepolia-rpc.publicnode.com';
-let sepoliaReader=null;const sepolia=()=>(sepoliaReader??=new JsonRpcProvider(SEPOLIA_PUBLIC_RPC,undefined,{cacheTimeout:-1}));
+// Con reintentos ante errores de red y RPC públicos de respaldo (SEPOLIA_RPC_RESPALDO, separados por comas). Si se
+// cambia el principal (por ejemplo, para un ensayo), el respaldo por defecto no se usa: no se mezclan redes.
+const SEPOLIA_PUBLIC_RPC=process.env.SEPOLIA_PUBLIC_RPC_URL||RPC_SEPOLIA;
+const SEPOLIA_RESPALDO=process.env.SEPOLIA_RPC_RESPALDO!==undefined?process.env.SEPOLIA_RPC_RESPALDO.split(',').map(s=>s.trim()).filter(Boolean):SEPOLIA_PUBLIC_RPC===RPC_SEPOLIA?[...RPC_RESPALDO]:[];
+let sepoliaReader=null;const sepolia=()=>(sepoliaReader??=new LectorSepolia([SEPOLIA_PUBLIC_RPC,...SEPOLIA_RESPALDO],{avisar:t=>{if(t)console.warn(`Sepolia: ${t}`);}}));
 const readJsonBody=async(req,limit)=>{let body='';for await(const chunk of req){body+=chunk;if(body.length>limit)throw new Error('Petición demasiado grande');}return JSON.parse(body||'{}');};
 // En el equipo: 127.0.0.1:8080. En un servicio como Render: HOST=0.0.0.0 y el PORT que asigne la plataforma.
 const PORT=Number(process.env.PORT)||8080,HOST=process.env.HOST||'127.0.0.1';
@@ -132,7 +135,7 @@ export async function startApp(){
    }
    if(req.method!=='GET'){res.writeHead(405);res.end();return;}
    // RPC público de lectura (para comprobar internet sin período activo) y dirección del portal del proveedor.
-   if(url.pathname==='/api/modo'){res.writeHead(200,{'Content-Type':'application/json'});res.end(JSON.stringify({sepoliaRpc:SEPOLIA_PUBLIC_RPC,portalProveedor:PORTAL_PROVEEDOR}));return;}
+   if(url.pathname==='/api/modo'){res.writeHead(200,{'Content-Type':'application/json'});res.end(JSON.stringify({sepoliaRpc:SEPOLIA_PUBLIC_RPC,sepoliaRespaldo:SEPOLIA_RESPALDO,portalProveedor:PORTAL_PROVEEDOR}));return;}
    if(url.pathname==='/api/sal'){
     // Solo para esta misma página: sin CORS y rechazando peticiones desde otros sitios.
     if(!sameSite(req)){res.writeHead(403);res.end();return;}

@@ -201,6 +201,9 @@ main {
 .dot.red { background: var(--red-dot); box-shadow: 0 0 0 3px rgba(214, 64, 78, 0.25); }
 .dot.gray { background: var(--gray-dot); }
 
+/* Aviso mientras se reintenta leer Sepolia (red inestable). */
+.red-aviso { position: sticky; top: 0; z-index: 5; margin: 0 0 var(--space-4); padding: var(--space-2) var(--space-4); border-radius: var(--radius); background: var(--amber-bg); border: 1px solid var(--amber-line); color: var(--amber-ink); font-weight: 600; }
+
 /* Red activa: una línea en el Panel (antes era un cuadro en el menú lateral). */
 .panel-net { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-1) var(--space-2); margin: calc(-1 * var(--space-2)) 0 var(--space-5); font-size: 13px; color: var(--text); overflow-wrap: anywhere; }
 .panel-net #netName { font-weight: 600; color: var(--ink); }

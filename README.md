@@ -28,7 +28,7 @@ Para una demostración desde cero (contrato sin sellar en una instancia nueva): 
 
 | Comando | Qué hace |
 |---|---|
-| `npm.cmd test` | 72 pruebas: núcleo, sal, hallazgos, contrato, privacidad, Sepolia ensayado en Ganache, reloj del proveedor (Nivel 2, con lotes y el flujo municipio → proveedor) y catálogo anclado (Nivel 3) |
+| `npm.cmd test` | 80 pruebas: núcleo, sal, hallazgos, contrato, privacidad, Sepolia ensayado en Ganache, reloj del proveedor (Nivel 2, con lotes y el flujo municipio → proveedor) catálogo anclado (Nivel 3), sello directo o por cuenta inteligente y lecturas con reintentos |
 | `npm.cmd run proveedor` | Portal del proveedor, programa aparte, en http://127.0.0.1:8081 |
 | `npm.cmd run test:evidencia` | Las mismas pruebas, guardadas en `evidencias/pruebas-unitarias.txt` sin rutas personales |
 | `npm.cmd run compile` | Recompila el contrato y regenera `contracts/RegistroIndicador.json` (abi, bytecode, compilador e input estándar) |
@@ -173,6 +173,10 @@ Opcional: con `SEPOLIA_MUNICIPIO=0x…` en el entorno del servidor, solo esa cue
 **Render y Sepolia:** en Render el disco no es persistente. Si se sella Sepolia desde Render, la sal (`.secreto/`) y la configuración se pierden al reiniciar el servicio: el sello sigue en Sepolia, pero ya nadie podría comprobar los tickets sin la sal. Por eso, para Sepolia, usar la app en la propia computadora y descargar siempre el respaldo de la sal.
 
 **Verificar en otro equipo:** clonar el repositorio (trae `evidencias/red-sepolia.json` y `evidencias/sello-sepolia.json`) y copiar desde el equipo que selló la carpeta **`.secreto/`** completa, con el archivo `sal-sepolia-<dirección del contrato>.json`, a la raíz del proyecto. Luego `npm.cmd ci` y `npm.cmd start`: el servidor entrega la sal a su propia página y Verificar da VERDE leyendo Sepolia por RPC público, sin MetaMask. Sin esa carpeta, la verificación queda INCOMPLETA a propósito. La carpeta se copia a mano (USB, carpeta compartida): no se sube a git ni a ningún servicio público.
+
+**Cuenta estándar o cuenta inteligente de MetaMask (EIP-7702).** Con una cuenta inteligente, MetaMask envía las llamadas a través de otro contrato (la transacción no va directa al contrato del sello). Por eso el sello se valida por el evento `Sealed` que emite el propio contrato dentro del recibo y por su almacenamiento, no por la forma de la transacción; si el envío es directo, además se comprueba que la calldata sea `seal(...)` con el mismo compromiso. Se mantienen todas las demás comprobaciones: red, bytecode, `rulesHash`, un único sello del período, 187 tickets y raíz y compromiso iguales a los del contrato. Solo el owner puede sellar porque el contrato lo exige.
+
+**Red inestable.** Todas las lecturas de Sepolia (servidor, app y portal del proveedor) reintentan ante errores de red (conexión cortada, tiempo agotado, HTTP 429 o 5xx) y, si el RPC principal sigue fallando, pasan a uno de respaldo (`sepolia.gateway.tenderly.co` y `1rpc.io/sepolia`; se cambian con `SEPOLIA_RPC_RESPALDO`, separados por comas). Mientras reintenta, la página muestra «Sin conexión con Sepolia, reintentando…». La primera vez que se usa cada RPC se comprueba que su red sea Sepolia.
 
 Sin internet, todo funciona igual en la red local. El reloj del proveedor usa siempre la red local.
 

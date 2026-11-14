@@ -24,7 +24,8 @@ export function initCatalogo(ctx){
   const nuevo=r.ok?await r.json():null;
   if(nuevo?.address!==config?.address||!provider){provider?.destroy();provider=null;anclado=null;txAnclaje=null;verificado=null;$('catResultado').replaceChildren();}
   config=nuevo;
-  if(!provider){provider=new JsonRpcProvider(sep()?(config?.rpc??ctx.modo().sepoliaRpc):new URL('/rpc',location.href).href,undefined,{cacheTimeout:-1});provider.pollingInterval=sep()?4000:100;}
+  // Sepolia: reintentos y RPC de respaldo. Local: el /rpc de este servidor.
+  if(!provider){if(sep())provider=ctx.lectorSepolia(config?.rpc);else{provider=new JsonRpcProvider(new URL('/rpc',location.href).href,undefined,{cacheTimeout:-1});provider.pollingInterval=100;}}
   if(!config){anclado={anclado:false,servicios:[]};owner=null;return;}
   const k=nuevoCatalogo(config.address,provider);
   owner=getAddress(await k.owner());anclado=await leerAnclado(k,PERIODO_CATALOGO);

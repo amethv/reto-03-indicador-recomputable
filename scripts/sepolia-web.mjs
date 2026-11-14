@@ -6,7 +6,7 @@ import path from 'node:path';
 import {Contract,AbiCoder,keccak256,getAddress} from 'ethers';
 import {ROOT,loadArtifact,writeSalt,readSalt} from './runtime.mjs';
 import {ABI,readAnchor} from '../src/chain.mjs';
-import {POLICY,sha,authenticateEvidence,validSalt,saltCommitment} from '../src/core.mjs';
+import {POLICY,PERIOD,sha,authenticateEvidence,validSalt,saltCommitment} from '../src/core.mjs';
 
 export const SEPOLIA_CHAIN_ID=11155111;
 export const DIRS=Object.freeze({evidenceDir:path.join(ROOT,'evidencias'),secretDir:path.join(ROOT,'.secreto')});
@@ -102,7 +102,9 @@ export async function registrarSello({provider,transactionHash,evidence,dirs=DIR
   try{
    receipt??=await provider.getTransactionReceipt(transactionHash);
    if(receipt){
-    if(receipt.status!==1||getAddress(receipt.to)!==getAddress(config.address))throw fail('La transacción no es un sello confirmado de este contrato.');
+    // Directa o a través de otro contrato (cuenta inteligente, EIP-7702): lo que cuenta es el evento Sealed del propio contrato.
+    const sealedTopic=new Contract(config.address,ABI).interface.getEvent('Sealed').topicHash;
+    if(receipt.status!==1||!receipt.logs.some(l=>getAddress(l.address)===getAddress(config.address)&&l.topics[0]===sealedTopic&&BigInt(l.topics[1])===BigInt(PERIOD)))throw fail('La transacción no es un sello confirmado de este contrato.');
     anchor=await readAnchor(provider,{...config,sealBlock:receipt.blockNumber});
    }
   }catch(e){if(e.status===400)throw e;ultimo=e;}
