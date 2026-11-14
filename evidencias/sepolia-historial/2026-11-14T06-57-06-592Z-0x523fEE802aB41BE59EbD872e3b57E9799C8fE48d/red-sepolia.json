@@ -1,0 +1,25 @@
+{
+  "network": "Sepolia (testnet pública de Ethereum)",
+  "chainId": 11155111,
+  "address": "0x523fEE802aB41BE59EbD872e3b57E9799C8fE48d",
+  "deploymentBlock": 12130871,
+  "deploymentTransaction": "0x4351173222626b092df610afaa40d3b7363e0a403ab5d5ee48f047355c8ed0dd",
+  "codeHash": "0xbd1a0f94c90d9dd54db1dcad1293e1804926cfcceebd66a01118a69b66f91a48",
+  "rulesHash": "0x3b8651c310d3254dba501c38a781a7e3e2b28631ae97112aa20fa3ec5c12f906",
+  "rulesVersion": "nivel1-v3",
+  "sealer": "0x7cA013427943D478f18B3D37FE26883a0B982c27",
+  "rpc": "https://ethereum-sepolia-rpc.publicnode.com",
+  "explorer": "https://sepolia.etherscan.io",
+  "local": false,
+  "evidenceFile": "sello-sepolia.json",
+  "compiler": "0.8.30+commit.73712a01.Emscripten.clang",
+  "preparedFrom": "navegador (MetaMask)",
+  "previous": "sepolia-historial/2026-11-14T04-57-27-603Z-0x19f848bb39379CB3ea099B60964a0A05075fecf6",
+  "links": {
+    "contract": "https://sepolia.etherscan.io/address/0x523fEE802aB41BE59EbD872e3b57E9799C8fE48d",
+    "deployment": "https://sepolia.etherscan.io/tx/0x4351173222626b092df610afaa40d3b7363e0a403ab5d5ee48f047355c8ed0dd",
+    "seal": "https://sepolia.etherscan.io/tx/0xca2593919c1b65ed7218b4168989115ae9c562bbc068e7ed9d9e0aa57e2a3fc5"
+  },
+  "sealTransaction": "0xca2593919c1b65ed7218b4168989115ae9c562bbc068e7ed9d9e0aa57e2a3fc5",
+  "sealBlock": 12130873
+}

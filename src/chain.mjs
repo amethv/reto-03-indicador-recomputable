@@ -17,9 +17,17 @@ export async function readAnchor(provider,config) {
   const logs=await contract.queryFilter(contract.filters.Sealed(PERIOD),config.sealBlock??config.deploymentBlock,config.sealBlock??'latest');
   if(logs.length!==1)throw incomplete('No se encontró un único evento de sellado');
   const log=logs[0],tx=await provider.getTransaction(log.transactionHash),receipt=await provider.getTransactionReceipt(log.transactionHash);
-  if(!tx||!receipt||receipt.status!==1||tx.to?.toLowerCase()!==config.address.toLowerCase())throw incomplete('Recibo de sellado no confirmado');
-  const data=contract.interface.parseTransaction({data:tx.data});
-  if(data?.name!=='seal'||Number(data.args[0])!==PERIOD||data.args[1]!==s.root||data.args[2]!==s.evidenceHash||Number(data.args[3])!==EXPECTED_COUNT)throw incomplete('Calldata no corresponde al compromiso');
+  // El sello se prueba por el recibo confirmado que contiene el evento Sealed EMITIDO POR ESTE CONTRATO y por el
+  // almacenamiento; no por la forma de la transacción. Una cuenta inteligente de MetaMask (EIP-7702) envía la llamada
+  // a través de otro contrato (tx.to ≠ contrato); solo el owner puede sellar porque el contrato lo exige.
+  const sealedTopic=contract.interface.getEvent('Sealed').topicHash,address=config.address.toLowerCase();
+  const enRecibo=receipt?.logs.filter(l=>l.address.toLowerCase()===address&&l.topics[0]===sealedTopic&&l.topics[1]===log.topics[1])??[];
+  if(!tx||!receipt||receipt.status!==1||enRecibo.length!==1)throw incomplete('Recibo de sellado no confirmado');
+  // Envío directo al contrato: además, la calldata debe ser seal(...) con el mismo compromiso.
+  if(tx.to?.toLowerCase()===address){
+   const data=contract.interface.parseTransaction({data:tx.data});
+   if(data?.name!=='seal'||Number(data.args[0])!==PERIOD||data.args[1]!==s.root||data.args[2]!==s.evidenceHash||Number(data.args[3])!==EXPECTED_COUNT)throw incomplete('Calldata no corresponde al compromiso');
+  }
   if(log.args.root!==s.root||log.args.evidenceHash!==s.evidenceHash||Number(log.args.count)!==EXPECTED_COUNT)throw incomplete('Evento y almacenamiento no coinciden');
   return {root:s.root,evidenceHash:s.evidenceHash,count:Number(s.count),timestamp:Number(s.timestamp),transactionHash:tx.hash,blockNumber:receipt.blockNumber,calldata:tx.data,address:config.address,chainId:Number(network.chainId),codeHash:config.codeHash,rulesHash:await contract.rulesHash(),event:{period:PERIOD,root:s.root,evidenceHash:s.evidenceHash,count:Number(s.count)}};
  }catch(error){if(error.code==='ANCHOR_INCOMPLETE')throw error;const connection=new Error(error.message);connection.code='CHAIN_CONNECTION';throw connection;}

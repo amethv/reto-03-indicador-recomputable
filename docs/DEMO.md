@@ -1,32 +1,42 @@
-# Demostración del Nivel 1 · cinco minutos
+<img src="../src/cygnus-icono.png" alt="Cygnus" width="48">
 
-Hilo conductor: julio de 2026. Los cinco criterios del brief, en su orden.
+# Cygnus · Demostración: Nivel 1 en cinco minutos, Nivel 2 y Nivel 3 en uno cada uno
+
+Hilo conductor: julio de 2026. Los cinco criterios del Nivel 1, en su orden; después el reloj del proveedor (Nivel 2) y el catálogo y SLA anclados (Nivel 3).
 
 ## Preparación (antes del cronómetro)
 
 1. `npm.cmd ci --no-audit --no-fund` y `npm.cmd test` (todo en verde).
-2. Cerrar cualquier proceso en los puertos 8080 y 8545. Ejecutar `npm.cmd run demo` (o doble clic en `INICIAR_DEMO.cmd`): crea una instancia nueva con el contrato **sin sellar**. Abrir http://127.0.0.1:8080.
-3. Abrir en VS Code o el Bloc de notas una **copia** de `datos/tickets.csv` (por ejemplo en el Escritorio). No editar el original. Dejar el cursor en TK-2026-04201, primera fila.
-4. Abrir en otra pestaña el contrato de Sepolia (enlace en `evidencias/red-sepolia.json` o en el README) y las dos láminas de `presentacion/`.
-5. Sin internet: usar solo la red «Local (Ganache)». Todo funciona igual salvo el paso de Sepolia.
+2. Cerrar cualquier proceso en los puertos 8080 y 8545 y ejecutar `npm.cmd start` en la computadora del municipio. Cada arranque archiva el período y el reloj de Sepolia en el historial (no borra nada: las sales siguen en `.secreto/`) y abre la app **sin período activo**. Abrir http://127.0.0.1:8080: Sellar dice «Sin período activo · prepara un nuevo período para sellar julio». (Para Sepolia no usar Render: su disco no guarda la sal entre reinicios.)
+3. MetaMask: cuenta del municipio, red Sepolia, con Sepolia ETH de prueba, en **Chrome**.
+3b. Nivel 2, el proveedor: en otra terminal, `npm.cmd run proveedor` (portal en http://127.0.0.1:8081, programa aparte; o el portal publicado en Render). El compañero que hace de proveedor usa **Edge** con **su propia MetaMask** (otra frase secreta), en Sepolia y con Sepolia ETH; su cuenta es `0x417502991342eAf1B71015b66D128B75D7a0fA67`.
+4. Recargar la página no pierde nada mientras el servidor siga encendido. **No cerrar la terminal**: si el servidor se reinicia, el período pasa al historial y hay que preparar y sellar uno nuevo (cerca de un minuto, con dos firmas en MetaMask).
+5. Abrir en el Bloc de notas una **copia** de `datos/tickets.csv` (por ejemplo en el Escritorio). No editar el original y no usar un editor con autoguardado: guardaría el cambio a medio escribir. Dejar el cursor en TK-2026-04201, primera fila.
+6. Tener a mano las dos láminas de `presentacion/`.
+6b. Nivel 3: tener una **copia** de `datos/catalogo_servicios.csv` con la fila de CS-11 cambiada de `CRITICA,4` a `ALTA,8` (por ejemplo `catalogo-relajado.csv` en el Escritorio). El arranque del servidor archiva también el catálogo anclado: la vista 7 empieza sin catálogo.
+7. Sin internet: usar la red «Local (Ganache)» con `npm.cmd run demo` (o `INICIAR_DEMO.cmd`), que crea una instancia nueva sin sellar. Todo funciona igual, sellando sin MetaMask.
 
 ## Guion
 
-La demo sigue el menú lateral de arriba hacia abajo: **Panel → Sellar → Recalcular → Verificar → Comparar → Privacidad**. Cada vista tiene su ruta (`#/panel`, `#/sellar`, …), así que recargar no pierde el lugar. El punto a la derecha de cada ítem cambia de gris a verde (o a rojo) cuando ese paso se cumple. El Panel marca el guion con un check.
+La demo sigue el menú lateral de arriba hacia abajo: **Panel → 1 Sellar → 2 Recalcular → 3 Verificar → 4 Comparar → 5 Privacidad → 6 Reloj del proveedor → 7 Catálogo y SLA**. Cada vista tiene su ruta (`#/panel`, `#/sellar`, …, `#/proveedor`), así que recargar no pierde el lugar. El punto a la derecha de cada ítem cambia de gris a verde (o a rojo) cuando ese paso se cumple. El Panel marca el guion con un check.
 
 | Tiempo | Vista (criterio) | Acción visible | Mensaje |
 |---|---|---|---|
 | 0:00–0:15 | Panel | Mostrar el titular, las cuatro tarjetas en pendiente y el guion sin checks. | Esto es lo que vamos a demostrar en cinco minutos. |
-| 0:15–0:50 | Sellar (1) | «Cargar los originales entregados» → 187/187. «Sellar julio en blockchain» → TX confirmada. El punto de Sellar se pone verde. «Siguiente: Recalcular →». | Anclamos los 187 tickets con sus tiempos y su SLA. En cadena solo van hashes, conteos y período. |
+| 0:15–1:10 | Sellar (1) | «Administración», arriba y abierta, en cuatro pasos: ① «Conectar MetaMask» (cuenta, red y «Es la cuenta del municipio») → ② «Preparar nuevo período en Sepolia» → firmar → «Período preparado… sin sellar» → ③ «Cargar los originales entregados» → 187/187 → ④ «Sellar julio en blockchain» → firmar → «Esperando confirmación de la red…» → SELLADO CONFIRMADO y «✓ Julio ya está sellado». Cada paso hecho queda con ✓. Abrir «Transacción del sello en Etherscan». | El municipio firma con su propia llave, que nunca sale de MetaMask. Anclamos los 187 tickets con sus tiempos y su SLA; en cadena solo van hashes, conteos y período. |
 | 0:50–2:00 | Recalcular (2) | «Recalcular desde lo sellado» → VERDE. Mostrar la cascada, la tabla de cuatro indicadores, la tarjeta de TK-2026-04228 y la de reaperturas. | **Publicado 98,25 %; solo confirmados por el usuario 55,61 %.** El 171 publicado sale de 187 − 7 reaperturas − 9 casos del proveedor. TK-2026-04228 se resolvió en 5,80 h y alguien lo editó a 3,80 h dos días después: solo la bitácora lo revela. Cinco reaperturas debieron conservar su número. Cada exclusión o edición mejora el número publicado. |
 | 2:00–3:00 | Verificar (3) | En la copia del CSV cambiar `fecha_resolucion` de TK-2026-04201 de `2026-08-03T12:03:55-05:00` a `2026-08-03T12:04:55-05:00`. Guardar, elegirla en «CSV que se va a verificar» y pulsar «Verificar nuevamente contra blockchain». Los puntos de Verificar, Recalcular y Comparar se ponen rojos. | ROJO con el ticket y el campo, el valor sellado frente al editado, y el sello no cambió. Un minuto de diferencia basta. |
-| 3:00–3:45 | Comparar (4) | Volver a Recalcular y pulsar «Recalcular desde lo sellado»: descarta la copia y verifica el original (VERDE). Ir a Comparar. Filtrar «Excluidos de B». | 100 % contando todos los cierres; 55,61 % contando solo los confirmados. Los 83 cierres automáticos (44 %) explican 44,39 puntos. |
-| 3:45–4:40 | Privacidad (5) | Cambiar el selector de la tarjeta de red (abajo en el menú) a «Pública (Sepolia)» → abrir el enlace al explorador. Pulsar «Buscar datos personales en la cadena». | Cualquiera lo verifica sin wallet. **0 coincidencias de 174 valores buscados**: usuarios, técnicos, unidades y actores, en texto y como hash. Lo único en cadena es período, raíz, compromiso, cantidad, fecha y hash de reglas. |
-| 4:40–5:00 | Panel y cierre | Volver al Panel: los cinco pasos con check y la brecha de 44,39 pp. Lámina 2. | La cadena solo donde el emisor es el medido: el indicador público. Lo interno, con logs firmados. |
+| 3:00–3:45 | Comparar (4) | Ir a Comparar y pulsar «Recalcular para comparar»: descarta la copia y verifica el original (VERDE). En «Mostrar», elegir «Los que no cuentan en B». | 100 % contando todos los cierres; 55,61 % contando solo los confirmados. Los 83 cierres automáticos (44 %) explican 44,39 puntos: el hallazgo. |
+| 3:45–4:40 | Privacidad (5) | «Consultar contrato y transacción» → lo que sí hay en la cadena de Sepolia. «Buscar datos personales en la cadena» → 0 / 0 / 0, revisando la calldata y los eventos reales. | Cualquiera lo verifica sin wallet. **0 coincidencias de 174 valores buscados**: usuarios, técnicos, unidades y actores, en texto y como hash. Lo único en cadena es período, raíz, compromiso, cantidad, fecha y hash de reglas. |
+| 4:40–6:00 | Reloj del proveedor (Nivel 2, Sepolia real) | **Chrome, app del municipio** (modo «Sepolia (real)»): ① «Preparar reloj en Sepolia» → firmar → ② «Firmar apertura de 9 casos» (una firma) → ③ «Enviar al proveedor» y mandarle el enlace. **Edge, portal del proveedor**, con su MetaMask: aparece en naranja «Nuevos casos del municipio: 9 pendientes de tu respuesta» y PVT-04226 ya en rojo, sin gastar gas → «Conectar MetaMask» (✓ cuenta del proveedor 1) → «Firmar respuestas» (8 en un lote). **Chrome**: la vista se actualiza sola con **2.592 USD** y PVT-04226 rechazado; abrir un enlace de Etherscan. | Aquí hay dos organizaciones, un contrato y dinero. El municipio firma la apertura y el proveedor su respuesta, cada uno con su llave. El CSV daba PVT-04226 como cumplido con −1,42 h; el contrato lo rechaza. Cualquiera recalcula las penalidades desde los eventos, sin llaves. |
+| 6:00–7:00 | Catálogo y SLA (Nivel 3, Sepolia real) | **Chrome**, vista 7: ① «Conectar MetaMask» → ② «Anclar catálogo de julio» (dos firmas: desplegar y anclar) → los 14 servicios anclados. ③ «Verificar catálogo» con el original: VERDE; con una copia donde CS-11 pasa de CRITICA 4 h a ALTA 8 h: ROJO, con TK-2026-04228 y otros 2 tickets que pasarían de «No cumple» a «Cumple». ④ «Intentar reclasificar»: rechazo en rojo, sin gas. | El catálogo se fija al inicio del período. TK-2026-04228 tardó 5,80 h con un SLA de 4 h: relajar su servicio a 8 h lo borraría del incumplimiento. El contrato no tiene ninguna función para modificar, y un segundo anclaje de julio se rechaza: «Catálogo ya anclado: no se puede reclasificar». |
+| 7:00–7:20 | Panel y cierre | Volver al Panel: los siete pasos con check y la brecha de 44,39 pp. Lámina 2. | La cadena solo donde hay una frontera de confianza: el indicador público, el reloj con el proveedor y el catálogo que fija los plazos. Lo interno, con logs firmados. |
 
-Si Sepolia aún no está desplegado, el selector lo dice («Sepolia pendiente»): en ese caso hacer el paso de Privacidad en la red local y mostrar `scripts/seal-testnet.mjs`. Al cambiar de red se reinicia el estado de la sesión (puntos y guion), porque cada red tiene su propio sello.
+Los criterios 2 a 5 leen Sepolia por RPC público, sin MetaMask. La app abre en Sepolia; si no hay internet, abre sola la red local. Si MetaMask o la red pública fallan en vivo, en Sellar → «Administración», al final, elegir «Local (Ganache)» (respaldo para emergencias) y repetir desde el paso ③: todo funciona igual sin internet. La dirección del contrato activo, con su enlace a Etherscan, se ve en el paso ② de Sellar y en la línea de red del Panel. Al cambiar de red se reinicia el estado de la sesión (puntos y guion), porque cada red tiene su propio sello.
 
-«Simular feriado», bajo «Herramientas», queda fuera del cronómetro: sirve para la pregunta sobre feriados.
+Si Sepolia o una de las billeteras fallan en el Nivel 2, en la vista Reloj del proveedor elegir «Modo local (simulación)»: «Reiniciar simulación», «Como municipio» → «Firmar apertura de 9 casos», «Como proveedor 1» → «Firmar respuestas», «Como auditor externo» → «Recalcular sin llaves» → «coincide» y 2.592 USD.
+
+«Calendario de feriados», bajo «Herramientas», queda fuera del cronómetro: sirve para la pregunta sobre feriados.
 
 En pantallas de menos de 900 px el menú se abre con el botón «Menú» de la barra superior.
 
@@ -46,14 +56,23 @@ En pantallas de menos de 900 px el menú se abre con el botón «Menú» de la b
 
 **¿El hash prueba que la fecha era verdadera?** No: prueba que no cambió después del sello. TK-2026-04228 ya venía editado antes; lo detectamos porque la bitácora también está comprometida en el sello.
 
-**¿Quién tiene la llave?** El municipio, en `.env` del equipo que sella. El navegador nunca la recibe: solo lee por un RPC público.
+**¿Quién tiene la llave?** El municipio, en su MetaMask. La página solo le pide firmar; la llave nunca sale de la billetera. El servidor no la tiene: comprueba cada despliegue y cada sello leyendo Sepolia por un RPC público. Los demás criterios se verifican sin billetera.
+
+**¿Por qué el reloj del proveedor sí va en cadena?** Porque cruza una frontera de confianza: son dos organizaciones con intereses opuestos, un contrato y penalidades en dólares. Si el municipio llevara el reloj, el proveedor podría decir que lo manipuló; si lo llevara el proveedor, al revés. Con el contrato, cada uno firma solo su parte y nadie puede cambiar la del otro.
+
+**¿Y si el proveedor firma una hora falsa?** El contrato no sabe qué hora es la real: registra lo que cada parte firma y rechaza lo imposible, como una respuesta anterior a la apertura. Lo que gana el municipio es que la hora queda firmada por el proveedor y no se puede negar ni cambiar después.
+
+**¿Por qué horas corridas y no hábiles?** Así vienen los datos del proveedor (11,30 h entre las 22:32 y las 09:50). Es un supuesto declarado; un contrato real lo diría en sus cláusulas.
+
+**¿Las dos llaves están en el mismo servidor?** No, en Sepolia: el municipio firma con su MetaMask en su app y el proveedor con la suya, con otra frase secreta, desde otro programa (el portal del proveedor), que no comparte nada con el servidor del municipio. Solo en el «Modo local (simulación)», el respaldo sin internet, son cuentas de Ganache del mismo equipo. En los dos casos el contrato exige que cada paso lo firme la cuenta correcta (el municipio no puede responder, el proveedor no puede abrir, PV-02 no puede responder un caso de PV-01).
 
 ## Contingencia
 
-- Si la instancia ya aparece sellada: detener y volver a ejecutar `npm.cmd run demo` (crea otra instancia; no borra cadenas).
+- Si la instancia ya aparece sellada: detener y volver a ejecutar `npm.cmd run demo` (crea otra instancia; no borra cadenas). En Render, reiniciar el servicio.
+- Si los 9 casos ya estaban cargados: «Cargar los 9 casos» no los repite; muestra cada paso «(ya estaba en la cadena)» y el contrato vuelve a rechazar PVT-04226.
 - Si falla el RPC: la interfaz no muestra indicadores acreditados (ERROR DE CONEXIÓN). Cambiar a la red local.
 - Las capturas de `evidencias/` son respaldo documental, no sustituyen la demostración en vivo.
-- Si se verifica desde otro navegador o equipo: importar en la vista Verificar el manifiesto (`sello-original.json`) y la sal secreta (`.instances/nivel1-v4/secreto/sal-202607.json`). Sin la sal el resultado es INCOMPLETA, a propósito.
+- Si se verifica desde otro equipo (Sepolia): copiar la carpeta `.secreto/` del equipo que selló a la raíz del proyecto y ejecutar `npm.cmd start` (ver README, «Verificar en otro equipo»). Otro navegador en el mismo equipo no necesita nada: el servidor entrega la sal. Sin la sal el resultado es INCOMPLETA, a propósito.
 
 ## Evidencia de la edición manual
 

@@ -11,6 +11,8 @@ import {PERIOD,SOURCES,csv,verifyText,authenticateEvidence,sha} from '../src/cor
 import {verifySource} from './verify-source.mjs';
 import {personalValues,searchPersonalData,collectChainData} from '../src/privacy.mjs';
 import {BITACORA_HEADERS} from '../src/core.mjs';
+import {ABI_RELOJ,idHash,parseCasos,recalcularComoTercero} from '../src/reloj.mjs';
+import {RECHAZO_RECLASIFICAR,argumentosAnclaje,argsContrato,leerAnclado,compararCatalogo,ticketsAfectados,reclasificar,intentarReclasificar,nuevoCatalogo} from '../src/catalogo.mjs';
 const names=['Sellado de los 187 tickets','Recálculo independiente','Detección de alteraciones','Comparación de indicadores','Privacidad en blockchain'];
 const implementation=[
  'src/core.mjs: buildEvidence, leaf, merkle, evidenceHash; contracts/RegistroIndicador.sol: seal; src/chain.mjs: readAnchor; src/app.mjs: botón seal.',
@@ -20,6 +22,10 @@ const implementation=[
  'contracts/RegistroIndicador.sol; src/chain.mjs: readAnchor; src/privacy.mjs: collectChainData, searchPersonalData; src/app.mjs: botón searchPersonal.'
 ];
 const report={started:new Date().toISOString(),timezone:'America/Guayaquil',criteria:names.map((name,i)=>({criterion:i+1,name,implementation:implementation[i],status:'NO VERIFICADO',test:'No ejecutada',result:null,evidence:[],pending:[]})),supplementary:[],browserErrors:[]};
+// Nivel 2: sección aparte. No cambia los cinco criterios del Nivel 1 ni su resultado.
+report.level2={name:'Nivel 2 · Reloj del proveedor',implementation:'contracts/RelojProveedor.sol: abrirCaso, responder, abrirCasos y responderCasos por lote, penalidad; src/reloj.mjs: abrirCasos, responderCasos, recalcularComoTercero; src/proveedor.mjs: vista #/proveedor por roles (modo local); src/proveedor-sepolia.mjs y portal-proveedor/: flujo real en Sepolia con dos programas y dos billeteras (probado en tests/reloj-sepolia.test.mjs; la firma con MetaMask se prueba a mano); scripts/reloj.mjs y POST /api/reloj/reiniciar: despliegue, fondeo y reinicio.',status:'NO VERIFICADO',test:'En la vista #/proveedor, por roles y sobre un reloj recién desplegado («Reiniciar simulación»): el proveedor intenta responder antes de la apertura (mensaje, «Caso no abierto»); el municipio firma la apertura de los 9 casos con la cuenta 0 y una segunda firma se explica («Caso ya abierto»); el proveedor 1 firma con la cuenta 1: 8 aceptados y PVT-04226 rechazado («Respuesta anterior a la apertura»), total 2.592 USD; el auditor recalcula sin llaves desde los eventos y coincide en las 8 filas. Después se repite el cálculo desde Node y se buscan los textos de proveedores.csv en calldata y eventos.',result:null,evidence:[],pending:[]};
+// Nivel 3: sección aparte. No cambia los Niveles 1 y 2.
+report.level3={name:'Nivel 3 · Catálogo y SLA anclados',implementation:'contracts/RegistroCatalogo.sol: anclarCatalogo (solo el owner, una vez por período, sin funciones para modificar), catalogo, servicio, serviciosDe; src/catalogo.mjs: argumentosAnclaje, leerAnclado, compararCatalogo, ticketsAfectados, intentarReclasificar; src/catalogo-ui.mjs: vista #/catalogo; scripts/catalogo-sepolia.mjs: validación por RPC público e historial.',status:'NO VERIFICADO',test:'En la vista #/catalogo: abre en Sepolia sin catálogo (el arranque lo archivó); en la red local se ancla el catálogo de julio, el original verifica VERDE, una copia con CS-11 relajado de CRITICA 4 h a ALTA 8 h da ROJO con el servicio, lo anclado y lo editado, y TK-2026-04228 en la lista de tickets que cambiarían; «Intentar reclasificar» muestra el rechazo del contrato sin gas. Desde Node se leen los 14 servicios y se comprueba que otra cuenta no puede anclar.',result:null,evidence:[],pending:[]};
 let app,browser,step=0,anchor,evidence,originals,salt;
 try {
  report.sourceFiles=(await verifySource()).map(({file,actual})=>({file,sha256:actual}));
@@ -34,7 +40,20 @@ try {
  originals=Object.fromEntries(await Promise.all(Object.entries(SOURCES).map(async([k,f])=>[k,await fs.readFile(path.join(ROOT,'datos',f),'utf8')])));
  // Se ejecutan las cinco demostraciones en el orden del jurado.
  step=1;let item=report.criteria[0];item.test='Cargar originales, pulsar sellado en navegador si aún no existe; comprobar código, recibo, evento y getSeal mediante JSON-RPC real.';
- await expect(page.locator('section#panel')).toBeVisible();await go('sellar');await page.locator('#load').click();await expect(page.locator('#sealStatus')).toContainText('187/187');
+ // Arranque: startApp archivó el período y el reloj de Sepolia (nada se borra). La app abre en Sepolia SIN período:
+ // «Sin período activo · prepara…», nunca «Julio ya está sellado». Los pasos están arriba del todo y siempre abiertos.
+ const existe=async f=>fs.access(path.join(ROOT,'evidencias',f)).then(()=>true,()=>false);
+ assert.equal(await existe('red-sepolia.json'),false,'el arranque archiva el período de Sepolia');assert.equal(await existe('reloj-sepolia.json'),false,'el arranque archiva el reloj de Sepolia');
+ await expect(page.locator('section#panel')).toBeVisible();await go('sellar');
+ await expect(page.locator('#network')).toHaveValue('sepolia');await expect(page.locator('#sealStatus')).toContainText('Sin período activo · prepara un nuevo período para sellar julio',{timeout:60000});
+ await expect(page.locator('#seal')).toHaveText('Sellar julio en blockchain');await expect(page.locator('#seal')).toBeDisabled();await expect(page.locator('#load')).toBeDisabled();await expect(page.locator('#prepareSepolia')).toBeDisabled();
+ await expect(page.locator('#s1 > .viewhead + section#adminFlow')).toBeVisible();await expect(page.locator('#adminFlow .flow-step')).toHaveCount(4);
+ await expect(page.locator('[data-flow-step="1"]')).toHaveClass(/current/);await expect(page.locator('[data-flow-step="2"]')).not.toHaveClass(/done/);
+ report.supplementary.push({test:'Arranque sin período activo: período y reloj de Sepolia archivados en el historial, Sellar dice «Sin período activo», julio no aparece sellado, pasos 1 a 4 arriba y abiertos, y los pasos 2 a 4 esperan al 1',status:'APROBADO'});
+ // La auditoría sella en la red local con el selector de respaldo de «Administración».
+ await page.locator('#network').selectOption('local');await expect(page.locator('#sealStatus')).toContainText(/Sello existente confirmado|Sin sellado comprobado/,{timeout:60000});
+ await expect(page.locator('[data-flow-step="1"]')).toHaveClass(/na/);await expect(page.locator('[data-flow-step="2"]')).toHaveClass(/na/);
+ await page.locator('#load').click();await expect(page.locator('#sealStatus')).toContainText('187/187');
  if(await page.locator('#seal').isEnabled()){await page.locator('#seal').click();await expect(page.locator('#sealStatus')).toContainText('SELLADO CONFIRMADO',{timeout:60000});item.newTransaction=true;}else{item.newTransaction=false;}
  anchor=await readAnchor(app.provider,app.config);evidence=JSON.parse(await fs.readFile(path.join(EVIDENCE_DIR,'sello-original.json'),'utf8'));salt=await readSalt(SALT_FILES.local);assert.ok(salt,'Falta la sal del sello local');
  assert.equal((await authenticateEvidence(evidence,anchor)).ok,true);assert.equal(anchor.count,187);assert.equal(evidence.tickets.length,187);
@@ -94,9 +113,10 @@ try {
  // Pruebas complementarias posteriores a los cinco criterios.
  await assert.rejects(new Contract(app.config.address,ABI,await app.provider.getSigner(0)).seal(PERIOD,anchor.root,anchor.evidenceHash,187));report.supplementary.push({test:'Segundo sellado rechazado por EVM',status:'APROBADO'});
  await go('feriado');await page.locator('#simulate').click();await expect(page.locator('#holidayResult')).toContainText('SIMULACIÓN NO SELLADA');await expect(page.locator('#holidayResult')).toContainText('124/187');report.supplementary.push({test:'Simulación de feriado 2026-07-24: 4 tickets cambian de estado, sin tocar el sello',status:'APROBADO'});
- await page.locator('#network').selectOption('sepolia');
- try{await fs.access(path.join(ROOT,'evidencias/red-sepolia.json'));await expect(page.locator('#sealStatus')).toContainText('Sello existente confirmado',{timeout:60000});report.supplementary.push({test:'Sepolia: sello leído en solo lectura por RPC público',status:'APROBADO'});}
- catch(e){if(e.code!=='ENOENT')throw e;await expect(page.locator('#verification')).toContainText('Sepolia pendiente');report.supplementary.push({test:'Sepolia sin desplegar: la interfaz lo indica y no inventa un ancla',status:'APROBADO (despliegue pendiente)'});}
+ await go('sellar');await page.locator('#network').selectOption('sepolia');
+ // Volver a Sepolia después de usar la red local: sigue sin período (el arranque lo archivó) y no inventa un ancla.
+ await expect(page.locator('#sealStatus')).toContainText('Sin período activo',{timeout:60000});await expect(page.locator('#seal')).toHaveText('Sellar julio en blockchain');
+ report.supplementary.push({test:'Sepolia sin período activo: la interfaz lo indica y no inventa un ancla',status:'APROBADO'});
  await page.locator('#network').selectOption('local');await expect(page.locator('#sealStatus')).toContainText('Sello existente confirmado',{timeout:30000});
  await go('verificar');await context.route('**/rpc',route=>route.abort());await page.locator('#verify').click();await expect(page.locator('#verification')).toContainText('ERROR DE CONEXIÓN',{timeout:30000});await expect(page.locator('#percentA')).toHaveText('—');await expect(page.locator('#verification')).not.toHaveClass(/green/);report.supplementary.push({test:'RPC bloqueado: sin verde ni indicadores acreditados',status:'APROBADO'});await context.unroute('**/rpc');
  // El proxy /rpc solo deja pasar lecturas y transacciones al contrato configurado.
@@ -133,15 +153,106 @@ try {
    criterion.test+=' Además: edición manual confirmada por el usuario, observada en sesión separada y autenticada nuevamente contra el mismo sello.';
   }
  }catch(error){if(error.code!=='ENOENT')throw error;}
+ // ---------- Nivel 2 · Reloj del proveedor ----------
+ const l2=report.level2;
+ try {
+  await page.setViewportSize({width:1440,height:1100});await go('proveedor');
+  // La vista abre en «Sepolia (real)», solo con el rol del municipio; los tres roles quedan en el modo local.
+  await expect(page.locator('#relojModo')).toHaveValue('sepolia');await expect(page.locator('#relojSepolia')).toBeVisible();await expect(page.locator('#roleProveedor')).toBeHidden();
+  await expect(page.locator('#sepGuide')).toContainText('Paso 1 · Prepara el reloj en Sepolia');await expect(page.locator('#prepararReloj')).toBeVisible();await expect(page.locator('#sepRelojInfo')).toContainText('Sin reloj en Sepolia');await expect(page.locator('#sepProveedor')).toHaveValue('0x417502991342eAf1B71015b66D128B75D7a0fA67');
+  report.supplementary.push({test:'Reloj del proveedor: abre en «Sepolia (real)» solo con el rol del municipio; los tres roles quedan en «Modo local (simulación)»',status:'APROBADO'});
+  await page.locator('#relojModo').selectOption('local');await expect(page.locator('#relojLocal')).toBeVisible();await expect(page.locator('#relojSepolia')).toBeHidden();
+  const caseStatus=page.locator('#caseStatus'),guide=page.locator('#roleGuide');
+  // Reiniciar: un reloj nuevo en la red local, para recorrer el flujo desde cero en cualquier instancia.
+  await page.locator('#resetReloj').click();await expect(caseStatus).toContainText('Simulación reiniciada',{timeout:60000});await expect(guide).toContainText('Paso 1 de 3');
+  // Fuera de turno: el proveedor antes de la apertura recibe un mensaje claro y no se envía nada.
+  await page.locator('#roleProveedor').click();await expect(page.locator('#signers')).toContainText('Proveedor 1');await expect(page.locator('#signers')).toContainText('No puede');
+  await page.locator('#answerCases').click();await expect(caseStatus).toContainText('Todavía no le toca al proveedor 1',{timeout:60000});await expect(caseStatus).toContainText('Caso no abierto');
+  // Paso 1: el municipio firma la apertura; una segunda firma se explica con el motivo del contrato.
+  await page.locator('#roleMunicipio').click();await expect(page.locator('#signers')).toContainText('Municipio');
+  await page.locator('#loadCases').click();await expect(caseStatus).toContainText('El municipio firmó la apertura de 9 casos',{timeout:120000});await expect(guide).toContainText('Paso 2 de 3');
+  await page.locator('#loadCases').click();await expect(caseStatus).toContainText('El municipio ya firmó la apertura',{timeout:60000});await expect(caseStatus).toContainText('Caso ya abierto');
+  // Paso 2: el proveedor 1 firma sus respuestas; PVT-04226 sale rechazado.
+  await page.locator('#roleProveedor').click();await page.locator('#answerCases').click();
+  await expect(caseStatus).toContainText('9 casos procesados: 8 aceptados y 1 rechazado por el contrato',{timeout:120000});await expect(guide).toContainText('Paso 3 de 3');
+  await expect(page.locator('#cases tr.rejected')).toContainText('anterior a la apertura');
+  await expect(page.locator('#caseTotal .metric-value').nth(0)).toHaveText('8');await expect(page.locator('#caseTotal .metric-value').nth(1)).toHaveText('1');
+  await page.locator('#roleAuditor').click();
+  await expect(page.locator('#cases tr')).toHaveCount(9);await expect(page.locator('#cases tr.rejected')).toHaveCount(1);await expect(page.locator('#cases tr.rejected')).toContainText('PVT-04226');
+  await expect(page.locator('#caseRejected')).toContainText('PVT-04226 · Rechazado por el contrato: respuesta anterior a la apertura. El CSV lo reportaba como cumplido con 0 USD');
+  await expect(page.locator('#caseTotal .case-total')).toHaveText('2.592 USD');
+  await page.locator('#thirdParty').click();await expect(page.locator('#thirdTotal')).toContainText('2.592 USD · coincide con el contrato',{timeout:60000});await expect(page.locator('#cases td.third .match')).toHaveCount(8);
+  await expect(guide).toContainText('Flujo completo');await expect(page.locator('[data-dot="proveedor"]')).toHaveClass(/green/);
+  await shot('08-proveedor.png');
+  // El mismo resultado desde Node, sin la interfaz: estado del contrato, penalidad() y eventos.
+  const reloj=app.reloj,casos=parseCasos(await fs.readFile(path.join(ROOT,'datos/tickets_proveedor.csv'),'utf8'));
+  const contrato=new Contract(reloj.address,ABI_RELOJ,app.provider),esperado={'PVT-04244':95400n,'PVT-04288':34200n,'PVT-04326':95400n,'PVT-04367':34200n},filas=[];
+  for(const c of casos){
+   const id=idHash(c.id),e=await contrato.casos(id);
+   if(c.id==='PVT-04226'){
+    assert.equal(e.abierto,true);assert.equal(e.respondido,false);
+    await assert.rejects(contrato.connect(await app.provider.getSigner(reloj.proveedores[0].cuenta)).responder.staticCall(id,c.respuesta),/Respuesta anterior a la apertura/);
+    filas.push({caso:c.id,estado:'RECHAZADO',motivo:'Respuesta anterior a la apertura',horasDeclaradas:c.declarado.horas,penalidadDeclaradaUSD:c.declarado.penalidadCentavos/100});continue;
+   }
+   assert.equal(e.respondido,true,c.id);const p=await contrato.penalidad(id);assert.equal(p,esperado[c.id]??0n,c.id);
+   filas.push({caso:c.id,estado:'ACEPTADO',horas:(Number(e.respuesta)-Number(e.apertura))/3600,penalidadContratoUSD:Number(p)/100,penalidadDeclaradaUSD:c.declarado.penalidadCentavos/100});
+  }
+  const tercero=await recalcularComoTercero(app.provider,reloj.address,reloj.deploymentBlock);assert.equal(tercero.total,259200n);assert.equal(tercero.coincide,true);
+  // Privacidad: ningún texto de proveedores.csv en la calldata ni en los eventos del reloj.
+  const logs=await app.provider.getLogs({address:reloj.address,fromBlock:reloj.deploymentBlock,toBlock:'latest'});
+  const hashes=[...new Set([reloj.deploymentTransaction,...logs.map(l=>l.transactionHash)])];
+  const blobs=[...await Promise.all(hashes.map(async h=>({source:`calldata ${h}`,hex:(await app.provider.getTransaction(h)).data}))),...logs.map(l=>({source:`evento ${l.transactionHash}`,hex:'0x'+[...l.topics,l.data].map(x=>x.slice(2)).join('')}))];
+  const provRows=csv(await fs.readFile(path.join(ROOT,'datos/proveedores.csv'),'utf8')).rows;
+  const search=await searchPersonalData(blobs,provRows.flatMap(r=>['razon_social','servicio_contratado','contrato','contacto'].map(k=>({value:r[k],kind:k}))));assert.deepEqual(search.matches,[]);
+  for(const t of [...provRows.map(r=>r.proveedor_id),...casos.map(c=>c.id)])for(const b of blobs)assert.ok(!b.hex.toLowerCase().includes(hexlify(toUtf8Bytes(t)).slice(2)),`${t} en ${b.source}`);
+  l2.result={contrato:reloj.address,municipio:reloj.municipio,proveedores:reloj.proveedores,aceptados:filas.filter(f=>f.estado==='ACEPTADO').length,rechazados:filas.filter(f=>f.estado==='RECHAZADO').map(f=>f.caso),totalUSD:Number(tercero.total)/100,terceroCoincide:tercero.coincide,casos:filas,privacidad:{valoresBuscados:search.searched,bytes:search.bytes,coincidencias:search.matches.length},supuesto:'SLA contractual en horas corridas, no hábiles'};
+  await fs.writeFile(path.join(EVIDENCE_DIR,'proveedor.json'),JSON.stringify(l2.result,null,2));
+  await page.setViewportSize({width:390,height:844});await page.locator('#menuToggle').click();await page.locator('nav a[data-route="proveedor"]').click();await expect(page.locator('section.view[data-route="proveedor"]')).toBeVisible();
+  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth),true,'desbordamiento horizontal en proveedor');await shot('vista-proveedor-movil.png');
+  l2.evidence=['evidencias/08-proveedor.png','evidencias/vista-proveedor-movil.png','evidencias/proveedor.json','evidencias/reloj-local.json'];l2.status='APROBADO';
+ }catch(error){l2.status='FALLIDO';l2.pending.push(error.message);console.error(error);process.exitCode=1;}
+ // ---------- Nivel 3 · Catálogo y SLA anclados ----------
+ const l3=report.level3;
+ try {
+  await page.setViewportSize({width:1440,height:1100});await go('catalogo');
+  const info=page.locator('#catInfo'),st=page.locator('#catStatus'),res=page.locator('#catResultado');
+  // Abre en Sepolia sin catálogo: el arranque lo archivó; sin MetaMask no se puede anclar.
+  await expect(page.locator('#catModo')).toHaveValue('sepolia');await expect(info).toContainText('Sin catálogo anclado en Sepolia',{timeout:60000});await expect(page.locator('#catAnclar')).toBeDisabled();
+  await page.locator('#catModo').selectOption('local');await expect(info).not.toContainText('Leyendo',{timeout:60000});
+  await expect(page.locator('[data-cat-step="1"]')).toHaveClass(/na/);
+  if(await page.locator('#catAnclar').isEnabled()){await page.locator('#catAnclar').click();await expect(st).toContainText('anclado en la red local',{timeout:60000});l3.newTransaction=true;}else l3.newTransaction=false;
+  await expect(info).toContainText('14 servicios');await expect(page.locator('#catServicios tr')).toHaveCount(14);await expect(page.locator('#catAnclar')).toHaveText('✓ Catálogo de julio anclado');
+  // Original: VERDE. Copia con CS-11 relajado: ROJO con el servicio y TK-2026-04228.
+  await page.locator('#catVerificar').click();await expect(res).toContainText('VERDE',{timeout:30000});
+  const catTexto=await fs.readFile(path.join(ROOT,'datos/catalogo_servicios.csv'),'utf8'),copiaCat=path.join(EVIDENCE_DIR,'catalogo-editado.csv');await fs.writeFile(copiaCat,reclasificar(catTexto,'CS-11','ALTA',8));
+  await page.locator('#catArchivo').setInputFiles(copiaCat);await page.locator('#catVerificar').click();await expect(res).toContainText('ROJO',{timeout:30000});
+  await expect(res).toContainText('CS-11 · prioridad: anclado CRITICA → editado ALTA');await expect(res).toContainText('CS-11 · SLA (h hábiles): anclado 4 → editado 8');
+  await expect(res.locator('tbody tr')).toHaveCount(3);await expect(res.locator('tr.flip')).toContainText('TK-2026-04228');await expect(res.locator('tr.flip')).toContainText('5,80 h (bitácora)');
+  // Intentar reclasificar: rechazo del contrato, sin gas.
+  const bloqueAntes=await app.provider.getBlockNumber();
+  await page.locator('#catReclasificar').click();await expect(st).toContainText(`Rechazado por el contrato: ${RECHAZO_RECLASIFICAR}`,{timeout:30000});
+  assert.equal(await app.provider.getBlockNumber(),bloqueAntes,'reclasificar no envió transacciones');
+  await expect(page.locator('[data-dot="catalogo"]')).toHaveClass(/green/);await shot('09-catalogo.png');
+  // Desde Node: los 14 servicios anclados coinciden con el CSV; otra cuenta no puede anclar; el segundo anclaje se rechaza.
+  const kCat=nuevoCatalogo(app.catalogo.address,app.provider),ancl=await leerAnclado(kCat),esperado=await argumentosAnclaje(catTexto);
+  assert.equal(ancl.csvSha256,esperado.csvSha256);assert.deepEqual(ancl.servicios,esperado.filas.map(f=>({id:f.id,prioridad:f.prioridad,sla:f.sla})));
+  await assert.rejects(kCat.connect(await app.provider.getSigner(1)).anclarCatalogo.staticCall(...argsContrato(esperado)),/Solo el municipio ancla el catalogo/);
+  const intento=await intentarReclasificar(kCat,await argumentosAnclaje(reclasificar(catTexto)),app.catalogo.owner);assert.deepEqual(intento,{rechazado:true,motivo:RECHAZO_RECLASIFICAR});
+  const afectados=ticketsAfectados(ancl,(await compararCatalogo(ancl,reclasificar(catTexto))).editado,originals.tickets,originals.bitacora);
+  l3.result={contrato:app.catalogo.address,owner:app.catalogo.owner,periodo:202607,csvSha256:ancl.csvSha256,servicios:ancl.servicios,reclasificacion:intento,catalogoEditado:'CS-11 CRITICA 4 h -> ALTA 8 h',ticketsQueCambiarian:afectados.map(a=>({ticket:a.ticket,horas:a.horas,deBitacora:a.horasDeBitacora,anclado:a.cumpleAnclado?'cumple':'no cumple',editado:a.cumpleEditado?'cumple':'no cumple'}))};
+  await fs.writeFile(path.join(EVIDENCE_DIR,'catalogo.json'),JSON.stringify(l3.result,null,2));
+  await page.setViewportSize({width:390,height:844});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth),true,'desbordamiento horizontal en catalogo');await shot('vista-catalogo-movil.png');
+  l3.evidence=['evidencias/09-catalogo.png','evidencias/vista-catalogo-movil.png','evidencias/catalogo.json','evidencias/catalogo-editado.csv','evidencias/catalogo-local.json'];l3.status='APROBADO';
+ }catch(error){l3.status='FALLIDO';l3.pending.push(error.message);console.error(error);process.exitCode=1;}
  assert.deepEqual(report.browserErrors,[]);report.completed=true;report.instance=INSTANCE;
 }catch(error){report.error=error.stack;if(step&&report.criteria[step-1].status!=='APROBADO'){report.criteria[step-1].status='FALLIDO';report.criteria[step-1].pending.push(error.message);}console.error(error);process.exitCode=1;}
 finally {
- report.finished=new Date().toISOString();report.level1Complete=report.criteria.every(r=>r.status==='APROBADO');
+ report.finished=new Date().toISOString();report.level1Complete=report.criteria.every(r=>r.status==='APROBADO');report.level2Complete=report.level2.status==='APROBADO';report.level3Complete=report.level3.status==='APROBADO';
  await fs.mkdir(EVIDENCE_DIR,{recursive:true});await fs.writeFile(path.join(EVIDENCE_DIR,'aceptacion.json'),JSON.stringify(report,null,2));
- const md=['# Auditoría Nivel 1 — Reto 03','',`Ejecución UTC: ${report.started} → ${report.finished}. Zona de presentación: America/Guayaquil.`,'',`Resultado: **${report.level1Complete?'NIVEL 1 COMPLETO':'NIVEL 1 NO DECLARADO COMPLETO'}**.`,'','Se leyeron ambos PDF entregados (docs/referencia/) y el README de datos/. Los originales se comparan por SHA-256 con src/source-manifest.json; ejecutar npm run verify:source para repetir el contraste. Se usan los 187 tickets del lote, con advertencia de 185 reportados en julio y 2 en agosto. Se usa estado final del lote, no un corte al 31 de julio.','',...report.criteria.flatMap(r=>[`## ${r.criterion}. ${r.name}`,'',`- Archivos y funciones: ${r.implementation}`,`- Prueba ejecutada: ${r.test}`,`- Resultado real: ${r.result?JSON.stringify(r.result):'No obtenido.'}`,`- Estado: **${r.status}**.${r.automatedStatus?' Prueba automática: '+r.automatedStatus+'.':''}`,`- Evidencia disponible: ${r.evidence.length?r.evidence.join(', '):'Sin evidencia de ejecución.'}`,`- Correcciones o validaciones pendientes: ${r.pending.length?r.pending.join(' '):'Ninguna en esta prueba automatizada; repetir ante el jurado para la demostración en vivo.'}`,'']), '## Pruebas complementarias','',...report.supplementary.map(r=>`- ${r.test}: ${r.status}.`),'','## Límites y pendientes','', report.criteria[2].manualEvidence ? '- Edición manual realizada y confirmada por el usuario; CSV y transacción autenticados nuevamente. Las pruebas automáticas y la edición manual se ejecutaron en sesiones distintas. El guion completo debe ensayarse por el expositor.' : '- La edición manual sigue pendiente; una prueba automática no acredita ese paso.', '- Las pruebas unitarias se ejecutan con npm test; sus resultados se conservan por separado en evidencias/pruebas-unitarias.txt. No se confunden los anclajes de pruebas unitarias con el sello real de aceptación.', '- La EVM local (Ganache) es el respaldo sin internet; no es una red pública. Ganache conserva bloques y estado por instancia en .instances/. Es necesario npm start para consultar las evidencias por RPC; el JSON y las capturas por sí solos no reemplazan esa consulta.', '- El motor descuenta feriados configurados. Se usa lista vacía como supuesto explícito porque no se entregó calendario oficial. Ver docs/CALENDARIO.md. El panel «Simular feriado» muestra el efecto sin sellar.', '- El ancla pública en Sepolia se despliega con npm run deploy:sepolia y npm run seal:sepolia; sin evidencias/red-sepolia.json la auditoría solo comprueba que la interfaz lo declara pendiente.', '- Un sello acredita integridad posterior al anclaje, no veracidad ni cumplimiento institucional anterior.', ...(report.error?['', '## Error de ejecución','', '```',report.error,'```']:[])].join('\n');
+ const md=['<img src="../src/cygnus-icono.png" alt="Cygnus" width="48">','','# Cygnus · Auditoría — Reto 03','',`Ejecución UTC: ${report.started} → ${report.finished}. Zona de presentación: America/Guayaquil.`,'',`Resultado: **${report.level1Complete?'NIVEL 1 COMPLETO':'NIVEL 1 NO DECLARADO COMPLETO'}**.`,'','Se leyeron ambos PDF entregados (docs/referencia/) y el README de datos/. Los originales se comparan por SHA-256 con src/source-manifest.json; ejecutar npm run verify:source para repetir el contraste. Se usan los 187 tickets del lote, con advertencia de 185 reportados en julio y 2 en agosto. Se usa estado final del lote, no un corte al 31 de julio.','',...report.criteria.flatMap(r=>[`## ${r.criterion}. ${r.name}`,'',`- Archivos y funciones: ${r.implementation}`,`- Prueba ejecutada: ${r.test}`,`- Resultado real: ${r.result?JSON.stringify(r.result):'No obtenido.'}`,`- Estado: **${r.status}**.${r.automatedStatus?' Prueba automática: '+r.automatedStatus+'.':''}`,`- Evidencia disponible: ${r.evidence.length?r.evidence.join(', '):'Sin evidencia de ejecución.'}`,`- Correcciones o validaciones pendientes: ${r.pending.length?r.pending.join(' '):'Ninguna en esta prueba automatizada; repetir ante el jurado para la demostración en vivo.'}`,'']), ...((l2r=>[`## ${l2r.name}`,'',`Resultado: **${l2r.status==='APROBADO'?'NIVEL 2 COMPLETO':'NIVEL 2 NO DECLARADO COMPLETO'}**.`,'',`- Archivos y funciones: ${l2r.implementation}`,`- Prueba ejecutada: ${l2r.test}`,`- Resultado real: ${l2r.result?JSON.stringify({aceptados:l2r.result.aceptados,rechazados:l2r.result.rechazados,totalUSD:l2r.result.totalUSD,terceroCoincide:l2r.result.terceroCoincide,penalidades:Object.fromEntries(l2r.result.casos.filter(c=>c.estado==='ACEPTADO').map(c=>[c.caso,c.penalidadContratoUSD])),privacidad:l2r.result.privacidad}):'No obtenido.'}`,`- Estado: **${l2r.status}**.`,`- Evidencia disponible: ${l2r.evidence.length?l2r.evidence.join(', '):'Sin evidencia de ejecución.'}`,`- Correcciones o validaciones pendientes: ${l2r.pending.length?l2r.pending.join(' '):'Ninguna en esta prueba automatizada.'}`,''])(report.level2)), ...((l3r=>[`## ${l3r.name}`,'',`Resultado: **${l3r.status==='APROBADO'?'NIVEL 3 COMPLETO':'NIVEL 3 NO DECLARADO COMPLETO'}**.`,'',`- Archivos y funciones: ${l3r.implementation}`,`- Prueba ejecutada: ${l3r.test}`,`- Resultado real: ${l3r.result?JSON.stringify({servicios:l3r.result.servicios.length,csvSha256:l3r.result.csvSha256,reclasificacion:l3r.result.reclasificacion,ticketsQueCambiarian:l3r.result.ticketsQueCambiarian.map(t=>t.ticket)}):'No obtenido.'}`,`- Estado: **${l3r.status}**.`,`- Evidencia disponible: ${l3r.evidence.length?l3r.evidence.join(', '):'Sin evidencia de ejecución.'}`,`- Correcciones o validaciones pendientes: ${l3r.pending.length?l3r.pending.join(' '):'Ninguna en esta prueba automatizada. El anclaje en Sepolia con MetaMask se prueba a mano.'}`,''])(report.level3)), '## Pruebas complementarias','',...report.supplementary.map(r=>`- ${r.test}: ${r.status}.`),'','## Límites y pendientes','', report.criteria[2].manualEvidence ? '- Edición manual realizada y confirmada por el usuario; CSV y transacción autenticados nuevamente. Las pruebas automáticas y la edición manual se ejecutaron en sesiones distintas. El guion completo debe ensayarse por el expositor.' : '- La edición manual sigue pendiente; una prueba automática no acredita ese paso.', '- Las pruebas unitarias se ejecutan con npm test; sus resultados se conservan por separado en evidencias/pruebas-unitarias.txt. No se confunden los anclajes de pruebas unitarias con el sello real de aceptación.', '- La EVM local (Ganache) es el respaldo sin internet; no es una red pública. Ganache conserva bloques y estado por instancia en .instances/. Es necesario npm start para consultar las evidencias por RPC; el JSON y las capturas por sí solos no reemplazan esa consulta.', '- El motor descuenta feriados configurados. Se usa lista vacía como supuesto explícito porque no se entregó calendario oficial. Ver docs/CALENDARIO.md. La vista «Calendario de feriados» muestra el efecto sin sellar.', '- Sepolia: cada arranque del servidor archiva el período y el reloj activos en el historial (evidencias/sepolia-historial/ y evidencias/reloj-sepolia-historial/), sin borrar nada. El período se prepara y se sella en vivo con MetaMask, que no se automatiza: la auditoría comprueba que la interfaz abre «Sin período activo» y no inventa un ancla. Los sellos reales anteriores quedan en el historial y en Sepolia.', '- Un sello acredita integridad posterior al anclaje, no veracidad ni cumplimiento institucional anterior.', '- Nivel 2: en la demo las llaves del municipio y de los proveedores están en el mismo servidor (cuentas de Ganache). En la realidad cada organización guarda la suya y firma desde su propio equipo; el contrato ya exige que cada paso lo firme la cuenta correcta.', '- Nivel 2: el SLA contractual se mide en horas corridas, no hábiles, porque así vienen los datos de tickets_proveedor.csv. El reloj registra lo que cada parte firma; no prueba que la hora firmada sea la real.', ...(report.error?['', '## Error de ejecución','', '```',report.error,'```']:[])].join('\n');
  await fs.writeFile(path.join(ROOT,'docs/AUDITORIA.md'),md);
  await fs.mkdir(path.join(ROOT,'evidencias'),{recursive:true});
  for(const name of await fs.readdir(EVIDENCE_DIR))await fs.copyFile(path.join(EVIDENCE_DIR,name),path.join(ROOT,'evidencias',name));
  if(browser)await browser.close();if(app)await app.close();
- console.log(JSON.stringify({criteria:report.criteria.map(r=>({criterion:r.criterion,status:r.status,automated:r.automatedStatus})),completed:report.completed,level1Complete:report.level1Complete,error:report.error},null,2));
+ console.log(JSON.stringify({criteria:report.criteria.map(r=>({criterion:r.criterion,status:r.status,automated:r.automatedStatus})),completed:report.completed,level1Complete:report.level1Complete,level2:report.level2.status,level2Complete:report.level2Complete,level3:report.level3.status,level3Complete:report.level3Complete,error:report.error},null,2));
 }

@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Portal del proveedor · Soluciones Tecnológicas Meridiano</title>
+<link rel="icon" type="image/png" href="cygnus-icono.png">
+<link rel="stylesheet" href="portal.css">
+<script type="importmap">{"imports":{"ethers":"./vendor/ethers.min.js"}}</script>
+<script type="module" src="portal.js"></script>
+</head>
+<body>
+<header class="barra">
+  <div class="marca"><img class="marca-icono" src="cygnus-icono-claro.png" alt="" width="40" height="40"><img class="marca-nombre" src="cygnus-nombre-claro.png" alt="Cygnus" width="104" height="16"></div>
+  <div><h1>Portal del proveedor · Soluciones Tecnológicas Meridiano</h1><p>Proveedor 1 (PV-01) · Reloj del proveedor del Municipio de San Ramón de Altamira · Sepolia</p></div>
+</header>
+
+<main>
+  <div id="redAviso" class="red-aviso" role="status" aria-live="polite" hidden></div>
+  <div id="aviso" class="aviso" role="status" aria-live="polite" hidden></div>
+
+  <section class="tarjeta">
+    <h2><span class="num">1</span> Conectar MetaMask</h2>
+    <p class="pequeno">Firma con <strong>tu propia billetera</strong>: el municipio no tiene tu llave ni puede responder por ti.</p>
+    <button id="conectar" type="button">Conectar MetaMask</button>
+    <p id="cuenta" class="estado-cuenta">Sin conectar.</p>
+  </section>
+
+  <section class="tarjeta">
+    <h2><span class="num">2</span> Contrato del reloj</h2>
+    <p class="pequeno">Viene en el enlace que te envió el municipio. También puedes pegarlo aquí; este navegador lo recuerda.</p>
+    <div class="fila"><label class="campo">Dirección del contrato<input id="contrato" type="text" spellcheck="false" autocomplete="off" placeholder="0x…"></label><button id="usarContrato" type="button" class="secundario">Usar este contrato</button></div>
+    <p id="relojInfo" class="pequeno"></p>
+  </section>
+
+  <section class="tarjeta">
+    <h2><span class="num">3</span> Casos pendientes de tu respuesta</h2>
+    <p class="pequeno">Tus horas de respuesta salen de tu propio registro. Antes de firmar, cada caso se prueba contra el contrato sin gastar gas: el que el contrato rechazaría no se envía.</p>
+    <div id="rechazos"></div>
+    <div class="tabla"><table><thead><tr><th>Caso</th><th>Apertura (firma municipio)</th><th>Tu respuesta</th><th>Horas</th><th>Estado</th><th>Penalidad (contrato)</th></tr></thead><tbody id="casos"><tr><td colspan="6" class="vacio">Indica el contrato para ver tus casos.</td></tr></tbody></table></div>
+    <button id="firmar" type="button" disabled>Firmar respuestas</button>
+    <output id="estado" class="estado" aria-live="polite" hidden></output>
+  </section>
+
+  <section id="resumen" class="metricas" hidden></section>
+  <p id="enlaces" class="enlaces"></p>
+  <p class="pie">Plazo contractual en horas corridas. Fechas en UTC−05:00. Esta página revisa Sepolia cada 5 segundos por un RPC público. Caso San Ramón de Altamira · datos de prueba.</p>
+</main>
+</body>
+</html>

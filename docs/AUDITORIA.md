@@ -1,8 +1,10 @@
-# Auditoría Nivel 1 — Reto 03
+<img src="../src/cygnus-icono.png" alt="Cygnus" width="48">
 
-Ejecución UTC: 2026-11-09T02:40:25.186Z → 2026-11-09T02:40:43.547Z. Zona de presentación: America/Guayaquil.
+# Cygnus · Auditoría — Reto 03
 
-Resultado: **NIVEL 1 NO DECLARADO COMPLETO**.
+Ejecución UTC: 2026-11-14T14:33:08.035Z → 2026-11-14T14:35:08.224Z. Zona de presentación: America/Guayaquil.
+
+Resultado: **NIVEL 1 COMPLETO**.
 
 Se leyeron ambos PDF entregados (docs/referencia/) y el README de datos/. Los originales se comparan por SHA-256 con src/source-manifest.json; ejecutar npm run verify:source para repetir el contraste. Se usan los 187 tickets del lote, con advertencia de 185 reportados en julio y 2 en agosto. Se usa estado final del lote, no un corte al 31 de julio.
 
@@ -10,7 +12,7 @@ Se leyeron ambos PDF entregados (docs/referencia/) y el README de datos/. Los or
 
 - Archivos y funciones: src/core.mjs: buildEvidence, leaf, merkle, evidenceHash; contracts/RegistroIndicador.sol: seal; src/chain.mjs: readAnchor; src/app.mjs: botón seal.
 - Prueba ejecutada: Cargar originales, pulsar sellado en navegador si aún no existe; comprobar código, recibo, evento y getSeal mediante JSON-RPC real.
-- Resultado real: {"count":187,"root":"0x9277bf7192fa581c9acf0a6885d1d4925598669293057e2731e7044fb436a6c4","transaction":"0x8005337484a237e29598474695996e4d79a5e88aef1531ec0961dd13dbfb221f","block":2,"address":"0xe78A0F7E598Cc8b0Bb87894B0F60dD2a88d6a8Ab","chainId":31337}
+- Resultado real: {"count":187,"root":"0xd1506cf2f835116158223ae41d8e6fcbe0906d9ac6c18b89bf806bc6dd34020c","transaction":"0xf23b6c1122b310b0567c90bb1cb62614f51212f1960034c5cac74e95fde2ff76","block":2,"address":"0xe78A0F7E598Cc8b0Bb87894B0F60dD2a88d6a8Ab","chainId":31337}
 - Estado: **APROBADO**.
 - Evidencia disponible: evidencias/red-local.json, evidencias/sello-original.json, evidencias/01-sellado.png
 - Correcciones o validaciones pendientes: Ninguna en esta prueba automatizada; repetir ante el jurado para la demostración en vivo.
@@ -27,11 +29,11 @@ Se leyeron ambos PDF entregados (docs/referencia/) y el README de datos/. Los or
 ## 3. Detección de alteraciones
 
 - Archivos y funciones: src/core.mjs: authenticateEvidence, proofValid, verifyText, sealedValues; src/app.mjs: doVerify, renderChanges; contracts/RegistroIndicador.sol: sello inmutable.
-- Prueba ejecutada: Guardar una copia del CSV con fecha_resolucion alterada de un solo ticket; subir mediante selector de archivo real y verificar en navegador; comprobar ROJO, ID exacto, campo y ausencia de indicadores acreditados.
+- Prueba ejecutada: Guardar una copia del CSV con fecha_resolucion alterada de un solo ticket; subir mediante selector de archivo real y verificar en navegador; comprobar ROJO, ID exacto, campo y ausencia de indicadores acreditados. Además: edición manual confirmada por el usuario, observada en sesión separada y autenticada nuevamente contra el mismo sello.
 - Resultado real: {"color":"ROJO","ticket":"TK-2026-04201","fields":["fecha_resolucion"],"sealedVsEdited":true,"originalSealUnchanged":true,"automatedBrowserUpload":true}
-- Estado: **NO VERIFICADO**. Prueba automática: APROBADO.
-- Evidencia disponible: evidencias/03-alteracion.png, evidencias/tickets-modificado.csv
-- Correcciones o validaciones pendientes: La edición y carga fueron automatizadas sobre un archivo real. Falta ejecutar y observar la edición manual en un editor y la carga por una persona, exigida literalmente en la demostración.
+- Estado: **APROBADO**. Prueba automática: APROBADO.
+- Evidencia disponible: evidencias/03-alteracion.png, evidencias/tickets-modificado.csv, evidencias/edicion-manual.json, evidencias/tickets-edicion-manual.csv, evidencias/07-edicion-manual.png
+- Correcciones o validaciones pendientes: Ninguna en esta prueba automatizada; repetir ante el jurado para la demostración en vivo.
 
 ## 4. Comparación de indicadores
 
@@ -46,29 +48,55 @@ Se leyeron ambos PDF entregados (docs/referencia/) y el README de datos/. Los or
 
 - Archivos y funciones: contracts/RegistroIndicador.sol; src/chain.mjs: readAnchor; src/privacy.mjs: collectChainData, searchPersonalData; src/app.mjs: botón searchPersonal.
 - Prueba ejecutada: Consultar contrato, recibo, calldata, evento y almacenamiento reales; pulsar «Buscar datos personales en la cadena» y comprobar 0 coincidencias de todos los usuarios, técnicos, unidades y actores de la bitácora.
-- Resultado real: {"stored":["period","root","evidenceHash","count","timestamp","owner","rulesHash"],"sealCalldataBytes":132,"transaction":"0x8005337484a237e29598474695996e4d79a5e88aef1531ec0961dd13dbfb221f","contract":"0xe78A0F7E598Cc8b0Bb87894B0F60dD2a88d6a8Ab","network":"EVM local Ganache (red de desarrollo real)","personalDataSearch":{"values":174,"patterns":1530,"bytes":3328,"matches":0,"sources":["calldata de la transacción de sellado","calldata del despliegue (bytecode + hash de reglas)","bytecode desplegado","evento 1: temas y datos","almacenamiento del sello (3 ranuras)"]}}
+- Resultado real: {"stored":["period","root","evidenceHash","count","timestamp","owner","rulesHash"],"sealCalldataBytes":132,"transaction":"0xf23b6c1122b310b0567c90bb1cb62614f51212f1960034c5cac74e95fde2ff76","contract":"0xe78A0F7E598Cc8b0Bb87894B0F60dD2a88d6a8Ab","network":"EVM local Ganache (red de desarrollo real)","personalDataSearch":{"values":174,"patterns":1530,"bytes":3328,"matches":0,"sources":["calldata de la transacción de sellado","calldata del despliegue (bytecode + hash de reglas)","bytecode desplegado","evento 1: temas y datos","almacenamiento del sello (3 ranuras)"]}}
 - Estado: **APROBADO**.
 - Evidencia disponible: evidencias/blockchain.json, evidencias/contrato.json, evidencias/05-privacidad.png
 - Correcciones o validaciones pendientes: Ninguna en esta prueba automatizada; repetir ante el jurado para la demostración en vivo.
 
+## Nivel 2 · Reloj del proveedor
+
+Resultado: **NIVEL 2 COMPLETO**.
+
+- Archivos y funciones: contracts/RelojProveedor.sol: abrirCaso, responder, abrirCasos y responderCasos por lote, penalidad; src/reloj.mjs: abrirCasos, responderCasos, recalcularComoTercero; src/proveedor.mjs: vista #/proveedor por roles (modo local); src/proveedor-sepolia.mjs y portal-proveedor/: flujo real en Sepolia con dos programas y dos billeteras (probado en tests/reloj-sepolia.test.mjs; la firma con MetaMask se prueba a mano); scripts/reloj.mjs y POST /api/reloj/reiniciar: despliegue, fondeo y reinicio.
+- Prueba ejecutada: En la vista #/proveedor, por roles y sobre un reloj recién desplegado («Reiniciar simulación»): el proveedor intenta responder antes de la apertura (mensaje, «Caso no abierto»); el municipio firma la apertura de los 9 casos con la cuenta 0 y una segunda firma se explica («Caso ya abierto»); el proveedor 1 firma con la cuenta 1: 8 aceptados y PVT-04226 rechazado («Respuesta anterior a la apertura»), total 2.592 USD; el auditor recalcula sin llaves desde los eventos y coincide en las 8 filas. Después se repite el cálculo desde Node y se buscan los textos de proveedores.csv en calldata y eventos.
+- Resultado real: {"aceptados":8,"rechazados":["PVT-04226"],"totalUSD":2592,"terceroCoincide":true,"penalidades":{"PVT-04244":954,"PVT-04288":342,"PVT-04301":0,"PVT-04315":0,"PVT-04320":0,"PVT-04326":954,"PVT-04360":0,"PVT-04367":342},"privacidad":{"valoresBuscados":8,"bytes":8936,"coincidencias":0}}
+- Estado: **APROBADO**.
+- Evidencia disponible: evidencias/08-proveedor.png, evidencias/vista-proveedor-movil.png, evidencias/proveedor.json, evidencias/reloj-local.json
+- Correcciones o validaciones pendientes: Ninguna en esta prueba automatizada.
+
+## Nivel 3 · Catálogo y SLA anclados
+
+Resultado: **NIVEL 3 COMPLETO**.
+
+- Archivos y funciones: contracts/RegistroCatalogo.sol: anclarCatalogo (solo el owner, una vez por período, sin funciones para modificar), catalogo, servicio, serviciosDe; src/catalogo.mjs: argumentosAnclaje, leerAnclado, compararCatalogo, ticketsAfectados, intentarReclasificar; src/catalogo-ui.mjs: vista #/catalogo; scripts/catalogo-sepolia.mjs: validación por RPC público e historial.
+- Prueba ejecutada: En la vista #/catalogo: abre en Sepolia sin catálogo (el arranque lo archivó); en la red local se ancla el catálogo de julio, el original verifica VERDE, una copia con CS-11 relajado de CRITICA 4 h a ALTA 8 h da ROJO con el servicio, lo anclado y lo editado, y TK-2026-04228 en la lista de tickets que cambiarían; «Intentar reclasificar» muestra el rechazo del contrato sin gas. Desde Node se leen los 14 servicios y se comprueba que otra cuenta no puede anclar.
+- Resultado real: {"servicios":14,"csvSha256":"0xad088fc60f9fb27a240688564afb78ac9623780460f773c71094bb9ee6bd6942","reclasificacion":{"rechazado":true,"motivo":"Catálogo ya anclado: no se puede reclasificar"},"ticketsQueCambiarian":["TK-2026-04228","TK-2026-04351","TK-2026-04355"]}
+- Estado: **APROBADO**.
+- Evidencia disponible: evidencias/09-catalogo.png, evidencias/vista-catalogo-movil.png, evidencias/catalogo.json, evidencias/catalogo-editado.csv, evidencias/catalogo-local.json
+- Correcciones o validaciones pendientes: Ninguna en esta prueba automatizada. El anclaje en Sepolia con MetaMask se prueba a mano.
+
 ## Pruebas complementarias
 
+- Arranque sin período activo: período y reloj de Sepolia archivados en el historial, Sellar dice «Sin período activo», julio no aparece sellado, pasos 1 a 4 arriba y abiertos, y los pasos 2 a 4 esperan al 1: APROBADO.
 - Navegación: 7 rutas con una sola vista visible, aria-current, atrás y adelante, estado de sello y verificación conservado entre vistas, guion con 5 pasos cumplidos: APROBADO.
 - Segundo sellado rechazado por EVM: APROBADO.
 - Simulación de feriado 2026-07-24: 4 tickets cambian de estado, sin tocar el sello: APROBADO.
-- Sepolia sin desplegar: la interfaz lo indica y no inventa un ancla: APROBADO (despliegue pendiente).
+- Sepolia sin período activo: la interfaz lo indica y no inventa un ancla: APROBADO.
 - RPC bloqueado: sin verde ni indicadores acreditados: APROBADO.
 - Proxy /rpc: rechaza evm_revert, evm_mine y transacciones fuera del contrato; deja pasar lecturas: APROBADO.
 - Recarga: se conserva la vista de la ruta (#/comparar): APROBADO.
 - Recarga: manifiesto persistido y sello original conservado: APROBADO.
 - Vista móvil 390 px: menú en panel lateral y las 7 vistas sin desbordamiento de página: APROBADO.
 - Reinicio del proceso EVM: mismos contrato, sello, transacción y resultado verificado: APROBADO.
+- Reloj del proveedor: abre en «Sepolia (real)» solo con el rol del municipio; los tres roles quedan en «Modo local (simulación)»: APROBADO.
 
 ## Límites y pendientes
 
-- La edición manual sigue pendiente; una prueba automática no acredita ese paso.
+- Edición manual realizada y confirmada por el usuario; CSV y transacción autenticados nuevamente. Las pruebas automáticas y la edición manual se ejecutaron en sesiones distintas. El guion completo debe ensayarse por el expositor.
 - Las pruebas unitarias se ejecutan con npm test; sus resultados se conservan por separado en evidencias/pruebas-unitarias.txt. No se confunden los anclajes de pruebas unitarias con el sello real de aceptación.
 - La EVM local (Ganache) es el respaldo sin internet; no es una red pública. Ganache conserva bloques y estado por instancia en .instances/. Es necesario npm start para consultar las evidencias por RPC; el JSON y las capturas por sí solos no reemplazan esa consulta.
-- El motor descuenta feriados configurados. Se usa lista vacía como supuesto explícito porque no se entregó calendario oficial. Ver docs/CALENDARIO.md. El panel «Simular feriado» muestra el efecto sin sellar.
-- El ancla pública en Sepolia se despliega con npm run deploy:sepolia y npm run seal:sepolia; sin evidencias/red-sepolia.json la auditoría solo comprueba que la interfaz lo declara pendiente.
+- El motor descuenta feriados configurados. Se usa lista vacía como supuesto explícito porque no se entregó calendario oficial. Ver docs/CALENDARIO.md. La vista «Calendario de feriados» muestra el efecto sin sellar.
+- Sepolia: cada arranque del servidor archiva el período y el reloj activos en el historial (evidencias/sepolia-historial/ y evidencias/reloj-sepolia-historial/), sin borrar nada. El período se prepara y se sella en vivo con MetaMask, que no se automatiza: la auditoría comprueba que la interfaz abre «Sin período activo» y no inventa un ancla. Los sellos reales anteriores quedan en el historial y en Sepolia.
 - Un sello acredita integridad posterior al anclaje, no veracidad ni cumplimiento institucional anterior.
+- Nivel 2: en la demo las llaves del municipio y de los proveedores están en el mismo servidor (cuentas de Ganache). En la realidad cada organización guarda la suya y firma desde su propio equipo; el contrato ya exige que cada paso lo firme la cuenta correcta.
+- Nivel 2: el SLA contractual se mide en horas corridas, no hábiles, porque así vienen los datos de tickets_proveedor.csv. El reloj registra lo que cada parte firma; no prueba que la hora firmada sea la real.

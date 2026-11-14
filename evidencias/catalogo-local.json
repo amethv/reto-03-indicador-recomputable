@@ -1,0 +1,10 @@
+{
+  "contract": "RegistroCatalogo",
+  "address": "0xd99748782d7643b00C36a4Bb296C4A099dF98Ff3",
+  "chainId": 31337,
+  "deploymentBlock": 184,
+  "deploymentTransaction": "0xe523a7a0c7e8de7acc02ae98f5a0ee421303d1e5c95524613f98f7edbb2d7cc5",
+  "codeHash": "0x0ad6dd0887fe20b36292dd8f6a1016d266a7071c0777d435ee80d7b7aa055d0c",
+  "owner": "0x90F8bf6A479f320ead074411a4B0e7944Ea8c9C1",
+  "local": true
+}

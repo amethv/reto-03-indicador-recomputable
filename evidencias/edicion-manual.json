@@ -1,0 +1,21 @@
+{
+  "observedAt": "2026-11-12T20:59:00.424Z",
+  "instance": "nivel1-v5-auditoria",
+  "humanConfirmed": true,
+  "edit": "Edición manual hecha por la usuaria en el Bloc de notas sobre una copia de datos/tickets.csv; confirmada por ella en la sesión del 2026-11-12.",
+  "upload": "Automática mediante selector del navegador",
+  "changes": [
+    {
+      "id": "TK-2026-04201",
+      "field": "fecha_resolucion",
+      "before": "2026-08-03T12:03:55-05:00",
+      "after": "2026-08-03T12:04:55-05:00"
+    }
+  ],
+  "result": "ROJO",
+  "transactionHash": "0xf23b6c1122b310b0567c90bb1cb62614f51212f1960034c5cac74e95fde2ff76",
+  "sourceHash": "0x6f3a1f097e438bf5518df1193a5bf2789a985a081920605ffb7ead04fa0e88f8",
+  "modifiedHash": "0x4c00566a049a64c222242e233b67145966efac61c6d2c76c7859ca1d9e27032c",
+  "sealUnchanged": true,
+  "observedFile": "edicion-observada-1794517140006"
+}

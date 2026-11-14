@@ -1,4 +1,6 @@
-# Calendario declarado
+<img src="../src/cygnus-icono.png" alt="Cygnus" width="48">
+
+# Cygnus · Calendario declarado
 
 El país y la entidad son ficticios. El material exige lunes a viernes de 08:00 a 17:00 y menciona feriados, pero no aporta fechas. No corresponde importar automáticamente un calendario de Ecuador ni de otro país real.
 
