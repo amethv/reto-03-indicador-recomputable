@@ -74,7 +74,8 @@ function pintar(){
  if(!estado){aviso(null);document.title=TITULO;$('firmar').disabled=true;$('resumen').hidden=true;$('rechazos').replaceChildren();if(!contrato)$('casos').innerHTML='<tr><td colspan="6" class="vacio">Indica el contrato para ver tus casos.</td></tr>';return;}
  const {filas,abiertos,validos,rechazados,respondidos,total}=estado;
  // Notificación: cuando el municipio abre casos, un aviso visible (y en el título de la pestaña).
- if(validos>0){aviso(`🔔 El municipio abrió ${abiertos} casos · pendientes de tu respuesta`);document.title=`🔔 (${validos}) ${TITULO}`;}
+ // Pendientes = abiertos sin respuesta (los válidos y el que el contrato rechazaría).
+ if(validos>0){const pendientes=validos+rechazados;aviso(`Nuevos casos del municipio: ${pendientes} pendientes de tu respuesta`);document.title=`(${pendientes}) ${TITULO}`;}
  else if(respondidos>0){aviso(`✓ Respondiste ${respondidos} casos${rechazados?` · ${rechazados} rechazado por el contrato`:''}`,true);document.title=TITULO;}
  else{aviso(null);document.title=TITULO;}
  $('rechazos').innerHTML=filas.filter(f=>f.estado==='RECHAZADO').map(f=>`<p class="rechazo">${esc(f.id)} · ${esc(textoRechazo(f.motivo))}. No se enviará: probado sin gastar gas.</p>`).join('');

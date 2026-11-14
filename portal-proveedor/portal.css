@@ -34,7 +34,8 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--morado); ou
 .estado-cuenta { margin: 10px 0 0; line-height: 1.5; overflow-wrap: anywhere; }
 .ok { font-weight: 600; color: var(--morado-oscuro); }
 .no { display: block; margin-top: 6px; padding: 8px 12px; border-radius: 8px; background: var(--ambar-bg); border: 1px solid var(--ambar-linea); color: var(--ambar); font-weight: 600; }
-.aviso { margin: 0 0 16px; padding: 14px 18px; border-radius: 14px; background: var(--crema); border: 2px solid var(--naranja); font-family: var(--titulos); font-size: 18px; animation: llega .5s ease-out; }
+/* Aviso de casos nuevos: destacado con el naranja del proyecto (texto morado oscuro, contraste ≥ 4.5:1). */
+.aviso { margin: 0 0 16px; padding: 14px 18px; border-radius: 14px; background: var(--naranja); border: 2px solid var(--naranja); color: var(--morado-oscuro); font-family: var(--titulos); font-size: 18px; animation: llega .5s ease-out; }
 .aviso.listo { background: #fff; border-color: var(--morado); }
 @keyframes llega { from { transform: translateY(-6px); opacity: 0; } to { transform: none; opacity: 1; } }
 .tabla { overflow-x: auto; margin: 0 0 12px; }
