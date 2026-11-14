@@ -137,8 +137,8 @@ async function renderChanges(result){
 
 async function doVerify(){
  clearResults('VERIFICACIÓN INCOMPLETA · consultando blockchain y comprobando evidencias…');
- if(!evidence)throw new Error('Falta la evidencia original; importa el manifiesto del sellado confirmado.');
- if(!salt)throw new Error('Falta la sal secreta del sello: impórtala en la vista Verificar, en «Verificar desde otro equipo».');
+ if(!evidence)throw new Error('Falta la evidencia original del sellado confirmado en evidencias/.');
+ if(!salt)throw new Error('Falta la sal secreta del sello: en otro equipo, copia la carpeta .secreto/ del equipo que selló y reinicia la app.');
  const t=await texts(),file=$('verifyFile').files[0],text=file?await file.text():t.tickets;
  const anchor=await readAnchor(provider,config);showAnchor(anchor);sealed=true;
  const result=await verifyText(text,evidence,anchor,t,salt);
@@ -307,20 +307,6 @@ $('inspect').onclick=()=>run(async()=>{
 });
 $('verifyFile').onchange=()=>clearResults();
 for(const id of Object.values(FILE_INPUTS))$(id).onchange=()=>{prepared=null;clearResults();controls();};
-$('evidenceFile').onchange=()=>run(async()=>{
- clearResults();const file=$('evidenceFile').files[0];if(!file)return;
- const candidate=JSON.parse(await file.text()),anchor=await readAnchor(provider,config),auth=await authenticateEvidence(candidate,anchor);if(!auth.ok)throw new Error(auth.error);
- evidence=candidate;sealed=true;if(salt&&await saltCommitment(salt)!==candidate.saltCommitment)salt=null;showSalt();
- status('sealStatus','Evidencia importada y autenticada contra blockchain. Ejecuta la verificación del CSV.');
-});
-$('saltFile').onchange=()=>run(async()=>{
- clearResults();const file=$('saltFile').files[0];if(!file)return;
- if(!evidence)throw new Error('Primero carga o importa la evidencia del sello; la sal se comprueba contra su manifiesto.');
- const text=(await file.text()).trim();let candidate=text;try{candidate=JSON.parse(text).salt;}catch{}
- if(!validSalt(candidate))throw new Error('El archivo no contiene una sal válida (0x y 64 caracteres hexadecimales).');
- if(await saltCommitment(candidate)!==evidence.saltCommitment)throw new Error('Esa sal no corresponde al manifiesto de este sello.');
- salt=candidate;showSalt();
-});
 $('export').onclick=()=>{if(!evidence)return;const blob=new Blob([JSON.stringify(evidence,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='sello-original-2026-07.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};
 $('search').oninput=renderTable;$('filter').onchange=renderTable;renderPolicy();
 
@@ -366,7 +352,7 @@ async function useNetwork(name){
  if(stored.ok){
   const candidate=await stored.json(),anchor=await readAnchor(provider,config),auth=await authenticateEvidence(candidate,anchor);if(!auth.ok)throw new Error(auth.error);
   evidence=candidate;sealed=true;showAnchor(anchor);status('sealStatus',`Sello existente confirmado en ${redVisible(config.network)}. No se reemplazará. TX ${anchor.transactionHash}`,'green');
-  // La sal la entrega solo el servidor local de quien selló; si no la tiene, se importa a mano.
+  // La sal la entrega solo el servidor local, desde .secreto/ (o la carpeta secreta de la instancia).
   const r=await fetch(`/api/sal?red=${name}`);
   if(r.ok){const {salt:s}=await r.json();if(validSalt(s)&&await saltCommitment(s)===evidence.saltCommitment)salt=s;}
   showSalt();
@@ -374,7 +360,7 @@ async function useNetwork(name){
 }
 function showSalt(){
  $('downloadSalt').hidden=!(network==='sepolia'&&salt&&lastAnchor);
- $('saltStatus').textContent=salt?'Sal secreta: cargada y coincide con el compromiso del manifiesto.':evidence?'Sal secreta: falta. Sin ella no se pueden comprobar los tickets; impórtala en «Verificar desde otro equipo».':'Sal secreta: pendiente.';
+ $('saltStatus').textContent=salt?'Sal secreta: cargada y coincide con el compromiso del manifiesto.':evidence?'Sal secreta: falta. Sin ella no se pueden comprobar los tickets; en otro equipo, copia la carpeta .secreto/ del equipo que selló.':'Sal secreta: pendiente.';
 }
 // ---------- Navegación por vistas, estado del menú y tarjeta de red ----------
 // Cada vista es un <section> que se muestra u oculta: el estado en memoria se conserva.

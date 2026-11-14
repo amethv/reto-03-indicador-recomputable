@@ -65,7 +65,7 @@ En pantallas de menos de 900 px el menú se abre con el botón «Menú» de la b
 - Si los 9 casos ya estaban cargados: «Cargar los 9 casos» no los repite; muestra cada paso «(ya estaba en la cadena)» y el contrato vuelve a rechazar PVT-04226.
 - Si falla el RPC: la interfaz no muestra indicadores acreditados (ERROR DE CONEXIÓN). Cambiar a la red local.
 - Las capturas de `evidencias/` son respaldo documental, no sustituyen la demostración en vivo.
-- Si se verifica desde otro navegador o equipo: importar en la vista Verificar el manifiesto (`sello-original.json`) y la sal secreta (`.instances/<instancia>/secreto/sal-202607.json`; con `npm.cmd start` la instancia es `nivel2-v1`, con `npm.cmd run demo` es la `demo-…` recién creada). Sin la sal el resultado es INCOMPLETA, a propósito.
+- Si se verifica desde otro equipo (Sepolia): copiar la carpeta `.secreto/` del equipo que selló a la raíz del proyecto y ejecutar `npm.cmd start` (ver README, «Verificar en otro equipo»). Otro navegador en el mismo equipo no necesita nada: el servidor entrega la sal. Sin la sal el resultado es INCOMPLETA, a propósito.
 
 ## Evidencia de la edición manual
 

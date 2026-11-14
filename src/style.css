@@ -102,8 +102,10 @@ body { margin: 0; min-width: 0; }
 main {
   min-width: 0;
   padding: var(--space-6) clamp(var(--space-4), 3vw, 48px);
-  max-width: 1240px;
+  /* En monitores anchos el contenido se centra en su columna en vez de quedar pegado al menú. */
+  max-width: 1440px;
   width: 100%;
+  margin-inline: auto;
 }
 
 .topbar, .backdrop, .brand .close { display: none; }

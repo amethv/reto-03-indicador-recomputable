@@ -117,7 +117,7 @@
     <div id="sealLinks" class="seal-links"></div>
     <button id="downloadSalt" type="button" class="secondary" hidden>Descargar sal secreta (respaldo)</button>
     <details><summary>Respaldo del sello</summary>
-      <p class="small">Copia del manifiesto con la huella de los 187 tickets. La app ya la guarda sola en este equipo; solo hace falta para verificar desde otro equipo.</p>
+      <p class="small">Copia del manifiesto con la huella de los 187 tickets. La app ya la guarda sola en evidencias/; es una copia de respaldo.</p>
       <button id="export" class="secondary" disabled>Descargar respaldo del sellado</button>
     </details>
     <details class="admin"><summary>Administración</summary>
@@ -162,10 +162,6 @@
   <div class="card">
     <div class="inputs"><label>CSV que se va a verificar<input id="verifyFile" type="file" accept=".csv"></label></div>
     <p id="saltStatus" class="small">Sal secreta: pendiente.</p>
-    <details><summary>Verificar desde otro equipo</summary>
-      <p class="small">En el equipo donde se selló, la evidencia y la sal se cargan solas. En otro equipo o navegador, impórtalas aquí.</p>
-      <div class="inputs"><label>Importar evidencia original (respaldo del sellado)<input id="evidenceFile" type="file" accept=".json"></label><label>Importar la sal secreta del sello<input id="saltFile" type="file" accept=".json,.txt"></label></div>
-    </details>
     <button id="verify">Verificar nuevamente contra blockchain</button>
     <div class="slot" data-slot="verification"></div>
     <div id="changes" aria-live="polite"></div>
