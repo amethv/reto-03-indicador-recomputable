@@ -1,0 +1,28 @@
+{
+  "contract": "RelojProveedor",
+  "network": "Sepolia (testnet pública de Ethereum)",
+  "chainId": 11155111,
+  "address": "0x8AB1f9C3053ec86a7eA7bC118506834f730e4079",
+  "deploymentBlock": 12132652,
+  "deploymentTransaction": "0xcc160dcb94421e57fb4e80d0ad485de21b67462438d62a2627842c820f27bbfd",
+  "codeHash": "0x51bdd69a41b6c973a2630de800da945c486a25adc1498f325dd2180d24936fdd",
+  "municipio": "0x7cA013427943D478f18B3D37FE26883a0B982c27",
+  "proveedores": [
+    {
+      "id": "PV-01",
+      "cuenta": "0x417502991342eAf1B71015b66D128B75D7a0fA67",
+      "slaSegundos": 21600,
+      "tarifaCentavosPorHora": 18000
+    }
+  ],
+  "rpc": "https://ethereum-sepolia-rpc.publicnode.com",
+  "explorer": "https://sepolia.etherscan.io",
+  "local": false,
+  "compiler": "0.8.30+commit.73712a01.Emscripten.clang",
+  "preparedFrom": "navegador (MetaMask)",
+  "supuesto": "SLA contractual en horas corridas, no hábiles",
+  "links": {
+    "contract": "https://sepolia.etherscan.io/address/0x8AB1f9C3053ec86a7eA7bC118506834f730e4079",
+    "deployment": "https://sepolia.etherscan.io/tx/0xcc160dcb94421e57fb4e80d0ad485de21b67462438d62a2627842c820f27bbfd"
+  }
+}

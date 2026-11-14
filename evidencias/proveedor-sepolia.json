@@ -1,0 +1,144 @@
+{
+  "red": "Sepolia (testnet pública de Ethereum)",
+  "chainId": 11155111,
+  "contrato": "0x8AB1f9C3053ec86a7eA7bC118506834f730e4079",
+  "municipio": "0x7cA013427943D478f18B3D37FE26883a0B982c27",
+  "proveedor1": "0x417502991342eAf1B71015b66D128B75D7a0fA67",
+  "despliegue": {
+    "tx": "0xcc160dcb94421e57fb4e80d0ad485de21b67462438d62a2627842c820f27bbfd",
+    "bloque": 12132652
+  },
+  "aperturaTransacciones": [
+    "0x55aafed4ce592299ed328d1b8eb9db5c980bc320d27ae2163455d29ea0585128"
+  ],
+  "respuestaTransacciones": [
+    "0x255e5a71504705ad4fec852daee55a86a9a572741bad976c328df372fe38c9a6"
+  ],
+  "aceptados": 8,
+  "rechazados": [
+    "PVT-04226"
+  ],
+  "totalUSD": 2592,
+  "auditorSinLlavesCoincide": true,
+  "casos": [
+    {
+      "caso": "PVT-04226",
+      "abierto": true,
+      "respondido": false,
+      "aperturaTx": "0x55aafed4ce592299ed328d1b8eb9db5c980bc320d27ae2163455d29ea0585128",
+      "aperturaBloque": 12132659,
+      "estado": "RECHAZADO",
+      "motivo": "Respuesta anterior a la apertura",
+      "aperturaFirmadaPor": "0x7cA013427943D478f18B3D37FE26883a0B982c27"
+    },
+    {
+      "caso": "PVT-04244",
+      "abierto": true,
+      "respondido": true,
+      "aperturaTx": "0x55aafed4ce592299ed328d1b8eb9db5c980bc320d27ae2163455d29ea0585128",
+      "aperturaBloque": 12132659,
+      "horas": 11.3,
+      "penalidadUSD": 954,
+      "respuestaTx": "0x255e5a71504705ad4fec852daee55a86a9a572741bad976c328df372fe38c9a6",
+      "respuestaBloque": 12132717,
+      "firmadaPor": "0x417502991342eAf1B71015b66D128B75D7a0fA67",
+      "aperturaFirmadaPor": "0x7cA013427943D478f18B3D37FE26883a0B982c27"
+    },
+    {
+      "caso": "PVT-04288",
+      "abierto": true,
+      "respondido": true,
+      "aperturaTx": "0x55aafed4ce592299ed328d1b8eb9db5c980bc320d27ae2163455d29ea0585128",
+      "aperturaBloque": 12132659,
+      "horas": 7.9,
+      "penalidadUSD": 342,
+      "respuestaTx": "0x255e5a71504705ad4fec852daee55a86a9a572741bad976c328df372fe38c9a6",
+      "respuestaBloque": 12132717,
+      "firmadaPor": "0x417502991342eAf1B71015b66D128B75D7a0fA67",
+      "aperturaFirmadaPor": "0x7cA013427943D478f18B3D37FE26883a0B982c27"
+    },
+    {
+      "caso": "PVT-04301",
+      "abierto": true,
+      "respondido": true,
+      "aperturaTx": "0x55aafed4ce592299ed328d1b8eb9db5c980bc320d27ae2163455d29ea0585128",
+      "aperturaBloque": 12132659,
+      "horas": 3.8,
+      "penalidadUSD": 0,
+      "respuestaTx": "0x255e5a71504705ad4fec852daee55a86a9a572741bad976c328df372fe38c9a6",
+      "respuestaBloque": 12132717,
+      "firmadaPor": "0x417502991342eAf1B71015b66D128B75D7a0fA67",
+      "aperturaFirmadaPor": "0x7cA013427943D478f18B3D37FE26883a0B982c27"
+    },
+    {
+      "caso": "PVT-04315",
+      "abierto": true,
+      "respondido": true,
+      "aperturaTx": "0x55aafed4ce592299ed328d1b8eb9db5c980bc320d27ae2163455d29ea0585128",
+      "aperturaBloque": 12132659,
+      "horas": 2.5,
+      "penalidadUSD": 0,
+      "respuestaTx": "0x255e5a71504705ad4fec852daee55a86a9a572741bad976c328df372fe38c9a6",
+      "respuestaBloque": 12132717,
+      "firmadaPor": "0x417502991342eAf1B71015b66D128B75D7a0fA67",
+      "aperturaFirmadaPor": "0x7cA013427943D478f18B3D37FE26883a0B982c27"
+    },
+    {
+      "caso": "PVT-04320",
+      "abierto": true,
+      "respondido": true,
+      "aperturaTx": "0x55aafed4ce592299ed328d1b8eb9db5c980bc320d27ae2163455d29ea0585128",
+      "aperturaBloque": 12132659,
+      "horas": 3.8,
+      "penalidadUSD": 0,
+      "respuestaTx": "0x255e5a71504705ad4fec852daee55a86a9a572741bad976c328df372fe38c9a6",
+      "respuestaBloque": 12132717,
+      "firmadaPor": "0x417502991342eAf1B71015b66D128B75D7a0fA67",
+      "aperturaFirmadaPor": "0x7cA013427943D478f18B3D37FE26883a0B982c27"
+    },
+    {
+      "caso": "PVT-04326",
+      "abierto": true,
+      "respondido": true,
+      "aperturaTx": "0x55aafed4ce592299ed328d1b8eb9db5c980bc320d27ae2163455d29ea0585128",
+      "aperturaBloque": 12132659,
+      "horas": 11.3,
+      "penalidadUSD": 954,
+      "respuestaTx": "0x255e5a71504705ad4fec852daee55a86a9a572741bad976c328df372fe38c9a6",
+      "respuestaBloque": 12132717,
+      "firmadaPor": "0x417502991342eAf1B71015b66D128B75D7a0fA67",
+      "aperturaFirmadaPor": "0x7cA013427943D478f18B3D37FE26883a0B982c27"
+    },
+    {
+      "caso": "PVT-04360",
+      "abierto": true,
+      "respondido": true,
+      "aperturaTx": "0x55aafed4ce592299ed328d1b8eb9db5c980bc320d27ae2163455d29ea0585128",
+      "aperturaBloque": 12132659,
+      "horas": 3.8,
+      "penalidadUSD": 0,
+      "respuestaTx": "0x255e5a71504705ad4fec852daee55a86a9a572741bad976c328df372fe38c9a6",
+      "respuestaBloque": 12132717,
+      "firmadaPor": "0x417502991342eAf1B71015b66D128B75D7a0fA67",
+      "aperturaFirmadaPor": "0x7cA013427943D478f18B3D37FE26883a0B982c27"
+    },
+    {
+      "caso": "PVT-04367",
+      "abierto": true,
+      "respondido": true,
+      "aperturaTx": "0x55aafed4ce592299ed328d1b8eb9db5c980bc320d27ae2163455d29ea0585128",
+      "aperturaBloque": 12132659,
+      "horas": 7.9,
+      "penalidadUSD": 342,
+      "respuestaTx": "0x255e5a71504705ad4fec852daee55a86a9a572741bad976c328df372fe38c9a6",
+      "respuestaBloque": 12132717,
+      "firmadaPor": "0x417502991342eAf1B71015b66D128B75D7a0fA67",
+      "aperturaFirmadaPor": "0x7cA013427943D478f18B3D37FE26883a0B982c27"
+    }
+  ],
+  "leidoPor": "RPC público de Sepolia, sin llaves (eventos, casos() y penalidad())",
+  "leido": "2026-11-14T11:21:36.338Z",
+  "etherscan": {
+    "contrato": "https://sepolia.etherscan.io/address/0x8AB1f9C3053ec86a7eA7bC118506834f730e4079"
+  }
+}

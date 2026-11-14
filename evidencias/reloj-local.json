@@ -1,9 +1,9 @@
 {
   "contract": "RelojProveedor",
-  "address": "0x6793E8E0E8ac22d71c65c2bf82e9B142dEf9eCDb",
+  "address": "0xDd37b2eB92F97dd09cEd1f1d20A73aA340b2311A",
   "chainId": 31337,
-  "deploymentBlock": 148,
-  "deploymentTransaction": "0x515a3e2292b6f4776b89c60eca5d20c938932aa453a5e588d13d9c90381309e4",
+  "deploymentBlock": 166,
+  "deploymentTransaction": "0xbe9feaf2891a9923ce2622ace0e3312b09b8aee3925af6e43c4e55231a505b68",
   "codeHash": "0x250b644b1f1534bd57054a6c84d330dd48710b3fe624f631937d5f58ca12ccf4",
   "municipio": "0x90F8bf6A479f320ead074411a4B0e7944Ea8c9C1",
   "proveedores": [
