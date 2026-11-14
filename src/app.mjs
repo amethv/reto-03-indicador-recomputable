@@ -447,7 +447,7 @@ function showRoute({focus=false}={}){
  // El mensaje de verificación es uno solo: se muestra en Recalcular y en Verificar.
  const slot=$(ROUTES[name]).querySelector('[data-slot="verification"]');if(slot)slot.append($('verification'));
  if(name==='comparar'&&lastStatus==='VERDE')done.add(4);
- const changed=route!==name;route=name;document.title=`${TITLES[name]} · ATENEA · Indicador recomputable`;
+ const changed=route!==name;route=name;document.title=`${TITLES[name]} · Cygnus`;
  closeMenu();
  if(changed&&focus){window.scrollTo(0,0);$(ROUTES[name]).querySelector('h1').focus({preventScroll:true});}
  renderNav();

@@ -1,6 +1,8 @@
-# Auditoría Nivel 1 — Reto 03
+<img src="../src/cygnus-icono.png" alt="Cygnus" width="48">
 
-Ejecución UTC: 2026-11-14T14:20:57.287Z → 2026-11-14T14:22:42.674Z. Zona de presentación: America/Guayaquil.
+# Cygnus · Auditoría — Reto 03
+
+Ejecución UTC: 2026-11-14T14:33:08.035Z → 2026-11-14T14:35:08.224Z. Zona de presentación: America/Guayaquil.
 
 Resultado: **NIVEL 1 COMPLETO**.
 

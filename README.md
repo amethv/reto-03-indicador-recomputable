@@ -1,6 +1,8 @@
-# Reto 03 · El indicador que nadie puede recalcular
+<p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="src/cygnus-logo-claro.png"><img src="src/cygnus-logo.png" alt="Cygnus" width="240"></picture></p>
 
-Nivel 1 del caso San Ramón de Altamira. Un **sellador** ancla en blockchain el compromiso de los 187 tickets de julio de 2026 y un **verificador** en el navegador recalcula el indicador desde lo sellado, sin pedirle el número a nadie.
+# Cygnus · El indicador que nadie puede recalcular
+
+**Cygnus** es el sistema de este reto (Reto 03). Nivel 1 del caso San Ramón de Altamira. Un **sellador** ancla en blockchain el compromiso de los 187 tickets de julio de 2026 y un **verificador** en el navegador recalcula el indicador desde lo sellado, sin pedirle el número a nadie.
 
 **Publicado 98,25 % · solo confirmados por el usuario 55,61 %.**
 

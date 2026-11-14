@@ -1,4 +1,6 @@
-# Procedencia de los datos
+<img src="../src/cygnus-icono.png" alt="Cygnus" width="48">
+
+# Cygnus · Procedencia de los datos
 
 ## Estado vigente
 

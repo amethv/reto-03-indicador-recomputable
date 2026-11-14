@@ -1,4 +1,6 @@
-# Demostración · Nivel 1 en cinco minutos, Nivel 2 y Nivel 3 en uno cada uno
+<img src="../src/cygnus-icono.png" alt="Cygnus" width="48">
+
+# Cygnus · Demostración: Nivel 1 en cinco minutos, Nivel 2 y Nivel 3 en uno cada uno
 
 Hilo conductor: julio de 2026. Los cinco criterios del Nivel 1, en su orden; después el reloj del proveedor (Nivel 2) y el catálogo y SLA anclados (Nivel 3).
 

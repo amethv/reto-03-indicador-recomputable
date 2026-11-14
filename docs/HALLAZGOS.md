@@ -1,4 +1,6 @@
-# Hallazgos del lote de julio de 2026
+<img src="../src/cygnus-icono.png" alt="Cygnus" width="48">
+
+# Cygnus · Hallazgos del lote de julio de 2026
 
 El brief del reto anuncia seis inconsistencias sembradas. Ninguna es un error de digitación: todas mejoran un número que alguien tiene que reportar o evitan una penalidad. El Nivel 1 toca cuatro y el Nivel 2 la quinta. Las cuatro primeras se calculan en `src/findings.mjs` a partir de archivos cuyo SHA-256 está comprometido en el sello, y tienen pruebas en `tests/findings.test.mjs`. La quinta la rechaza el contrato `RelojProveedor` y tiene pruebas en `tests/proveedor.test.mjs`.
 
