@@ -14,6 +14,8 @@ import {JsonRpcProvider} from 'ethers';
 import {registrarPeriodo,guardarSal,leerSal,registrarSello} from './sepolia-web.mjs';
 import {registrarReloj} from './reloj-sepolia.mjs';
 import {iniciarSinPeriodo} from './arranque.mjs';
+import {ensureCatalogo} from './catalogo.mjs';
+import {registrarCatalogo} from './catalogo-sepolia.mjs';
 // Portal del proveedor: otro programa (npm run proveedor, puerto 8081) o un sitio estático aparte en Render.
 // En Render, render.yaml pasa solo el host del portal (sin https://): se completa aquí.
 const portalEnv=(process.env.PORTAL_PROVEEDOR_URL||'').trim();
@@ -46,7 +48,7 @@ export async function startApp(){
  await verifySource();
  // Cada arranque empieza sin período activo de Sepolia ni reloj del proveedor: los anteriores van al historial.
  const archivo=await iniciarSinPeriodo();
- for(const [que,dir] of [['Período de Sepolia',archivo.periodo],['Reloj del proveedor en Sepolia',archivo.reloj]])if(dir)console.log(`${que} anterior archivado en ${path.relative(ROOT,dir)}`);
+ for(const [que,dir] of [['Período de Sepolia',archivo.periodo],['Reloj del proveedor en Sepolia',archivo.reloj],['Catálogo anclado en Sepolia',archivo.catalogo]])if(dir)console.log(`${que} anterior archivado en ${path.relative(ROOT,dir)}`);
  await fs.mkdir(path.join(STATE_ROOT,'.chain'),{recursive:true});
  // Cuentas: 0 municipio y sellador del Nivel 1; 1 PV-01; 2 PV-02 (Nivel 2). En una cadena persistida
  // creada con 2 cuentas, la tercera no tiene saldo: ensureReloj la fondea desde la cuenta 0.
@@ -59,7 +61,10 @@ export async function startApp(){
  if(await provider.getCode(config.address)==='0x')throw new Error('La cadena persistida no contiene el contrato configurado. No se reemplazará automáticamente.');
  // Nivel 2: después del contrato del Nivel 1, para no alterar su dirección en una instancia nueva.
  // «Reiniciar simulación» cambia el reloj vigente: la lista del proxy se actualiza con él.
- let reloj=await ensureReloj(provider),contracts=[config.address,reloj.address];
+ let reloj=await ensureReloj(provider);
+ // Nivel 3: RegistroCatalogo local (respaldo sin internet), después de los Niveles 1 y 2 y sin tocarlos.
+ const catalogo=await ensureCatalogo(provider);
+ let contracts=[config.address,reloj.address,catalogo.address];
  const mime={'.html':'text/html; charset=utf-8','.mjs':'text/javascript; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.json':'application/json; charset=utf-8','.csv':'text/csv; charset=utf-8','.sol':'text/plain; charset=utf-8','.md':'text/plain; charset=utf-8','.pdf':'application/pdf','.png':'image/png','.woff2':'font/woff2'};
  // Vendor se lee y se comprime una sola vez; se guarda en memoria mientras corre el servidor.
  const vendorCache=new Map();
@@ -111,10 +116,17 @@ export async function startApp(){
     const result=await registrarReloj({provider:sepolia(),address:body.address,deploymentTransaction:body.deploymentTransaction,proveedor:body.proveedor,publicRpc:SEPOLIA_PUBLIC_RPC,admin:process.env.SEPOLIA_MUNICIPIO||null,intentos:10});
     res.writeHead(200,{'Content-Type':'application/json'});res.end(JSON.stringify(result));return;
    }
+   // Nivel 3 en Sepolia: despliegue y anclaje del catálogo hechos con MetaMask; se comprueban por RPC público.
+   if(req.method==='POST'&&url.pathname==='/api/catalogo-sepolia/registrar'){
+    if(!req.headers.origin||!sameSite(req)){res.writeHead(403);res.end();return;}
+    const body=await readJsonBody(req,10_000);
+    const result=await registrarCatalogo({provider:sepolia(),address:body.address,deploymentTransaction:body.deploymentTransaction,anclajeTransaction:body.anclajeTransaction,publicRpc:SEPOLIA_PUBLIC_RPC,admin:process.env.SEPOLIA_MUNICIPIO||null,intentos:10});
+    res.writeHead(200,{'Content-Type':'application/json'});res.end(JSON.stringify(result));return;
+   }
    if(req.method==='POST'&&url.pathname==='/api/reloj/reiniciar'){
     // Solo desde esta misma página. Despliega un RelojProveedor nuevo en la red local; el del Nivel 1 no se toca.
     if(!req.headers.origin||!sameSite(req)){res.writeHead(403);res.end();return;}
-    reloj=await reiniciarReloj(provider);contracts=[config.address,reloj.address];
+    reloj=await reiniciarReloj(provider);contracts=[config.address,reloj.address,catalogo.address];
     res.writeHead(200,{'Content-Type':'application/json'});res.end(JSON.stringify(reloj));return;
    }
    if(req.method!=='GET'){res.writeHead(405);res.end();return;}
@@ -151,8 +163,8 @@ export async function startApp(){
   }catch(e){res.writeHead(e.code==='ENOENT'?404:400,{'Content-Type':'text/plain; charset=utf-8'});res.end(e.code==='ENOENT'?'No disponible':e.message);}
  });
  await new Promise((resolve,reject)=>{server.once('error',reject);server.listen(PORT,HOST,resolve);});
- console.log(`Instancia: ${INSTANCE}`);console.log(`Aplicación: http://${HOST==='0.0.0.0'?'127.0.0.1':HOST}:${PORT}`);console.log(`Blockchain: ${config.rpc} | contrato ${config.address}`);console.log(`Nivel 2: RelojProveedor ${reloj.address}`);
- return {config,get reloj(){return reloj;},provider,close:async()=>{provider.destroy();sepoliaReader?.destroy();sepoliaReader=null;await new Promise(resolve=>server.close(resolve));await chain.close();}};
+ console.log(`Instancia: ${INSTANCE}`);console.log(`Aplicación: http://${HOST==='0.0.0.0'?'127.0.0.1':HOST}:${PORT}`);console.log(`Blockchain: ${config.rpc} | contrato ${config.address}`);console.log(`Nivel 2: RelojProveedor ${reloj.address}`);console.log(`Nivel 3: RegistroCatalogo ${catalogo.address}`);
+ return {config,get reloj(){return reloj;},catalogo,provider,close:async()=>{provider.destroy();sepoliaReader?.destroy();sepoliaReader=null;await new Promise(resolve=>server.close(resolve));await chain.close();}};
 }
 if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href){
  const app=await startApp();for(const signal of ['SIGINT','SIGTERM'])process.on(signal,async()=>{await app.close();process.exit(0);});

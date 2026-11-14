@@ -28,11 +28,12 @@ Para una demostración desde cero (contrato sin sellar en una instancia nueva): 
 
 | Comando | Qué hace |
 |---|---|
-| `npm.cmd test` | 65 pruebas: núcleo, sal, hallazgos, contrato, privacidad, Sepolia ensayado en Ganache y reloj del proveedor (Nivel 2, con lotes y el flujo municipio → proveedor) |
+| `npm.cmd test` | 71 pruebas: núcleo, sal, hallazgos, contrato, privacidad, Sepolia ensayado en Ganache, reloj del proveedor (Nivel 2, con lotes y el flujo municipio → proveedor) y catálogo anclado (Nivel 3) |
 | `npm.cmd run proveedor` | Portal del proveedor, programa aparte, en http://127.0.0.1:8081 |
 | `npm.cmd run test:evidencia` | Las mismas pruebas, guardadas en `evidencias/pruebas-unitarias.txt` sin rutas personales |
 | `npm.cmd run compile` | Recompila el contrato y regenera `contracts/RegistroIndicador.json` (abi, bytecode, compilador e input estándar) |
 | `npm.cmd run compile:reloj` | Lo mismo para el contrato del Nivel 2: `contracts/RelojProveedor.json` |
+| `npm.cmd run compile:catalogo` | Lo mismo para el contrato del Nivel 3: `contracts/RegistroCatalogo.json` |
 | `npm.cmd run verify:source` | Compara los 11 archivos de `datos/` con sus SHA-256 |
 | `npm.cmd run audit` | Los cinco criterios del Nivel 1 y la sección del Nivel 2 en Edge sobre la cadena real; escribe `docs/AUDITORIA.md` y `evidencias/` |
 | `npm.cmd run slides` | Regenera las láminas de `presentacion/` |
@@ -93,6 +94,25 @@ La vista **6 · Reloj del proveedor** (`#/proveedor`) tiene dos modos:
 
 **Limitación del modo local:** las llaves del municipio y de los proveedores son cuentas de Ganache del mismo servidor. En el modo Sepolia, cada organización firma con su propia billetera y desde su propio programa.
 
+## Nivel 3 · Catálogo y SLA anclados
+
+Objetivo: fijar el catálogo de servicios, con su prioridad y su plazo, **al inicio del período**, para que nadie pueda reclasificar un servicio a una prioridad más laxa después de haber incumplido.
+
+`contracts/RegistroCatalogo.sol` (mismo compilador y opciones, precompilado en `contracts/RegistroCatalogo.json`, con su prueba de bytecode):
+
+- `anclarCatalogo(periodo, csvSha256, ids, prioridades, slaHoras)`: solo el municipio (`owner`), una sola vez por período. Guarda los 14 servicios de `datos/catalogo_servicios.csv` (id, prioridad y SLA en horas hábiles) y el SHA-256 del CSV completo. El catálogo es público y no tiene datos personales.
+- No hay ninguna función para modificar. Un segundo anclaje del mismo período revierte con «Catálogo ya anclado: no se puede reclasificar».
+- Lectura pública: `catalogo(periodo)`, `servicio(periodo, id)` y `serviciosDe(periodo)`, y los eventos `CatalogoAnclado` y `ServicioAnclado`.
+
+Vista **7 · Catálogo y SLA** (`#/catalogo`), con red «Sepolia (real)» por defecto y «Local (respaldo sin internet)»:
+
+1. **Conectar MetaMask** con la cuenta del municipio.
+2. **Anclar catálogo de julio**: dos firmas (desplegar `RegistroCatalogo` y anclar). El servidor comprueba por RPC público el bytecode, la cuenta que desplegó, la transacción de anclaje y que lo anclado sea exactamente `datos/catalogo_servicios.csv`; solo entonces escribe `evidencias/catalogo-sepolia.json`. El anterior pasa a `evidencias/catalogo-sepolia-historial/`, y cada arranque del servidor también lo archiva, igual que el sello y el reloj.
+3. **Verificar catálogo**: el original da VERDE (mismo SHA-256). Una copia con CS-11 relajado de CRITICA 4 h a ALTA 8 h da ROJO, con el servicio, el valor anclado y el editado, y la lista de tickets de julio cuyo cumplimiento cambiaría: TK-2026-04228 (5,80 h reales según la bitácora), TK-2026-04351 y TK-2026-04355.
+4. **Intentar reclasificar**: simula un segundo anclaje con `staticCall` y muestra en rojo el rechazo del contrato, sin gastar gas.
+
+Debajo, la tabla de los 14 servicios anclados con enlaces a Etherscan. Detalle en [docs/HALLAZGOS.md](docs/HALLAZGOS.md), hallazgo 6.
+
 ## Contrato desplegado
 
 `contracts/RegistroIndicador.sol` (Solidity 0.8.30, optimizador 200, EVM Shanghai). Acepta cualquier período AAAAMM, un sello por período, inmutable, solo del sellador. La regla de 187 tickets para julio vive en el verificador. Va precompilado en `contracts/RegistroIndicador.json`; una prueba recompila y comprueba que el bytecode no cambió.
@@ -102,6 +122,8 @@ La vista **6 · Reloj del proveedor** (`#/proveedor`) tiene dos modos:
 | Sepolia (pública) | Cambia en cada período: se prepara con MetaMask antes de cada presentación y queda en `evidencias/red-sepolia.json` (los anteriores, en `evidencias/sepolia-historial/`) |
 | Ganache local (respaldo) | `0xe78A0F7E598Cc8b0Bb87894B0F60dD2a88d6a8Ab`, chain ID 31337 (determinista; ver `evidencias/red-local.json`) |
 | RelojProveedor, Nivel 2 en Sepolia | Se prepara con MetaMask desde la vista Reloj del proveedor y queda en `evidencias/reloj-sepolia.json` (los anteriores, en `evidencias/reloj-sepolia-historial/`) |
+| RegistroCatalogo, Nivel 3 en Sepolia | Se ancla con MetaMask desde la vista Catálogo y SLA y queda en `evidencias/catalogo-sepolia.json` (los anteriores, en `evidencias/catalogo-sepolia-historial/`) |
+| RegistroCatalogo, Nivel 3 local (respaldo) | Lo despliega el servidor al arrancar, sin anclar; cada instancia lo guarda en `evidencias/catalogo-local.json` |
 | RelojProveedor, Nivel 2 local (simulación) | En una instancia nueva, `0x5b1869D9A4C187F2EAa108f3062412ecf0526b24`. En una cadena creada antes del Nivel 2 la dirección cambia (primero se fondea la cuenta de PV-02); cada instancia la guarda en `evidencias/reloj-local.json` |
 
 `contracts/RelojProveedor.sol` usa los mismos ajustes (Solidity 0.8.30, optimizador 200, Shanghai) y también va precompilado, con su prueba de bytecode.
@@ -186,4 +208,4 @@ evidencias/  resultados de la auditoría y configuración de redes
 - [docs/PROCEDENCIA.md](docs/PROCEDENCIA.md): huellas de los datos y corrección de TK-2026-04201.
 - [docs/referencia/](docs/referencia/): brief del reto y manual MP-DMSI-INC-001.
 
-Datos sintéticos. Fuera del alcance: controles del Nivel 3.
+Datos sintéticos. Del Nivel 3 se implementa la opción «Catálogo y SLA anclados»; las demás opciones quedan fuera del alcance.

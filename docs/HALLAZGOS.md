@@ -82,11 +82,23 @@ En los 8 casos aceptados el contrato coincide con lo que declaraba el CSV. La di
 
 **En la app.** Vista «Reloj del proveedor» (`#/proveedor`): «Cargar los 9 casos», la fila de PVT-04226 en rojo, el total de 2.592 USD y «Recalcular como tercero».
 
+## 6. Reclasificar un servicio borra un incumplimiento (Nivel 3)
+
+**Evidencia.** **TK-2026-04228** es del servicio **CS-11** («Intento de acceso no autorizado»), CRITICA con SLA de **4 h** hábiles en el catálogo. Según la bitácora se resolvió en **5,80 h**: incumplió (hallazgo 2). Hay otros dos tickets de CS-11 en la misma situación: TK-2026-04351 (5,80 h) y TK-2026-04355 (7,20 h). Si después del mes alguien edita el catálogo y pasa CS-11 a ALTA con **8 h**, los tres pasan de «No cumple» a «Cumple» sin tocar ningún ticket.
+
+**En el contrato.** `RegistroCatalogo` ancla al inicio del período los 14 servicios de `catalogo_servicios.csv` con su prioridad y su SLA, más el SHA-256 del CSV completo. Solo el municipio (owner) ancla, una vez por período, y no hay ninguna función para modificar: un segundo anclaje de julio revierte con «Catálogo ya anclado: no se puede reclasificar». El catálogo es público y no tiene datos personales, así que los ids van en texto.
+
+| Servicio | Anclado | Copia editada | Tickets que cambiarían de cumplimiento |
+|---|---|---|---|
+| CS-11 | CRITICA, 4 h | ALTA, 8 h | TK-2026-04228 (5,80 h, bitácora), TK-2026-04351 (5,80 h), TK-2026-04355 (7,20 h): de «No cumple» a «Cumple» |
+
+**En la app.** Vista «Catálogo y SLA» (`#/catalogo`): «Anclar catálogo de julio», «Verificar catálogo» (VERDE con el original; ROJO con la copia, con el servicio, lo anclado, lo editado y la lista de tickets), «Intentar reclasificar» (rechazo del contrato simulado sin gas) y la tabla de los 14 servicios con enlaces a Etherscan.
+
 ## Fuera del alcance
 
-La sexta inconsistencia sembrada corresponde al Nivel 3 del reto y no se implementa:
+Del Nivel 3 se implementa la opción «Catálogo y SLA anclados» (hallazgo 6). La otra inconsistencia sembrada para el Nivel 3 no se implementa:
 
-- **Seguridad cerrada sin Seguridad (Nivel 3).** **TK-2026-04202** (CS-12, «Correo malicioso reportado por usuario», área Seguridad según el catálogo) se cerró en Nivel 1 sin pasar por Seguridad.
+- **Seguridad cerrada sin Seguridad.** **TK-2026-04202** (CS-12, «Correo malicioso reportado por usuario», área Seguridad según el catálogo) se cerró en Nivel 1 sin pasar por Seguridad.
 
 ## Cómo se protege la evidencia
 

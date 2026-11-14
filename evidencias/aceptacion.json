@@ -1,5 +1,5 @@
 {
-  "started": "2026-11-14T11:24:18.593Z",
+  "started": "2026-11-14T11:55:19.847Z",
   "timezone": "America/Guayaquil",
   "criteria": [
     {
@@ -243,7 +243,7 @@
     "status": "APROBADO",
     "test": "En la vista #/proveedor, por roles y sobre un reloj recién desplegado («Reiniciar simulación»): el proveedor intenta responder antes de la apertura (mensaje, «Caso no abierto»); el municipio firma la apertura de los 9 casos con la cuenta 0 y una segunda firma se explica («Caso ya abierto»); el proveedor 1 firma con la cuenta 1: 8 aceptados y PVT-04226 rechazado («Respuesta anterior a la apertura»), total 2.592 USD; el auditor recalcula sin llaves desde los eventos y coincide en las 8 filas. Después se repite el cálculo desde Node y se buscan los textos de proveedores.csv en calldata y eventos.",
     "result": {
-      "contrato": "0xDd37b2eB92F97dd09cEd1f1d20A73aA340b2311A",
+      "contrato": "0x8b9e409a817c7dC1a42C3DDe9E85dcBFF602c0fC",
       "municipio": "0x90F8bf6A479f320ead074411a4B0e7944Ea8c9C1",
       "proveedores": [
         {
@@ -345,6 +345,127 @@
     ],
     "pending": []
   },
+  "level3": {
+    "name": "Nivel 3 · Catálogo y SLA anclados",
+    "implementation": "contracts/RegistroCatalogo.sol: anclarCatalogo (solo el owner, una vez por período, sin funciones para modificar), catalogo, servicio, serviciosDe; src/catalogo.mjs: argumentosAnclaje, leerAnclado, compararCatalogo, ticketsAfectados, intentarReclasificar; src/catalogo-ui.mjs: vista #/catalogo; scripts/catalogo-sepolia.mjs: validación por RPC público e historial.",
+    "status": "APROBADO",
+    "test": "En la vista #/catalogo: abre en Sepolia sin catálogo (el arranque lo archivó); en la red local se ancla el catálogo de julio, el original verifica VERDE, una copia con CS-11 relajado de CRITICA 4 h a ALTA 8 h da ROJO con el servicio, lo anclado y lo editado, y TK-2026-04228 en la lista de tickets que cambiarían; «Intentar reclasificar» muestra el rechazo del contrato sin gas. Desde Node se leen los 14 servicios y se comprueba que otra cuenta no puede anclar.",
+    "result": {
+      "contrato": "0xd99748782d7643b00C36a4Bb296C4A099dF98Ff3",
+      "owner": "0x90F8bf6A479f320ead074411a4B0e7944Ea8c9C1",
+      "periodo": 202607,
+      "csvSha256": "0xad088fc60f9fb27a240688564afb78ac9623780460f773c71094bb9ee6bd6942",
+      "servicios": [
+        {
+          "id": "CS-01",
+          "prioridad": "MEDIA",
+          "sla": 24
+        },
+        {
+          "id": "CS-02",
+          "prioridad": "ALTA",
+          "sla": 8
+        },
+        {
+          "id": "CS-03",
+          "prioridad": "ALTA",
+          "sla": 8
+        },
+        {
+          "id": "CS-04",
+          "prioridad": "MEDIA",
+          "sla": 24
+        },
+        {
+          "id": "CS-05",
+          "prioridad": "MEDIA",
+          "sla": 24
+        },
+        {
+          "id": "CS-06",
+          "prioridad": "ALTA",
+          "sla": 8
+        },
+        {
+          "id": "CS-07",
+          "prioridad": "CRITICA",
+          "sla": 4
+        },
+        {
+          "id": "CS-08",
+          "prioridad": "CRITICA",
+          "sla": 4
+        },
+        {
+          "id": "CS-09",
+          "prioridad": "CRITICA",
+          "sla": 4
+        },
+        {
+          "id": "CS-10",
+          "prioridad": "BAJA",
+          "sla": 72
+        },
+        {
+          "id": "CS-11",
+          "prioridad": "CRITICA",
+          "sla": 4
+        },
+        {
+          "id": "CS-12",
+          "prioridad": "ALTA",
+          "sla": 8
+        },
+        {
+          "id": "CS-13",
+          "prioridad": "BAJA",
+          "sla": 72
+        },
+        {
+          "id": "CS-14",
+          "prioridad": "CRITICA",
+          "sla": 4
+        }
+      ],
+      "reclasificacion": {
+        "rechazado": true,
+        "motivo": "Catálogo ya anclado: no se puede reclasificar"
+      },
+      "catalogoEditado": "CS-11 CRITICA 4 h -> ALTA 8 h",
+      "ticketsQueCambiarian": [
+        {
+          "ticket": "TK-2026-04228",
+          "horas": 5.8,
+          "deBitacora": true,
+          "anclado": "no cumple",
+          "editado": "cumple"
+        },
+        {
+          "ticket": "TK-2026-04351",
+          "horas": 5.8,
+          "deBitacora": false,
+          "anclado": "no cumple",
+          "editado": "cumple"
+        },
+        {
+          "ticket": "TK-2026-04355",
+          "horas": 7.2,
+          "deBitacora": false,
+          "anclado": "no cumple",
+          "editado": "cumple"
+        }
+      ]
+    },
+    "evidence": [
+      "evidencias/09-catalogo.png",
+      "evidencias/vista-catalogo-movil.png",
+      "evidencias/catalogo.json",
+      "evidencias/catalogo-editado.csv",
+      "evidencias/catalogo-local.json"
+    ],
+    "pending": [],
+    "newTransaction": false
+  },
   "sourceFiles": [
     {
       "file": "asignaciones.csv",
@@ -393,7 +514,8 @@
   ],
   "completed": true,
   "instance": "nivel1-v5-auditoria",
-  "finished": "2026-11-14T11:25:45.531Z",
+  "finished": "2026-11-14T11:56:52.286Z",
   "level1Complete": true,
-  "level2Complete": true
+  "level2Complete": true,
+  "level3Complete": true
 }

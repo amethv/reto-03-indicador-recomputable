@@ -5,7 +5,9 @@
 // encendido, lo que se prepare en la sesión se conserva aunque se recargue la página.
 import {DIRS,archivarPeriodo} from './sepolia-web.mjs';
 import {RELOJ_DIRS,archivarReloj} from './reloj-sepolia.mjs';
+import {CATALOGO_DIRS,archivarCatalogo} from './catalogo-sepolia.mjs';
 
-export async function iniciarSinPeriodo({dirs=DIRS,relojDirs=RELOJ_DIRS}={}){
- return {periodo:await archivarPeriodo(dirs),reloj:await archivarReloj(relojDirs)};
+// El catálogo anclado (Nivel 3) también pasa a evidencias/catalogo-sepolia-historial/.
+export async function iniciarSinPeriodo({dirs=DIRS,relojDirs=RELOJ_DIRS,catalogoDirs=CATALOGO_DIRS}={}){
+ return {periodo:await archivarPeriodo(dirs),reloj:await archivarReloj(relojDirs),catalogo:await archivarCatalogo(catalogoDirs)};
 }

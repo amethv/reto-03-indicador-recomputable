@@ -1,0 +1,106 @@
+{
+  "contrato": "0xd99748782d7643b00C36a4Bb296C4A099dF98Ff3",
+  "owner": "0x90F8bf6A479f320ead074411a4B0e7944Ea8c9C1",
+  "periodo": 202607,
+  "csvSha256": "0xad088fc60f9fb27a240688564afb78ac9623780460f773c71094bb9ee6bd6942",
+  "servicios": [
+    {
+      "id": "CS-01",
+      "prioridad": "MEDIA",
+      "sla": 24
+    },
+    {
+      "id": "CS-02",
+      "prioridad": "ALTA",
+      "sla": 8
+    },
+    {
+      "id": "CS-03",
+      "prioridad": "ALTA",
+      "sla": 8
+    },
+    {
+      "id": "CS-04",
+      "prioridad": "MEDIA",
+      "sla": 24
+    },
+    {
+      "id": "CS-05",
+      "prioridad": "MEDIA",
+      "sla": 24
+    },
+    {
+      "id": "CS-06",
+      "prioridad": "ALTA",
+      "sla": 8
+    },
+    {
+      "id": "CS-07",
+      "prioridad": "CRITICA",
+      "sla": 4
+    },
+    {
+      "id": "CS-08",
+      "prioridad": "CRITICA",
+      "sla": 4
+    },
+    {
+      "id": "CS-09",
+      "prioridad": "CRITICA",
+      "sla": 4
+    },
+    {
+      "id": "CS-10",
+      "prioridad": "BAJA",
+      "sla": 72
+    },
+    {
+      "id": "CS-11",
+      "prioridad": "CRITICA",
+      "sla": 4
+    },
+    {
+      "id": "CS-12",
+      "prioridad": "ALTA",
+      "sla": 8
+    },
+    {
+      "id": "CS-13",
+      "prioridad": "BAJA",
+      "sla": 72
+    },
+    {
+      "id": "CS-14",
+      "prioridad": "CRITICA",
+      "sla": 4
+    }
+  ],
+  "reclasificacion": {
+    "rechazado": true,
+    "motivo": "Catálogo ya anclado: no se puede reclasificar"
+  },
+  "catalogoEditado": "CS-11 CRITICA 4 h -> ALTA 8 h",
+  "ticketsQueCambiarian": [
+    {
+      "ticket": "TK-2026-04228",
+      "horas": 5.8,
+      "deBitacora": true,
+      "anclado": "no cumple",
+      "editado": "cumple"
+    },
+    {
+      "ticket": "TK-2026-04351",
+      "horas": 5.8,
+      "deBitacora": false,
+      "anclado": "no cumple",
+      "editado": "cumple"
+    },
+    {
+      "ticket": "TK-2026-04355",
+      "horas": 7.2,
+      "deBitacora": false,
+      "anclado": "no cumple",
+      "editado": "cumple"
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 # Auditoría Nivel 1 — Reto 03
 
-Ejecución UTC: 2026-11-14T11:24:18.593Z → 2026-11-14T11:25:45.531Z. Zona de presentación: America/Guayaquil.
+Ejecución UTC: 2026-11-14T11:55:19.847Z → 2026-11-14T11:56:52.286Z. Zona de presentación: America/Guayaquil.
 
 Resultado: **NIVEL 1 COMPLETO**.
 
@@ -61,6 +61,17 @@ Resultado: **NIVEL 2 COMPLETO**.
 - Estado: **APROBADO**.
 - Evidencia disponible: evidencias/08-proveedor.png, evidencias/vista-proveedor-movil.png, evidencias/proveedor.json, evidencias/reloj-local.json
 - Correcciones o validaciones pendientes: Ninguna en esta prueba automatizada.
+
+## Nivel 3 · Catálogo y SLA anclados
+
+Resultado: **NIVEL 3 COMPLETO**.
+
+- Archivos y funciones: contracts/RegistroCatalogo.sol: anclarCatalogo (solo el owner, una vez por período, sin funciones para modificar), catalogo, servicio, serviciosDe; src/catalogo.mjs: argumentosAnclaje, leerAnclado, compararCatalogo, ticketsAfectados, intentarReclasificar; src/catalogo-ui.mjs: vista #/catalogo; scripts/catalogo-sepolia.mjs: validación por RPC público e historial.
+- Prueba ejecutada: En la vista #/catalogo: abre en Sepolia sin catálogo (el arranque lo archivó); en la red local se ancla el catálogo de julio, el original verifica VERDE, una copia con CS-11 relajado de CRITICA 4 h a ALTA 8 h da ROJO con el servicio, lo anclado y lo editado, y TK-2026-04228 en la lista de tickets que cambiarían; «Intentar reclasificar» muestra el rechazo del contrato sin gas. Desde Node se leen los 14 servicios y se comprueba que otra cuenta no puede anclar.
+- Resultado real: {"servicios":14,"csvSha256":"0xad088fc60f9fb27a240688564afb78ac9623780460f773c71094bb9ee6bd6942","reclasificacion":{"rechazado":true,"motivo":"Catálogo ya anclado: no se puede reclasificar"},"ticketsQueCambiarian":["TK-2026-04228","TK-2026-04351","TK-2026-04355"]}
+- Estado: **APROBADO**.
+- Evidencia disponible: evidencias/09-catalogo.png, evidencias/vista-catalogo-movil.png, evidencias/catalogo.json, evidencias/catalogo-editado.csv, evidencias/catalogo-local.json
+- Correcciones o validaciones pendientes: Ninguna en esta prueba automatizada. El anclaje en Sepolia con MetaMask se prueba a mano.
 
 ## Pruebas complementarias
 

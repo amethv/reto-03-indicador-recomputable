@@ -1,6 +1,6 @@
-# Demostración · Nivel 1 en cinco minutos y Nivel 2 en uno
+# Demostración · Nivel 1 en cinco minutos, Nivel 2 y Nivel 3 en uno cada uno
 
-Hilo conductor: julio de 2026. Los cinco criterios del Nivel 1, en su orden, y después el reloj del proveedor (Nivel 2).
+Hilo conductor: julio de 2026. Los cinco criterios del Nivel 1, en su orden; después el reloj del proveedor (Nivel 2) y el catálogo y SLA anclados (Nivel 3).
 
 ## Preparación (antes del cronómetro)
 
@@ -11,11 +11,12 @@ Hilo conductor: julio de 2026. Los cinco criterios del Nivel 1, en su orden, y d
 4. Recargar la página no pierde nada mientras el servidor siga encendido. **No cerrar la terminal**: si el servidor se reinicia, el período pasa al historial y hay que preparar y sellar uno nuevo (cerca de un minuto, con dos firmas en MetaMask).
 5. Abrir en el Bloc de notas una **copia** de `datos/tickets.csv` (por ejemplo en el Escritorio). No editar el original y no usar un editor con autoguardado: guardaría el cambio a medio escribir. Dejar el cursor en TK-2026-04201, primera fila.
 6. Tener a mano las dos láminas de `presentacion/`.
+6b. Nivel 3: tener una **copia** de `datos/catalogo_servicios.csv` con la fila de CS-11 cambiada de `CRITICA,4` a `ALTA,8` (por ejemplo `catalogo-relajado.csv` en el Escritorio). El arranque del servidor archiva también el catálogo anclado: la vista 7 empieza sin catálogo.
 7. Sin internet: usar la red «Local (Ganache)» con `npm.cmd run demo` (o `INICIAR_DEMO.cmd`), que crea una instancia nueva sin sellar. Todo funciona igual, sellando sin MetaMask.
 
 ## Guion
 
-La demo sigue el menú lateral de arriba hacia abajo: **Panel → 1 Sellar → 2 Recalcular → 3 Verificar → 4 Comparar → 5 Privacidad → 6 Reloj del proveedor**. Cada vista tiene su ruta (`#/panel`, `#/sellar`, …, `#/proveedor`), así que recargar no pierde el lugar. El punto a la derecha de cada ítem cambia de gris a verde (o a rojo) cuando ese paso se cumple. El Panel marca el guion con un check.
+La demo sigue el menú lateral de arriba hacia abajo: **Panel → 1 Sellar → 2 Recalcular → 3 Verificar → 4 Comparar → 5 Privacidad → 6 Reloj del proveedor → 7 Catálogo y SLA**. Cada vista tiene su ruta (`#/panel`, `#/sellar`, …, `#/proveedor`), así que recargar no pierde el lugar. El punto a la derecha de cada ítem cambia de gris a verde (o a rojo) cuando ese paso se cumple. El Panel marca el guion con un check.
 
 | Tiempo | Vista (criterio) | Acción visible | Mensaje |
 |---|---|---|---|
@@ -26,7 +27,8 @@ La demo sigue el menú lateral de arriba hacia abajo: **Panel → 1 Sellar → 2
 | 3:00–3:45 | Comparar (4) | Ir a Comparar y pulsar «Recalcular para comparar»: descarta la copia y verifica el original (VERDE). En «Mostrar», elegir «Los que no cuentan en B». | 100 % contando todos los cierres; 55,61 % contando solo los confirmados. Los 83 cierres automáticos (44 %) explican 44,39 puntos: el hallazgo. |
 | 3:45–4:40 | Privacidad (5) | «Consultar contrato y transacción» → lo que sí hay en la cadena de Sepolia. «Buscar datos personales en la cadena» → 0 / 0 / 0, revisando la calldata y los eventos reales. | Cualquiera lo verifica sin wallet. **0 coincidencias de 174 valores buscados**: usuarios, técnicos, unidades y actores, en texto y como hash. Lo único en cadena es período, raíz, compromiso, cantidad, fecha y hash de reglas. |
 | 4:40–6:00 | Reloj del proveedor (Nivel 2, Sepolia real) | **Chrome, app del municipio** (modo «Sepolia (real)»): ① «Preparar reloj en Sepolia» → firmar → ② «Firmar apertura de 9 casos» (una firma) → ③ «Enviar al proveedor» y mandarle el enlace. **Edge, portal del proveedor**, con su MetaMask: aparece en naranja «Nuevos casos del municipio: 9 pendientes de tu respuesta» y PVT-04226 ya en rojo, sin gastar gas → «Conectar MetaMask» (✓ cuenta del proveedor 1) → «Firmar respuestas» (8 en un lote). **Chrome**: la vista se actualiza sola con **2.592 USD** y PVT-04226 rechazado; abrir un enlace de Etherscan. | Aquí hay dos organizaciones, un contrato y dinero. El municipio firma la apertura y el proveedor su respuesta, cada uno con su llave. El CSV daba PVT-04226 como cumplido con −1,42 h; el contrato lo rechaza. Cualquiera recalcula las penalidades desde los eventos, sin llaves. |
-| 5:40–6:00 | Panel y cierre | Volver al Panel: los seis pasos con check y la brecha de 44,39 pp. Lámina 2. | La cadena solo donde hay una frontera de confianza: el indicador público y el reloj con el proveedor. Lo interno, con logs firmados. |
+| 6:00–7:00 | Catálogo y SLA (Nivel 3, Sepolia real) | **Chrome**, vista 7: ① «Conectar MetaMask» → ② «Anclar catálogo de julio» (dos firmas: desplegar y anclar) → los 14 servicios anclados. ③ «Verificar catálogo» con el original: VERDE; con una copia donde CS-11 pasa de CRITICA 4 h a ALTA 8 h: ROJO, con TK-2026-04228 y otros 2 tickets que pasarían de «No cumple» a «Cumple». ④ «Intentar reclasificar»: rechazo en rojo, sin gas. | El catálogo se fija al inicio del período. TK-2026-04228 tardó 5,80 h con un SLA de 4 h: relajar su servicio a 8 h lo borraría del incumplimiento. El contrato no tiene ninguna función para modificar, y un segundo anclaje de julio se rechaza: «Catálogo ya anclado: no se puede reclasificar». |
+| 7:00–7:20 | Panel y cierre | Volver al Panel: los siete pasos con check y la brecha de 44,39 pp. Lámina 2. | La cadena solo donde hay una frontera de confianza: el indicador público, el reloj con el proveedor y el catálogo que fija los plazos. Lo interno, con logs firmados. |
 
 Los criterios 2 a 5 leen Sepolia por RPC público, sin MetaMask. La app abre en Sepolia; si no hay internet, abre sola la red local. Si MetaMask o la red pública fallan en vivo, en Sellar → «Administración», al final, elegir «Local (Ganache)» (respaldo para emergencias) y repetir desde el paso ③: todo funciona igual sin internet. La dirección del contrato activo, con su enlace a Etherscan, se ve en el paso ② de Sellar y en la línea de red del Panel. Al cambiar de red se reinicia el estado de la sesión (puntos y guion), porque cada red tiene su propio sello.
 

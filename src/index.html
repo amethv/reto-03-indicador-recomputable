@@ -23,6 +23,7 @@
     <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z"/><circle cx="12" cy="12" r="3"/></symbol>
     <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 9.5h17M8 3v4M16 3v4"/><path d="M8 13.5h.01M12 13.5h.01M16 13.5h.01M8 17h.01M12 17h.01"/></symbol>
     <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12.5" r="8"/><path d="M12 8.5v4l2.8 2"/><path d="M9.5 2.5h5"/></symbol>
+    <symbol id="i-book" viewBox="0 0 24 24"><path d="M5 4.5h10.5a3 3 0 0 1 3 3v12H8a3 3 0 0 1-3-3Z"/><path d="M5 16.5a3 3 0 0 1 3-3h10.5"/><path d="M9 8h6"/></symbol>
     <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 6.5h16M4 12h16M4 17.5h16"/></symbol>
     <symbol id="i-close" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></symbol>
     <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8.5" y="8.5" width="11" height="11" rx="2"/><path d="M15.5 8.5v-2a2 2 0 0 0-2-2h-7a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h2"/></symbol>
@@ -54,6 +55,7 @@
       <li><a href="#/comparar" data-route="comparar"><span class="menu-ico"><svg class="icon"><use href="#i-compare"/></svg><span class="menu-num" aria-hidden="true">4</span></span><span class="item"><strong>Comparar</strong><small>Todos vs. confirmados</small></span><span class="dot" data-dot="comparar" role="img" aria-label="Estado: pendiente"></span></a></li>
       <li><a href="#/privacidad" data-route="privacidad"><span class="menu-ico"><svg class="icon"><use href="#i-eye"/></svg><span class="menu-num" aria-hidden="true">5</span></span><span class="item"><strong>Privacidad</strong><small>Qué hay en la cadena</small></span><span class="dot" data-dot="privacidad" role="img" aria-label="Estado: pendiente"></span></a></li>
       <li><a href="#/proveedor" data-route="proveedor"><span class="menu-ico"><svg class="icon"><use href="#i-clock"/></svg><span class="menu-num" aria-hidden="true">6</span></span><span class="item"><strong>Reloj del proveedor</strong><small>Municipio y proveedor firman</small></span><span class="dot" data-dot="proveedor" role="img" aria-label="Estado: pendiente"></span></a></li>
+      <li><a href="#/catalogo" data-route="catalogo"><span class="menu-ico"><svg class="icon"><use href="#i-book"/></svg><span class="menu-num" aria-hidden="true">7</span></span><span class="item"><strong>Catálogo y SLA</strong><small>Prioridades ancladas</small></span><span class="dot" data-dot="catalogo" role="img" aria-label="Estado: pendiente"></span></a></li>
     </ul>
     <p class="menu-sep">Herramientas</p>
     <ul class="menu">
@@ -83,6 +85,7 @@
       <li data-step="4"><span class="check" role="img" aria-label="Pendiente"><svg class="icon"><use href="#i-check"/></svg></span><span><a href="#/comparar">Comparar</a><small>Todos los cierres frente a solo los confirmados.</small></span></li>
       <li data-step="5"><span class="check" role="img" aria-label="Pendiente"><svg class="icon"><use href="#i-check"/></svg></span><span><a href="#/privacidad">Privacidad</a><small>Ningún nombre ni contenido de ticket en la cadena.</small></span></li>
       <li data-step="6"><span class="check" role="img" aria-label="Pendiente"><svg class="icon"><use href="#i-check"/></svg></span><span><a href="#/proveedor">Reloj del proveedor</a><small>Penalidades de <strong>2.592 USD</strong> y el caso con tiempo negativo <strong>RECHAZADO</strong>.</small></span></li>
+      <li data-step="7"><span class="check" role="img" aria-label="Pendiente"><svg class="icon"><use href="#i-check"/></svg></span><span><a href="#/catalogo">Catálogo y SLA</a><small>14 servicios anclados: nadie puede <strong>reclasificar</strong> un servicio después de incumplir.</small></span></li>
     </ol>
   </div>
   <aside class="notice"><strong>Universo: los 187 tickets del lote de julio.</strong> <span id="scopeNote">El lote incluye reportes fuera de julio. Los conteos se muestran al validar los originales. Se usa el estado final del lote, no un corte calendario estricto.</span></aside>
@@ -293,6 +296,43 @@
       <p class="small">El plazo contractual se mide en horas corridas, no hábiles, tal como lo registran el municipio y el proveedor. Fechas en UTC−05:00.</p>
     </div>
   </div>
+  </div>
+</section>
+
+<section id="s7" class="view" data-route="catalogo" aria-labelledby="t-catalogo" hidden>
+  <header class="viewhead"><h1 id="t-catalogo" tabindex="-1">Catálogo y SLA</h1><p>El catálogo de servicios, con la prioridad y el plazo de cada uno, se ancla al inicio del período. Después nadie puede reclasificar un servicio a una prioridad más laxa para borrar un incumplimiento.</p></header>
+  <div class="reloj-modo"><label for="catModo">Red</label><select id="catModo"><option value="sepolia">Sepolia (real)</option><option value="local">Local (respaldo sin internet)</option></select></div>
+  <section id="catFlow" class="admin flow" aria-labelledby="t-catflow"><h2 id="t-catflow" class="flow-title">Anclar y verificar el catálogo de julio</h2>
+    <ol class="flow-steps">
+      <li class="flow-step" data-cat-step="1"><span class="flow-num" aria-hidden="true">1</span><div class="flow-body">
+        <h3>Conectar MetaMask</h3>
+        <p id="catWallet" class="small">Sin conectar.</p>
+        <button id="catConectar" type="button" class="secondary">Conectar MetaMask</button>
+      </div></li>
+      <li class="flow-step" data-cat-step="2"><span class="flow-num" aria-hidden="true">2</span><div class="flow-body">
+        <h3>Anclar catálogo de julio</h3>
+        <p id="catInfo" class="small"></p>
+        <button id="catAnclar" type="button">Anclar catálogo de julio</button>
+      </div></li>
+      <li class="flow-step" data-cat-step="3"><span class="flow-num" aria-hidden="true">3</span><div class="flow-body">
+        <h3>Verificar catálogo</h3>
+        <p class="small">Compara con lo anclado el catálogo original o una copia editada. Si un servicio cambió de prioridad o de plazo, muestra qué tickets de julio cambiarían de cumplimiento.</p>
+        <div class="inputs"><label>Catálogo que se va a verificar (vacío: el original)<input id="catArchivo" type="file" accept=".csv"></label></div>
+        <button id="catVerificar" type="button">Verificar catálogo</button>
+      </div></li>
+      <li class="flow-step" data-cat-step="4"><span class="flow-num" aria-hidden="true">4</span><div class="flow-body">
+        <h3>Intentar reclasificar</h3>
+        <p class="small">Simula un segundo anclaje de julio con CS-11 (Intento de acceso no autorizado) relajado de CRITICA 4 h a ALTA 8 h. Se prueba con staticCall: no se firma ni se gasta gas.</p>
+        <button id="catReclasificar" type="button" class="secondary">Intentar reclasificar</button>
+      </div></li>
+    </ol>
+    <output id="catStatus" class="status info" aria-live="polite" hidden></output>
+  </section>
+  <div id="catResultado" aria-live="polite"></div>
+  <div class="card">
+    <h2>Servicios anclados</h2>
+    <div class="tablewrap"><table class="cases"><thead><tr><th>Servicio</th><th>Nombre</th><th>Prioridad</th><th>SLA (h hábiles)</th><th>Etherscan</th></tr></thead><tbody id="catServicios"></tbody></table></div>
+    <p id="catPie" class="small"></p>
   </div>
 </section>
 

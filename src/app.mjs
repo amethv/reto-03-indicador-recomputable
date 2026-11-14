@@ -5,6 +5,7 @@ import {conectarSepolia,mensajeBilletera} from './wallet.mjs';
 import {simulateHolidays} from './findings.mjs';
 import {personalValues,searchPersonalData,collectChainData} from './privacy.mjs';
 import {initProveedor} from './proveedor.mjs';
+import {initCatalogo} from './catalogo-ui.mjs';
 
 const $=id=>document.getElementById(id);
 let network='local',config,provider,baseline,evidence=null,prepared=null,preparedSalt=null,salt=null,originalTexts=null,verified=null,sealed=false,busy=false;
@@ -20,7 +21,7 @@ const recordarRed=n=>{try{sessionStorage.setItem(PREF_RED,n);}catch{}};
 function periodo(){if(!config)throw new Error(`${SIN_PERIODO} (vista Sellar, paso 2).`);}
 // Nivel 2: configuración del RelojProveedor de esta red (solo existe en la red local).
 // La vista usa siempre el RelojProveedor de la red local, sin importar la red elegida para el sellado.
-let proveedorUI=null;
+let proveedorUI=null,catalogoUI=null;
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt=v=>Number(v).toLocaleString('es-EC',{minimumFractionDigits:2,maximumFractionDigits:2});
 const pct=r=>`${fmt(r.percent)} %`;
@@ -47,7 +48,7 @@ function controls(){
  $('connectWallet').disabled=busy||!sep;$('prepareSepolia').disabled=busy||!sep||!wallet;
  $('load').disabled=$('prepareFiles').disabled=busy||(sep&&!config);
  $('seal').disabled=busy||!prepared||sealed||(sep&&!config);$('export').disabled=busy||!evidence;sealUi();flowUi();
- proveedorUI?.botones(busy);
+ proveedorUI?.botones(busy);catalogoUI?.botones(busy);
 }
 // Estado visible del botón de sellado. No cambia cuándo se habilita: solo su texto y la línea de ayuda.
 function sealUi(){
@@ -389,8 +390,9 @@ async function useNetwork(name){
  const next=response.ok?await response.json():null;
  provider?.destroy();
  // El paso 6 (reloj del proveedor) vive en la red local siempre: cambiar la red del sellado no lo borra.
- const reloj6=done.has(6);
- network=name;config=next;evidence=null;salt=null;sealed=false;prepared=null;preparedSalt=null;lastAnchor=null;privacyMatches=null;done.clear();if(reloj6)done.add(6);clearResults();controls();showSalt();
+ // El paso 7 (catálogo) tiene su propia red en su vista: tampoco se borra.
+ const reloj6=done.has(6),catalogo7=done.has(7);
+ network=name;config=next;evidence=null;salt=null;sealed=false;prepared=null;preparedSalt=null;lastAnchor=null;privacyMatches=null;done.clear();if(reloj6)done.add(6);if(catalogo7)done.add(7);clearResults();controls();showSalt();
  $('network').value=name;
  $('configLink').href=`/evidencias/${CONFIG_FILES[name]}`;
  // La red local se consulta por /rpc del mismo servidor (funciona igual en el equipo y en un servicio publicado).
@@ -424,8 +426,8 @@ function showSalt(){
 }
 // ---------- Navegación por vistas, estado del menú y tarjeta de red ----------
 // Cada vista es un <section> que se muestra u oculta: el estado en memoria se conserva.
-const ROUTES={panel:'panel',sellar:'s1',recalcular:'s2',verificar:'s3',comparar:'s4',privacidad:'s5',proveedor:'s6',feriado:'holiday'};
-const TITLES={panel:'Panel',sellar:'Sellar',recalcular:'Recalcular',verificar:'Verificar',comparar:'Comparar',privacidad:'Privacidad',proveedor:'Reloj del proveedor',feriado:'Calendario de feriados'};
+const ROUTES={panel:'panel',sellar:'s1',recalcular:'s2',verificar:'s3',comparar:'s4',privacidad:'s5',proveedor:'s6',catalogo:'s7',feriado:'holiday'};
+const TITLES={panel:'Panel',sellar:'Sellar',recalcular:'Recalcular',verificar:'Verificar',comparar:'Comparar',privacidad:'Privacidad',proveedor:'Reloj del proveedor',catalogo:'Catálogo y SLA',feriado:'Calendario de feriados'};
 let route=null;
 const short=h=>h?`${h.slice(0,6)}…${h.slice(-4)}`:'—';
 function routeFromHash(){const m=/^#\/([a-z]+)$/.exec(location.hash);return m&&ROUTES[m[1]]?m[1]:null;}
@@ -434,6 +436,7 @@ function showRoute({focus=false}={}){
  if(!name){history.replaceState(null,'','#/panel');return showRoute({focus});}
  for(const [r,id] of Object.entries(ROUTES))$(id).hidden=r!==name;
  if(name==='proveedor'&&route!==name&&!busy)proveedorUI?.refresh();
+ if(name==='catalogo'&&route!==name&&!busy)catalogoUI?.refresh();
  for(const a of document.querySelectorAll('nav a[data-route]'))if(a.dataset.route===name)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current');
  // El mensaje de verificación es uno solo: se muestra en Recalcular y en Verificar.
  const slot=$(ROUTES[name]).querySelector('[data-slot="verification"]');if(slot)slot.append($('verification'));
@@ -452,7 +455,8 @@ function renderNav(){
   recalcular:result,comparar:result,
   verificar:lastStatus==='ROJO'?['red','alteración detectada']:['gray','sin alteración detectada'],
   privacidad:privacyMatches===null?['gray','pendiente']:privacyMatches===0?['green','0 coincidencias']:['red',`${privacyMatches} coincidencias`],
-  proveedor:done.has(6)?['green','casos cargados']:['gray','pendiente']
+  proveedor:done.has(6)?['green','casos cargados']:['gray','pendiente'],
+  catalogo:done.has(7)?['green','catálogo verificado']:['gray','pendiente']
  };
  for(const [name,[kind,label]] of Object.entries(dots))setDot(document.querySelector(`[data-dot="${name}"]`),kind,`Estado: ${label}`);
  // Panel
@@ -462,7 +466,7 @@ function renderNav(){
  $('sumVerifyNote').textContent=lastStatus==='VERDE'?'Integridad verificada contra el sello.':lastStatus==='ROJO'?'El archivo verificado no coincide con lo sellado.':'Pulsa «Recalcular desde lo sellado» en el paso 2.';
  $('sumCount').textContent=sealOk?String(lastAnchor.count):'—';
  $('sumGap').textContent=verified?`${fmt(verified.result.gap)} pp`:'—';
- const steps=[sealOk,done.has(2),done.has(3),done.has(4),done.has(5),done.has(6)];
+ const steps=[sealOk,done.has(2),done.has(3),done.has(4),done.has(5),done.has(6),done.has(7)];
  for(const li of $('demoScript').children){const ok=steps[Number(li.dataset.step)-1];li.classList.toggle('done',ok);li.querySelector('.check').setAttribute('aria-label',ok?'Cumplido':'Pendiente');}
  // Botones «Siguiente» solo cuando el paso de la vista ya se hizo.
  const next={sellar:sealOk,recalcular:lastStatus==='VERDE',verificar:done.has(3),comparar:!!verified};
@@ -530,5 +534,7 @@ async function redInicial(){
 }
 // Nivel 2: la vista vive en proveedor.mjs; aquí solo se le pasa el estado compartido.
 proveedorUI=initProveedor({$,esc,run,setDone:v=>{if(v)done.add(6);else done.delete(6);renderNav();},modo:()=>modo,ocupado:()=>busy});
+// Nivel 3: la vista vive en catalogo-ui.mjs.
+catalogoUI=initCatalogo({$,esc,run,setDone:v=>{if(v)done.add(7);else done.delete(7);renderNav();},modo:()=>modo,ocupado:()=>busy});
 await run(async()=>{baseline=JSON.parse(await get('/src/originals.json'));await useNetwork(await redInicial());});
 window.__ateneaReady=true;
