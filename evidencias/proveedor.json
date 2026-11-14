@@ -1,5 +1,5 @@
 {
-  "contrato": "0xc34175A79ACca40392bECD22ff10fAeBFE780Ae7",
+  "contrato": "0xd611F1AF9D056f00F49CB036759De2753EfA82c2",
   "municipio": "0x90F8bf6A479f320ead074411a4B0e7944Ea8c9C1",
   "proveedores": [
     {
@@ -88,7 +88,7 @@
   ],
   "privacidad": {
     "valoresBuscados": 8,
-    "bytes": 8066,
+    "bytes": 8936,
     "coincidencias": 0
   },
   "supuesto": "SLA contractual en horas corridas, no hábiles"

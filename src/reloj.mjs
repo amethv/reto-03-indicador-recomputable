@@ -11,6 +11,8 @@ export const ABI_RELOJ=[
  'function casos(bytes32) view returns (bytes32 proveedorId, uint64 apertura, uint64 respuesta, bool abierto, bool respondido)',
  'function abrirCaso(bytes32 casoId, bytes32 proveedorId, uint64 apertura)',
  'function responder(bytes32 casoId, uint64 respuesta)',
+ 'function abrirCasos(bytes32[] casoIds, bytes32[] proveedorIds, uint64[] aperturas)',
+ 'function responderCasos(bytes32[] casoIds, uint64[] respuestas)',
  'function penalidad(bytes32 casoId) view returns (uint256)',
  'event ProveedorRegistrado(bytes32 indexed proveedorId, address cuenta, uint64 slaSegundos, uint64 tarifaCentavosPorHora)',
  'event CasoAbierto(bytes32 indexed casoId, bytes32 indexed proveedorId, uint64 apertura)',

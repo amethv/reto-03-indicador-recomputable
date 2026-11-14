@@ -39,6 +39,29 @@ contract RelojProveedor {
 
     /// @notice Solo el municipio, una vez por caso.
     function abrirCaso(bytes32 casoId, bytes32 proveedorId, uint64 apertura) external {
+        _abrir(casoId, proveedorId, apertura);
+    }
+
+    /// @notice Lote: el municipio abre varios casos con una sola firma. Mismas reglas que abrirCaso;
+    ///         si un caso no cumple, se revierte el lote entero.
+    function abrirCasos(bytes32[] calldata casoIds, bytes32[] calldata proveedorIds, uint64[] calldata aperturas) external {
+        require(casoIds.length > 0 && casoIds.length == proveedorIds.length && casoIds.length == aperturas.length, "Lote invalido");
+        for (uint256 i = 0; i < casoIds.length; i++) _abrir(casoIds[i], proveedorIds[i], aperturas[i]);
+    }
+
+    /// @notice Solo la cuenta del proveedor de ese caso, una vez.
+    function responder(bytes32 casoId, uint64 respuesta) external {
+        _responder(casoId, respuesta);
+    }
+
+    /// @notice Lote: el proveedor responde varios casos con una sola firma. Mismas reglas que responder;
+    ///         si un caso no cumple, se revierte el lote entero.
+    function responderCasos(bytes32[] calldata casoIds, uint64[] calldata respuestas) external {
+        require(casoIds.length > 0 && casoIds.length == respuestas.length, "Lote invalido");
+        for (uint256 i = 0; i < casoIds.length; i++) _responder(casoIds[i], respuestas[i]);
+    }
+
+    function _abrir(bytes32 casoId, bytes32 proveedorId, uint64 apertura) private {
         require(msg.sender == municipio, "Solo el municipio abre casos");
         require(casoId != bytes32(0), "Caso invalido");
         require(proveedores[proveedorId].cuenta != address(0), "Proveedor desconocido");
@@ -47,8 +70,7 @@ contract RelojProveedor {
         emit CasoAbierto(casoId, proveedorId, apertura);
     }
 
-    /// @notice Solo la cuenta del proveedor de ese caso, una vez.
-    function responder(bytes32 casoId, uint64 respuesta) external {
+    function _responder(bytes32 casoId, uint64 respuesta) private {
         Caso storage caso = casos[casoId];
         require(caso.abierto, "Caso no abierto");
         require(msg.sender == proveedores[caso.proveedorId].cuenta, "Solo el proveedor del caso responde");

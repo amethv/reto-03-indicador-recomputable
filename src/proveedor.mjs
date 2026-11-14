@@ -1,9 +1,11 @@
 // Vista #/proveedor · Reloj del proveedor, explicado por roles.
 // Municipio → firma la apertura. Proveedor 1 → firma sus respuestas. Auditor externo → recalcula sin llaves.
-// Usa siempre el RelojProveedor de la red local (por /rpc), aunque la red elegida para el sellado sea Sepolia.
+// Modo local (simulación): usa el RelojProveedor de la red local (por /rpc), aunque la red del sellado sea Sepolia.
+// Modo Sepolia (real): lo maneja proveedor-sepolia.mjs; el proveedor firma desde portal-proveedor/.
 import {Contract,JsonRpcProvider} from 'ethers';
 import {ABI_RELOJ,idHash,parseCasos,abrirCasos,responderCasos,recalcularComoTercero,motivoRevert,usd} from './reloj.mjs';
 import {csv} from './core.mjs';
+import {initRelojSepolia} from './proveedor-sepolia.mjs';
 
 // En pantalla: «Proveedor 1», «Proveedor 2». En la cadena siguen los ids hasheados; la razón social nunca va a la cadena.
 const nombreProveedor=id=>`Proveedor ${Number(String(id).replace(/\D/g,''))}`;
@@ -150,6 +152,17 @@ export function initProveedor(ctx){
   pintar();
  });
 
+ // Modo de la vista: «Sepolia (real)» por defecto (solo el rol del municipio; el proveedor usa su propio
+ // programa) o «Modo local (simulación)» con los tres roles. La elección se recuerda en esta pestaña.
+ const sepolia=initRelojSepolia({...ctx,visible:()=>!$('s6').hidden});
+ let modoReloj='sepolia';try{modoReloj=sessionStorage.getItem('atenea-reloj')==='local'?'local':'sepolia';}catch{}
+ function aplicarModo(){
+  $('relojModo').value=modoReloj;
+  $('relojLocal').hidden=modoReloj!=='local';$('relojSepolia').hidden=modoReloj!=='sepolia';$('simNote').hidden=modoReloj!=='local';
+  sepolia.activar(modoReloj==='sepolia');
+ }
+ $('relojModo').onchange=()=>{modoReloj=$('relojModo').value==='local'?'local':'sepolia';try{sessionStorage.setItem('atenea-reloj',modoReloj);}catch{}aplicarModo();if(modoReloj==='local')refresh();};
+ aplicarModo();
  refresh();
- return {refresh};
+ return {refresh:()=>modoReloj==='sepolia'?sepolia.refresh():refresh(),botones:busy=>sepolia.botones(busy)};
 }

@@ -1,0 +1,51 @@
+{
+  "proveedor": "PV-01",
+  "nota": "Respuestas del proveedor 1 a los casos de julio de 2026, tal como las registró en su sistema. Fechas en UTC-05:00.",
+  "casos": [
+    {
+      "id": "PVT-04226",
+      "respuesta": 1783598078,
+      "respuestaIso": "2026-07-09T06:54:38-05:00"
+    },
+    {
+      "id": "PVT-04244",
+      "respuesta": 1784386229,
+      "respuestaIso": "2026-07-18T09:50:29-05:00"
+    },
+    {
+      "id": "PVT-04288",
+      "respuesta": 1783699071,
+      "respuestaIso": "2026-07-10T10:57:51-05:00"
+    },
+    {
+      "id": "PVT-04301",
+      "respuesta": 1783768754,
+      "respuestaIso": "2026-07-11T06:19:14-05:00"
+    },
+    {
+      "id": "PVT-04315",
+      "respuesta": 1783161933,
+      "respuestaIso": "2026-07-04T05:45:33-05:00"
+    },
+    {
+      "id": "PVT-04320",
+      "respuesta": 1782997669,
+      "respuestaIso": "2026-07-02T08:07:49-05:00"
+    },
+    {
+      "id": "PVT-04326",
+      "respuesta": 1785286168,
+      "respuestaIso": "2026-07-28T19:49:28-05:00"
+    },
+    {
+      "id": "PVT-04360",
+      "respuesta": 1785336808,
+      "respuestaIso": "2026-07-29T09:53:28-05:00"
+    },
+    {
+      "id": "PVT-04367",
+      "respuesta": 1784037840,
+      "respuestaIso": "2026-07-14T09:04:00-05:00"
+    }
+  ]
+}

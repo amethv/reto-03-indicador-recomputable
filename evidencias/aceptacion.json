@@ -1,5 +1,5 @@
 {
-  "started": "2026-11-14T05:42:55.364Z",
+  "started": "2026-11-14T06:23:49.735Z",
   "timezone": "America/Guayaquil",
   "criteria": [
     {
@@ -230,16 +230,20 @@
     {
       "test": "Reinicio del proceso EVM: mismos contrato, sello, transacción y resultado verificado",
       "status": "APROBADO"
+    },
+    {
+      "test": "Reloj del proveedor: abre en «Sepolia (real)» solo con el rol del municipio; los tres roles quedan en «Modo local (simulación)»",
+      "status": "APROBADO"
     }
   ],
   "browserErrors": [],
   "level2": {
     "name": "Nivel 2 · Reloj del proveedor",
-    "implementation": "contracts/RelojProveedor.sol: abrirCaso, responder, penalidad; src/reloj.mjs: abrirCasos, responderCasos, recalcularComoTercero; src/proveedor.mjs: vista #/proveedor por roles; scripts/reloj.mjs y POST /api/reloj/reiniciar: despliegue, fondeo y reinicio.",
+    "implementation": "contracts/RelojProveedor.sol: abrirCaso, responder, abrirCasos y responderCasos por lote, penalidad; src/reloj.mjs: abrirCasos, responderCasos, recalcularComoTercero; src/proveedor.mjs: vista #/proveedor por roles (modo local); src/proveedor-sepolia.mjs y portal-proveedor/: flujo real en Sepolia con dos programas y dos billeteras (probado en tests/reloj-sepolia.test.mjs; la firma con MetaMask se prueba a mano); scripts/reloj.mjs y POST /api/reloj/reiniciar: despliegue, fondeo y reinicio.",
     "status": "APROBADO",
     "test": "En la vista #/proveedor, por roles y sobre un reloj recién desplegado («Reiniciar simulación»): el proveedor intenta responder antes de la apertura (mensaje, «Caso no abierto»); el municipio firma la apertura de los 9 casos con la cuenta 0 y una segunda firma se explica («Caso ya abierto»); el proveedor 1 firma con la cuenta 1: 8 aceptados y PVT-04226 rechazado («Respuesta anterior a la apertura»), total 2.592 USD; el auditor recalcula sin llaves desde los eventos y coincide en las 8 filas. Después se repite el cálculo desde Node y se buscan los textos de proveedores.csv en calldata y eventos.",
     "result": {
-      "contrato": "0xc34175A79ACca40392bECD22ff10fAeBFE780Ae7",
+      "contrato": "0xd611F1AF9D056f00F49CB036759De2753EfA82c2",
       "municipio": "0x90F8bf6A479f320ead074411a4B0e7944Ea8c9C1",
       "proveedores": [
         {
@@ -328,7 +332,7 @@
       ],
       "privacidad": {
         "valoresBuscados": 8,
-        "bytes": 8066,
+        "bytes": 8936,
         "coincidencias": 0
       },
       "supuesto": "SLA contractual en horas corridas, no hábiles"
@@ -389,7 +393,7 @@
   ],
   "completed": true,
   "instance": "nivel1-v5-auditoria",
-  "finished": "2026-11-14T05:45:20.148Z",
+  "finished": "2026-11-14T06:25:17.578Z",
   "level1Complete": true,
   "level2Complete": true
 }

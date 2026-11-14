@@ -5,12 +5,18 @@
 import path from 'node:path';
 import {ROOT} from './runtime.mjs';
 import {archivarPeriodo} from './sepolia-web.mjs';
+import {archivarReloj} from './reloj-sepolia.mjs';
 import {startApp} from './start.mjs';
 
 const archivado = await archivarPeriodo();
 console.log(archivado
  ? `Período anterior de Sepolia archivado en ${path.relative(ROOT, archivado)}`
  : 'No había un período activo de Sepolia: nada que archivar.');
+// Nivel 2: el reloj del proveedor en Sepolia también empieza desde cero.
+const reloj = await archivarReloj();
+console.log(reloj
+ ? `Reloj del proveedor anterior archivado en ${path.relative(ROOT, reloj)}`
+ : 'No había un reloj del proveedor activo en Sepolia: nada que archivar.');
 const app = await startApp({presentacion: true});
 console.log('Modo presentación: julio sin sellar. Vista Sellar → Administración: conecta MetaMask y prepara un nuevo período.');
 for (const signal of ['SIGINT', 'SIGTERM']) process.on(signal, async () => { await app.close(); process.exit(0); });

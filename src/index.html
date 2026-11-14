@@ -223,7 +223,54 @@
 </section>
 
 <section id="s6" class="view" data-route="proveedor" aria-labelledby="t-proveedor" hidden>
-  <header class="viewhead"><h1 id="t-proveedor" tabindex="-1">Reloj del proveedor</h1><p>Dos organizaciones firman el mismo registro: el municipio abre cada caso y el proveedor responde, cada uno con su propia llave. Un auditor externo recalcula las penalidades sin llaves.</p><span class="sim-note">Simulación del flujo entre organizaciones · red local</span></header>
+  <header class="viewhead"><h1 id="t-proveedor" tabindex="-1">Reloj del proveedor</h1><p>Dos organizaciones firman el mismo registro: el municipio abre cada caso y el proveedor responde, cada uno con su propia llave. Un auditor externo recalcula las penalidades sin llaves.</p><span id="simNote" class="sim-note" hidden>Simulación del flujo entre organizaciones · red local</span></header>
+  <div class="reloj-modo"><label for="relojModo">Modo</label><select id="relojModo"><option value="sepolia">Sepolia (real)</option><option value="local">Modo local (simulación)</option></select></div>
+
+  <div id="relojSepolia">
+  <div class="card">
+    <p id="sepGuide" class="role-guide" aria-live="polite"></p>
+    <div class="role-card sep-roles">
+      <div class="role-who"><strong>Municipio de San Ramón de Altamira</strong><span>Esta app. Firma con su MetaMask: prepara el reloj y abre los casos.</span></div>
+      <div class="role-list can"><p>Proveedor 1</p><ul><li>Responde desde su propio programa, el portal del proveedor.</li><li>Firma con su propia MetaMask y su propia frase secreta.</li></ul></div>
+      <div class="role-list cannot"><p>El municipio no puede</p><ul><li>Responder casos.</li><li>Cambiar una apertura ya firmada.</li></ul></div>
+    </div>
+    <ol class="flow-steps">
+      <li class="flow-step" data-sep-step="1"><span class="flow-num" aria-hidden="true">1</span><div class="flow-body">
+        <h3>Preparar reloj en Sepolia</h3>
+        <label class="sep-field">Cuenta del proveedor 1 (su MetaMask)<input id="sepProveedor" type="text" spellcheck="false" autocomplete="off"></label>
+        <button id="prepararReloj" type="button" class="secondary">Preparar reloj en Sepolia</button>
+        <p id="sepRelojInfo" class="small"></p>
+      </div></li>
+      <li class="flow-step" data-sep-step="2"><span class="flow-num" aria-hidden="true">2</span><div class="flow-body">
+        <h3>Firmar apertura de 9 casos</h3>
+        <p class="small">Una sola firma del municipio para los 9 casos de julio (abrirCasos).</p>
+        <button id="sepAbrir" type="button">Firmar apertura de 9 casos</button>
+      </div></li>
+      <li class="flow-step" data-sep-step="3"><span class="flow-num" aria-hidden="true">3</span><div class="flow-body">
+        <h3>Enviar al proveedor</h3>
+        <p class="small">Copia el enlace al portal del proveedor, con la dirección del contrato incluida.</p>
+        <button id="sepEnviar" type="button" class="secondary">Enviar al proveedor</button>
+        <p id="sepLink" class="mono sep-link" hidden></p>
+      </div></li>
+      <li class="flow-step" data-sep-step="4"><span class="flow-num" aria-hidden="true">4</span><div class="flow-body">
+        <h3>Respuestas del proveedor</h3>
+        <p class="small">Esta vista revisa Sepolia cada 5 segundos y se actualiza sola cuando el proveedor responde.</p>
+      </div></li>
+    </ol>
+    <output id="sepStatus" class="status info" aria-live="polite" hidden></output>
+  </div>
+  <div id="sepResults">
+    <div id="sepTotal" class="metrics" aria-live="polite"></div>
+    <div id="sepRejected"></div>
+    <div class="card">
+      <h2>Casos de julio en Sepolia</h2>
+      <div class="tablewrap"><table class="cases"><thead><tr><th>Caso</th><th>Apertura</th><th>Respuesta</th><th>Horas</th><th>Penalidad (contrato)</th><th>Etherscan</th></tr></thead><tbody id="sepCases"></tbody></table></div>
+      <p class="small">El plazo contractual se mide en horas corridas, no hábiles. Fechas en UTC−05:00. Penalidades leídas de penalidad() del contrato.</p>
+    </div>
+  </div>
+  </div>
+
+  <div id="relojLocal" hidden>
   <div class="card">
     <div class="role-tabs" role="tablist" aria-label="Elegir rol">
       <button id="roleMunicipio" class="role-tab active" type="button" role="tab" aria-selected="true" data-ui>Como municipio</button>
@@ -245,6 +292,7 @@
       <p id="otherProviders" class="small"></p>
       <p class="small">El plazo contractual se mide en horas corridas, no hábiles, tal como lo registran el municipio y el proveedor. Fechas en UTC−05:00.</p>
     </div>
+  </div>
   </div>
 </section>
 

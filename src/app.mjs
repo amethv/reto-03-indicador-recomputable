@@ -47,6 +47,7 @@ function controls(){
  $('connectWallet').disabled=busy||!sep;$('prepareSepolia').disabled=busy||!sep||!wallet;
  $('load').disabled=$('prepareFiles').disabled=busy||(sep&&!config);
  $('seal').disabled=busy||!prepared||sealed||(sep&&!config);$('export').disabled=busy||!evidence;sealUi();flowUi();
+ proveedorUI?.botones(busy);
 }
 // Estado visible del botón de sellado. No cambia cuándo se habilita: solo su texto y la línea de ayuda.
 function sealUi(){
@@ -518,8 +519,8 @@ async function rpcResponde(url,ms=8000){
 // Red al abrir: Sepolia por defecto. La red local si no hay internet, o si no hay período fuera del modo presentación.
 async function redInicial(){
  let pref=null;try{pref=sessionStorage.getItem(PREF_RED);}catch{}
- if(pref==='local')return 'local';
  try{const r=await fetch('/api/modo');if(r.ok)modo={...modo,...await r.json()};}catch{}
+ if(pref==='local')return 'local';
  const cfg=await fetch('/evidencias/red-sepolia.json');
  if(!cfg.ok&&!modo.presentacion&&pref!=='sepolia')return 'local';
  const rpc=cfg.ok?(await cfg.json()).rpc:modo.sepoliaRpc;
@@ -528,6 +529,6 @@ async function redInicial(){
  return 'local';
 }
 // Nivel 2: la vista vive en proveedor.mjs; aquí solo se le pasa el estado compartido.
-proveedorUI=initProveedor({$,esc,run,setDone:v=>{if(v)done.add(6);else done.delete(6);renderNav();}});
+proveedorUI=initProveedor({$,esc,run,setDone:v=>{if(v)done.add(6);else done.delete(6);renderNav();},modo:()=>modo,ocupado:()=>busy});
 await run(async()=>{baseline=JSON.parse(await get('/src/originals.json'));await useNetwork(await redInicial());});
 window.__ateneaReady=true;

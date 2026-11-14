@@ -17,3 +17,18 @@ services:
         value: "24"
       - key: HOST
         value: 0.0.0.0
+
+  # Portal del proveedor (Nivel 2): servicio SEPARADO, sitio estático con su propia dirección web.
+  # Publica solo la carpeta portal-proveedor/: HTML, CSS y JS que leen Sepolia por RPC público y
+  # firman con la MetaMask del proveedor. No comparte estado con el servicio del municipio.
+  # Después de crearlo, en el servicio del municipio se configura PORTAL_PROVEEDOR_URL con su dirección.
+  - type: web
+    name: portal-proveedor
+    runtime: static
+    buildCommand: echo "Sitio estático: sin compilación"
+    staticPublishPath: ./portal-proveedor
+    autoDeploy: true
+    headers:
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff

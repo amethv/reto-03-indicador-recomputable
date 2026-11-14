@@ -12,6 +12,9 @@ import {verifySource} from './verify-source.mjs';
 import {ensureReloj,reiniciarReloj} from './reloj.mjs';
 import {JsonRpcProvider} from 'ethers';
 import {registrarPeriodo,guardarSal,leerSal,registrarSello} from './sepolia-web.mjs';
+import {registrarReloj} from './reloj-sepolia.mjs';
+// Portal del proveedor: otro programa (npm run proveedor, puerto 8081) o un sitio estático aparte en Render.
+const PORTAL_PROVEEDOR=process.env.PORTAL_PROVEEDOR_URL||'http://127.0.0.1:8081/';
 // Sepolia con MetaMask: el servidor verifica por un RPC público de solo lectura (nunca con llaves).
 const SEPOLIA_PUBLIC_RPC=process.env.SEPOLIA_PUBLIC_RPC_URL||'https://ethereum-sepolia-rpc.publicnode.com';
 let sepoliaReader=null;const sepolia=()=>(sepoliaReader??=new JsonRpcProvider(SEPOLIA_PUBLIC_RPC,undefined,{cacheTimeout:-1}));
@@ -97,6 +100,13 @@ export async function startApp({presentacion=false}={}){
     else{res.writeHead(404);res.end('No disponible');return;}
     res.writeHead(200,{'Content-Type':'application/json'});res.end(JSON.stringify(result));return;
    }
+   // Nivel 2 en Sepolia: el municipio desplegó RelojProveedor con MetaMask; se comprueba por RPC público antes de guardarlo.
+   if(req.method==='POST'&&url.pathname==='/api/reloj-sepolia/preparar'){
+    if(!req.headers.origin||!sameSite(req)){res.writeHead(403);res.end();return;}
+    const body=await readJsonBody(req,10_000);
+    const result=await registrarReloj({provider:sepolia(),address:body.address,deploymentTransaction:body.deploymentTransaction,proveedor:body.proveedor,publicRpc:SEPOLIA_PUBLIC_RPC,admin:process.env.SEPOLIA_MUNICIPIO||null,intentos:10});
+    res.writeHead(200,{'Content-Type':'application/json'});res.end(JSON.stringify(result));return;
+   }
    if(req.method==='POST'&&url.pathname==='/api/reloj/reiniciar'){
     // Solo desde esta misma página. Despliega un RelojProveedor nuevo en la red local; el del Nivel 1 no se toca.
     if(!req.headers.origin||!sameSite(req)){res.writeHead(403);res.end();return;}
@@ -105,7 +115,7 @@ export async function startApp({presentacion=false}={}){
    }
    if(req.method!=='GET'){res.writeHead(405);res.end();return;}
    // Modo de arranque y RPC público de lectura: la página decide con esto qué red abrir.
-   if(url.pathname==='/api/modo'){res.writeHead(200,{'Content-Type':'application/json'});res.end(JSON.stringify({presentacion,sepoliaRpc:SEPOLIA_PUBLIC_RPC}));return;}
+   if(url.pathname==='/api/modo'){res.writeHead(200,{'Content-Type':'application/json'});res.end(JSON.stringify({presentacion,sepoliaRpc:SEPOLIA_PUBLIC_RPC,portalProveedor:PORTAL_PROVEEDOR}));return;}
    if(url.pathname==='/api/sal'){
     // Solo para esta misma página: sin CORS y rechazando peticiones desde otros sitios.
     if(!sameSite(req)){res.writeHead(403);res.end();return;}

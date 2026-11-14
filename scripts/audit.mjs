@@ -22,7 +22,7 @@ const implementation=[
 ];
 const report={started:new Date().toISOString(),timezone:'America/Guayaquil',criteria:names.map((name,i)=>({criterion:i+1,name,implementation:implementation[i],status:'NO VERIFICADO',test:'No ejecutada',result:null,evidence:[],pending:[]})),supplementary:[],browserErrors:[]};
 // Nivel 2: sección aparte. No cambia los cinco criterios del Nivel 1 ni su resultado.
-report.level2={name:'Nivel 2 · Reloj del proveedor',implementation:'contracts/RelojProveedor.sol: abrirCaso, responder, penalidad; src/reloj.mjs: abrirCasos, responderCasos, recalcularComoTercero; src/proveedor.mjs: vista #/proveedor por roles; scripts/reloj.mjs y POST /api/reloj/reiniciar: despliegue, fondeo y reinicio.',status:'NO VERIFICADO',test:'En la vista #/proveedor, por roles y sobre un reloj recién desplegado («Reiniciar simulación»): el proveedor intenta responder antes de la apertura (mensaje, «Caso no abierto»); el municipio firma la apertura de los 9 casos con la cuenta 0 y una segunda firma se explica («Caso ya abierto»); el proveedor 1 firma con la cuenta 1: 8 aceptados y PVT-04226 rechazado («Respuesta anterior a la apertura»), total 2.592 USD; el auditor recalcula sin llaves desde los eventos y coincide en las 8 filas. Después se repite el cálculo desde Node y se buscan los textos de proveedores.csv en calldata y eventos.',result:null,evidence:[],pending:[]};
+report.level2={name:'Nivel 2 · Reloj del proveedor',implementation:'contracts/RelojProveedor.sol: abrirCaso, responder, abrirCasos y responderCasos por lote, penalidad; src/reloj.mjs: abrirCasos, responderCasos, recalcularComoTercero; src/proveedor.mjs: vista #/proveedor por roles (modo local); src/proveedor-sepolia.mjs y portal-proveedor/: flujo real en Sepolia con dos programas y dos billeteras (probado en tests/reloj-sepolia.test.mjs; la firma con MetaMask se prueba a mano); scripts/reloj.mjs y POST /api/reloj/reiniciar: despliegue, fondeo y reinicio.',status:'NO VERIFICADO',test:'En la vista #/proveedor, por roles y sobre un reloj recién desplegado («Reiniciar simulación»): el proveedor intenta responder antes de la apertura (mensaje, «Caso no abierto»); el municipio firma la apertura de los 9 casos con la cuenta 0 y una segunda firma se explica («Caso ya abierto»); el proveedor 1 firma con la cuenta 1: 8 aceptados y PVT-04226 rechazado («Respuesta anterior a la apertura»), total 2.592 USD; el auditor recalcula sin llaves desde los eventos y coincide en las 8 filas. Después se repite el cálculo desde Node y se buscan los textos de proveedores.csv en calldata y eventos.',result:null,evidence:[],pending:[]};
 let app,browser,step=0,anchor,evidence,originals,salt;
 try {
  report.sourceFiles=(await verifySource()).map(({file,actual})=>({file,sha256:actual}));
@@ -154,6 +154,11 @@ try {
  const l2=report.level2;
  try {
   await page.setViewportSize({width:1440,height:1100});await go('proveedor');
+  // La vista abre en «Sepolia (real)», solo con el rol del municipio; los tres roles quedan en el modo local.
+  await expect(page.locator('#relojModo')).toHaveValue('sepolia');await expect(page.locator('#relojSepolia')).toBeVisible();await expect(page.locator('#roleProveedor')).toBeHidden();
+  await expect(page.locator('#sepGuide')).toContainText('Paso');await expect(page.locator('#sepProveedor')).toHaveValue('0x417502991342eAf1B71015b66D128B75D7a0fA67');
+  report.supplementary.push({test:'Reloj del proveedor: abre en «Sepolia (real)» solo con el rol del municipio; los tres roles quedan en «Modo local (simulación)»',status:'APROBADO'});
+  await page.locator('#relojModo').selectOption('local');await expect(page.locator('#relojLocal')).toBeVisible();await expect(page.locator('#relojSepolia')).toBeHidden();
   const caseStatus=page.locator('#caseStatus'),guide=page.locator('#roleGuide');
   // Reiniciar: un reloj nuevo en la red local, para recorrer el flujo desde cero en cualquier instancia.
   await page.locator('#resetReloj').click();await expect(caseStatus).toContainText('Simulación reiniciada',{timeout:60000});await expect(guide).toContainText('Paso 1 de 3');

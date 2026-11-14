@@ -1,6 +1,6 @@
 # Auditoría Nivel 1 — Reto 03
 
-Ejecución UTC: 2026-11-14T05:42:55.364Z → 2026-11-14T05:45:20.148Z. Zona de presentación: America/Guayaquil.
+Ejecución UTC: 2026-11-14T06:23:49.735Z → 2026-11-14T06:25:17.578Z. Zona de presentación: America/Guayaquil.
 
 Resultado: **NIVEL 1 COMPLETO**.
 
@@ -55,9 +55,9 @@ Se leyeron ambos PDF entregados (docs/referencia/) y el README de datos/. Los or
 
 Resultado: **NIVEL 2 COMPLETO**.
 
-- Archivos y funciones: contracts/RelojProveedor.sol: abrirCaso, responder, penalidad; src/reloj.mjs: abrirCasos, responderCasos, recalcularComoTercero; src/proveedor.mjs: vista #/proveedor por roles; scripts/reloj.mjs y POST /api/reloj/reiniciar: despliegue, fondeo y reinicio.
+- Archivos y funciones: contracts/RelojProveedor.sol: abrirCaso, responder, abrirCasos y responderCasos por lote, penalidad; src/reloj.mjs: abrirCasos, responderCasos, recalcularComoTercero; src/proveedor.mjs: vista #/proveedor por roles (modo local); src/proveedor-sepolia.mjs y portal-proveedor/: flujo real en Sepolia con dos programas y dos billeteras (probado en tests/reloj-sepolia.test.mjs; la firma con MetaMask se prueba a mano); scripts/reloj.mjs y POST /api/reloj/reiniciar: despliegue, fondeo y reinicio.
 - Prueba ejecutada: En la vista #/proveedor, por roles y sobre un reloj recién desplegado («Reiniciar simulación»): el proveedor intenta responder antes de la apertura (mensaje, «Caso no abierto»); el municipio firma la apertura de los 9 casos con la cuenta 0 y una segunda firma se explica («Caso ya abierto»); el proveedor 1 firma con la cuenta 1: 8 aceptados y PVT-04226 rechazado («Respuesta anterior a la apertura»), total 2.592 USD; el auditor recalcula sin llaves desde los eventos y coincide en las 8 filas. Después se repite el cálculo desde Node y se buscan los textos de proveedores.csv en calldata y eventos.
-- Resultado real: {"aceptados":8,"rechazados":["PVT-04226"],"totalUSD":2592,"terceroCoincide":true,"penalidades":{"PVT-04244":954,"PVT-04288":342,"PVT-04301":0,"PVT-04315":0,"PVT-04320":0,"PVT-04326":954,"PVT-04360":0,"PVT-04367":342},"privacidad":{"valoresBuscados":8,"bytes":8066,"coincidencias":0}}
+- Resultado real: {"aceptados":8,"rechazados":["PVT-04226"],"totalUSD":2592,"terceroCoincide":true,"penalidades":{"PVT-04244":954,"PVT-04288":342,"PVT-04301":0,"PVT-04315":0,"PVT-04320":0,"PVT-04326":954,"PVT-04360":0,"PVT-04367":342},"privacidad":{"valoresBuscados":8,"bytes":8936,"coincidencias":0}}
 - Estado: **APROBADO**.
 - Evidencia disponible: evidencias/08-proveedor.png, evidencias/vista-proveedor-movil.png, evidencias/proveedor.json, evidencias/reloj-local.json
 - Correcciones o validaciones pendientes: Ninguna en esta prueba automatizada.
@@ -75,6 +75,7 @@ Resultado: **NIVEL 2 COMPLETO**.
 - Recarga: manifiesto persistido y sello original conservado: APROBADO.
 - Vista móvil 390 px: menú en panel lateral y las 7 vistas sin desbordamiento de página: APROBADO.
 - Reinicio del proceso EVM: mismos contrato, sello, transacción y resultado verificado: APROBADO.
+- Reloj del proveedor: abre en «Sepolia (real)» solo con el rol del municipio; los tres roles quedan en «Modo local (simulación)»: APROBADO.
 
 ## Límites y pendientes
 

@@ -28,7 +28,9 @@ Para una demostración desde cero (contrato sin sellar en una instancia nueva): 
 
 | Comando | Qué hace |
 |---|---|
-| `npm.cmd test` | 58 pruebas: núcleo, sal, hallazgos, contrato, privacidad, Sepolia ensayado en Ganache y reloj del proveedor (Nivel 2) |
+| `npm.cmd test` | 65 pruebas: núcleo, sal, hallazgos, contrato, privacidad, Sepolia ensayado en Ganache y reloj del proveedor (Nivel 2, con lotes y el flujo municipio → proveedor) |
+| `npm.cmd run presentacion` | El día de la presentación: archiva el período y el reloj activos de Sepolia y abre la app sin período |
+| `npm.cmd run proveedor` | Portal del proveedor, programa aparte, en http://127.0.0.1:8081 |
 | `npm.cmd run test:evidencia` | Las mismas pruebas, guardadas en `evidencias/pruebas-unitarias.txt` sin rutas personales |
 | `npm.cmd run compile` | Recompila el contrato y regenera `contracts/RegistroIndicador.json` (abi, bytecode, compilador e input estándar) |
 | `npm.cmd run compile:reloj` | Lo mismo para el contrato del Nivel 2: `contracts/RelojProveedor.json` |
@@ -58,6 +60,7 @@ Aquí sí hay frontera de confianza: **dos organizaciones, un contrato y dinero*
 
 - `abrirCaso(casoId, proveedorId, apertura)`: solo el municipio (cuenta 0), una vez por caso.
 - `responder(casoId, respuesta)`: solo la cuenta del proveedor de ese caso, una vez, y nunca antes de la apertura (`"Respuesta anterior a la apertura"`).
+- `abrirCasos(...)` y `responderCasos(...)`: lo mismo por lote, con una sola firma. Mantienen todas las reglas; si un caso no cumple, se revierte el lote entero.
 - `penalidad(casoId)`: centavos = máx(0, (respuesta − apertura) − SLA) × tarifa / 3600.
 
 Los proveedores salen de `datos/proveedores.csv`: PV-01 firma con la cuenta 1 (SLA 6 h, 180 USD/h) y PV-02 con la cuenta 2 (SLA 4 h, 240 USD/h). Los ids van como keccak256; razón social, servicio, contrato y contacto no entran en la cadena.
@@ -70,11 +73,26 @@ Los proveedores salen de `datos/proveedores.csv`: PV-01 firma con la cuenta 1 (S
 | Otros 4 casos | 2,50 a 3,80 | 0 USD | 0 USD |
 | **Total** | | **2.592 USD** | |
 
-En la vista **6 · Reloj del proveedor** (`#/proveedor`), «Cargar los 9 casos» abre y responde cada caso mostrando qué cuenta firma; «Recalcular como tercero» lee solo los eventos, sin llaves ni CSV, y compara caso por caso con `penalidad()`.
+La vista **6 · Reloj del proveedor** (`#/proveedor`) tiene dos modos:
+
+- **Sepolia (real)**, por defecto: **dos programas y dos billeteras distintas**. Esta vista solo muestra el rol del municipio; el proveedor responde desde otro programa, el **portal del proveedor**.
+- **Modo local (simulación)**, el respaldo sin internet: los tres roles (municipio, proveedor 1 y auditor externo) con cuentas de Ganache del mismo servidor.
+
+**Flujo real en Sepolia**
+
+| Quién | Programa | Billetera | Qué hace |
+|---|---|---|---|
+| Municipio | Esta app, `npm.cmd start` (puerto 8080) | Su MetaMask, por ejemplo en Chrome | 1 «Preparar reloj en Sepolia»: despliega `RelojProveedor` y registra al proveedor 1 con la dirección del campo (por defecto `0x417502991342eAf1B71015b66D128B75D7a0fA67`). 2 «Firmar apertura de 9 casos»: una sola firma (`abrirCasos`). 3 «Enviar al proveedor»: copia el enlace al portal con `?contrato=0x…`. |
+| Proveedor 1 | Portal del proveedor, `npm.cmd run proveedor` (puerto 8081), carpeta `portal-proveedor/` | **Otra** MetaMask, con su propia frase secreta, por ejemplo en Edge | «Conectar MetaMask» (dice si la cuenta es la del proveedor 1), aviso «🔔 El municipio abrió 9 casos · pendientes de tu respuesta», simulación de cada caso sin gas (PVT-04226 en rojo) y «Firmar respuestas»: un solo lote con los casos válidos (`responderCasos`). |
+
+- El servidor del municipio valida el despliegue del reloj por RPC público, como en el Nivel 1: bytecode de `RelojProveedor` (salvo el inmutable `municipio`), argumentos del constructor (solo PV-01, con su SLA y tarifa), red y cuenta que desplegó. Solo entonces escribe `evidencias/reloj-sepolia.json`. El reloj anterior pasa a `evidencias/reloj-sepolia-historial/`, y `npm.cmd run presentacion` también lo archiva.
+- La vista del municipio revisa Sepolia cada 5 segundos y se actualiza sola: estado de cada caso, horas, penalidad leída de `penalidad()`, PVT-04226 rechazado, total **2.592 USD** y enlaces a Etherscan de cada apertura y respuesta.
+- El portal **no comparte estado** con el servidor del municipio: es un sitio estático (HTML, CSS y JS) que lee Sepolia por RPC público y firma con la MetaMask del proveedor. Las horas de respuesta salen del registro del propio proveedor (`portal-proveedor/casos-pv01.json`, una prueba comprueba que coinciden con `datos/tickets_proveedor.csv`).
+- Si se conecta en el portal la cuenta del municipio u otra cualquiera, el portal explica que esa llave no puede responder, y no envía nada.
 
 **Supuesto:** el SLA contractual se mide en horas corridas, no hábiles, porque así vienen los datos.
 
-**Limitación de la demo:** las llaves del municipio y de los proveedores son cuentas de Ganache en el mismo servidor. En la realidad cada organización guarda la suya y firma desde su propio equipo; el contrato ya exige que cada paso lo firme la cuenta correcta.
+**Limitación del modo local:** las llaves del municipio y de los proveedores son cuentas de Ganache del mismo servidor. En el modo Sepolia, cada organización firma con su propia billetera y desde su propio programa.
 
 ## Contrato desplegado
 
@@ -84,13 +102,23 @@ En la vista **6 · Reloj del proveedor** (`#/proveedor`), «Cargar los 9 casos»
 |---|---|
 | Sepolia (pública) | Cambia en cada período: se prepara con MetaMask antes de cada presentación y queda en `evidencias/red-sepolia.json` (los anteriores, en `evidencias/sepolia-historial/`) |
 | Ganache local (respaldo) | `0xe78A0F7E598Cc8b0Bb87894B0F60dD2a88d6a8Ab`, chain ID 31337 (determinista; ver `evidencias/red-local.json`) |
-| RelojProveedor, Nivel 2 (solo local) | En una instancia nueva, `0x5b1869D9A4C187F2EAa108f3062412ecf0526b24`. En una cadena creada antes del Nivel 2 la dirección cambia (primero se fondea la cuenta de PV-02); cada instancia la guarda en `evidencias/reloj-local.json` |
+| RelojProveedor, Nivel 2 en Sepolia | Se prepara con MetaMask desde la vista Reloj del proveedor y queda en `evidencias/reloj-sepolia.json` (los anteriores, en `evidencias/reloj-sepolia-historial/`) |
+| RelojProveedor, Nivel 2 local (simulación) | En una instancia nueva, `0x5b1869D9A4C187F2EAa108f3062412ecf0526b24`. En una cadena creada antes del Nivel 2 la dirección cambia (primero se fondea la cuenta de PV-02); cada instancia la guarda en `evidencias/reloj-local.json` |
 
 `contracts/RelojProveedor.sol` usa los mismos ajustes (Solidity 0.8.30, optimizador 200, Shanghai) y también va precompilado, con su prueba de bytecode.
 
 ## Publicado en Render
 
 `render.yaml` describe el servicio: instala sin dependencias de desarrollo y arranca `node scripts/start.mjs` con `HOST=0.0.0.0` y el `PORT` de Render. Ganache corre dentro del mismo proceso y la página lo consulta por `/rpc`, que solo deja pasar lecturas y transacciones a los dos contratos configurados (el del Nivel 1 y el reloj del proveedor). En el plan gratis el disco no es persistente: tras un reinicio o una suspensión el contrato queda sin sellar y el reloj sin casos; se vuelven a cargar desde las vistas Sellar y Reloj del proveedor. En esta modalidad la sal se entrega a quien abra la página: sirve para la demo con datos sintéticos, no para datos reales.
+
+El mismo `render.yaml` crea **dos servicios separados**, cada uno con su propia dirección web:
+
+| Servicio | Tipo | Qué publica |
+|---|---|---|
+| `reto-03-indicador-recomputable` | Web (Node) | La app del municipio, igual que antes. |
+| `portal-proveedor` | Sitio estático | Solo la carpeta `portal-proveedor/`. No tiene servidor ni API: el navegador del proveedor lee Sepolia por RPC público y firma con su MetaMask. |
+
+Después de crear los dos servicios, en el servicio del municipio (Render → *Environment*) agregar la variable **`PORTAL_PROVEEDOR_URL`** con la dirección del portal, por ejemplo `https://portal-proveedor.onrender.com/`. Así «Enviar al proveedor» arma el enlace al portal publicado. Sin esa variable, el enlace apunta a `http://127.0.0.1:8081/` (el portal en este mismo equipo, con `npm.cmd run proveedor`).
 
 ## Ancla en Sepolia con MetaMask
 
@@ -140,7 +168,8 @@ Láminas: [presentacion/](presentacion/).
 ```
 contracts/   RegistroIndicador (Nivel 1) y RelojProveedor (Nivel 2), .sol y precompilado .json
 src/         núcleo (core, findings, privacy, chain, reloj), interfaz (app, proveedor) y estilos
-scripts/     servidor, auditoría, demo, Sepolia y láminas
+scripts/     servidor, auditoría, demo, presentación, Sepolia (sello y reloj) y láminas
+portal-proveedor/  programa SEPARADO del proveedor (sitio estático y su servidor en el puerto 8081)
 tests/       pruebas con node:test
 datos/       los 11 archivos del organizador, intactos
 docs/        DEMO, AUDITORIA, CALENDARIO, PROCEDENCIA, HALLAZGOS y referencia/ (PDF)
