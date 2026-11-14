@@ -97,7 +97,7 @@ test('preparar reloj: el servidor acepta el RelojProveedor correcto y rechaza by
   const ok2=await deploySepolia();const c2=await registrarReloj({provider,...ok2,proveedor:proveedorReal.address,...local,publicRpc:'x',dirs});
   assert.ok(c2.previous.startsWith('reloj-sepolia-historial/'));
   const hist=await fs.readdir(path.join(dirs.evidenceDir,'reloj-sepolia-historial'));assert.equal(hist.length,1);assert.ok(hist[0].endsWith(ok.address));
-  // npm run presentacion: archiva el reloj activo y deja la app sin reloj.
+  // Arranque del servidor: archiva el reloj activo y la vista empieza en «Preparar reloj en Sepolia».
   assert.ok(await archivarReloj(dirs));assert.equal(await readRelojSepolia(dirs),null);
   assert.equal((await fs.readdir(path.join(dirs.evidenceDir,'reloj-sepolia-historial'))).length,2);
   assert.equal(await archivarReloj(dirs),null);

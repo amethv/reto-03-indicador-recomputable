@@ -13,8 +13,11 @@ import {ensureReloj,reiniciarReloj} from './reloj.mjs';
 import {JsonRpcProvider} from 'ethers';
 import {registrarPeriodo,guardarSal,leerSal,registrarSello} from './sepolia-web.mjs';
 import {registrarReloj} from './reloj-sepolia.mjs';
+import {iniciarSinPeriodo} from './arranque.mjs';
 // Portal del proveedor: otro programa (npm run proveedor, puerto 8081) o un sitio estático aparte en Render.
-const PORTAL_PROVEEDOR=process.env.PORTAL_PROVEEDOR_URL||'http://127.0.0.1:8081/';
+// En Render, render.yaml pasa solo el host del portal (sin https://): se completa aquí.
+const portalEnv=(process.env.PORTAL_PROVEEDOR_URL||'').trim();
+const PORTAL_PROVEEDOR=!portalEnv?'http://127.0.0.1:8081/':/^https?:\/\//.test(portalEnv)?portalEnv:`https://${portalEnv}/`;
 // Sepolia con MetaMask: el servidor verifica por un RPC público de solo lectura (nunca con llaves).
 const SEPOLIA_PUBLIC_RPC=process.env.SEPOLIA_PUBLIC_RPC_URL||'https://ethereum-sepolia-rpc.publicnode.com';
 let sepoliaReader=null;const sepolia=()=>(sepoliaReader??=new JsonRpcProvider(SEPOLIA_PUBLIC_RPC,undefined,{cacheTimeout:-1}));
@@ -39,10 +42,11 @@ function rpcAllowed(call,contracts){
  if(READ_METHODS.has(call.method))return true;
  return call.method==='eth_sendTransaction'&&typeof call.params?.[0]?.to==='string'&&contracts.some(c=>call.params[0].to.toLowerCase()===c.toLowerCase());
 }
-// presentacion: lo arranca npm run presentacion, después de archivar el período activo. Sin período,
-// la página espera uno nuevo en Sepolia en vez de abrir la red local (que puede estar ya sellada).
-export async function startApp({presentacion=false}={}){
+export async function startApp(){
  await verifySource();
+ // Cada arranque empieza sin período activo de Sepolia ni reloj del proveedor: los anteriores van al historial.
+ const archivo=await iniciarSinPeriodo();
+ for(const [que,dir] of [['Período de Sepolia',archivo.periodo],['Reloj del proveedor en Sepolia',archivo.reloj]])if(dir)console.log(`${que} anterior archivado en ${path.relative(ROOT,dir)}`);
  await fs.mkdir(path.join(STATE_ROOT,'.chain'),{recursive:true});
  // Cuentas: 0 municipio y sellador del Nivel 1; 1 PV-01; 2 PV-02 (Nivel 2). En una cadena persistida
  // creada con 2 cuentas, la tercera no tiene saldo: ensureReloj la fondea desde la cuenta 0.
@@ -114,8 +118,8 @@ export async function startApp({presentacion=false}={}){
     res.writeHead(200,{'Content-Type':'application/json'});res.end(JSON.stringify(reloj));return;
    }
    if(req.method!=='GET'){res.writeHead(405);res.end();return;}
-   // Modo de arranque y RPC público de lectura: la página decide con esto qué red abrir.
-   if(url.pathname==='/api/modo'){res.writeHead(200,{'Content-Type':'application/json'});res.end(JSON.stringify({presentacion,sepoliaRpc:SEPOLIA_PUBLIC_RPC,portalProveedor:PORTAL_PROVEEDOR}));return;}
+   // RPC público de lectura (para comprobar internet sin período activo) y dirección del portal del proveedor.
+   if(url.pathname==='/api/modo'){res.writeHead(200,{'Content-Type':'application/json'});res.end(JSON.stringify({sepoliaRpc:SEPOLIA_PUBLIC_RPC,portalProveedor:PORTAL_PROVEEDOR}));return;}
    if(url.pathname==='/api/sal'){
     // Solo para esta misma página: sin CORS y rechazando peticiones desde otros sitios.
     if(!sameSite(req)){res.writeHead(403);res.end();return;}

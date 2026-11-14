@@ -1,6 +1,6 @@
 # Auditoría Nivel 1 — Reto 03
 
-Ejecución UTC: 2026-11-14T06:23:49.735Z → 2026-11-14T06:25:17.578Z. Zona de presentación: America/Guayaquil.
+Ejecución UTC: 2026-11-14T06:57:06.565Z → 2026-11-14T06:58:21.186Z. Zona de presentación: America/Guayaquil.
 
 Resultado: **NIVEL 1 COMPLETO**.
 
@@ -64,11 +64,11 @@ Resultado: **NIVEL 2 COMPLETO**.
 
 ## Pruebas complementarias
 
+- Arranque sin período activo: período y reloj de Sepolia archivados en el historial, Sellar dice «Sin período activo», julio no aparece sellado, pasos 1 a 4 arriba y abiertos, y los pasos 2 a 4 esperan al 1: APROBADO.
 - Navegación: 7 rutas con una sola vista visible, aria-current, atrás y adelante, estado de sello y verificación conservado entre vistas, guion con 5 pasos cumplidos: APROBADO.
 - Segundo sellado rechazado por EVM: APROBADO.
 - Simulación de feriado 2026-07-24: 4 tickets cambian de estado, sin tocar el sello: APROBADO.
-- Sepolia: sello leído en solo lectura por RPC público: APROBADO.
-- Sin período activo (arranque de presentación): «Sin período activo», julio no aparece sellado y los pasos 2 a 4 esperan al paso 1: APROBADO.
+- Sepolia sin período activo: la interfaz lo indica y no inventa un ancla: APROBADO.
 - RPC bloqueado: sin verde ni indicadores acreditados: APROBADO.
 - Proxy /rpc: rechaza evm_revert, evm_mine y transacciones fuera del contrato; deja pasar lecturas: APROBADO.
 - Recarga: se conserva la vista de la ruta (#/comparar): APROBADO.
@@ -83,7 +83,7 @@ Resultado: **NIVEL 2 COMPLETO**.
 - Las pruebas unitarias se ejecutan con npm test; sus resultados se conservan por separado en evidencias/pruebas-unitarias.txt. No se confunden los anclajes de pruebas unitarias con el sello real de aceptación.
 - La EVM local (Ganache) es el respaldo sin internet; no es una red pública. Ganache conserva bloques y estado por instancia en .instances/. Es necesario npm start para consultar las evidencias por RPC; el JSON y las capturas por sí solos no reemplazan esa consulta.
 - El motor descuenta feriados configurados. Se usa lista vacía como supuesto explícito porque no se entregó calendario oficial. Ver docs/CALENDARIO.md. La vista «Calendario de feriados» muestra el efecto sin sellar.
-- El ancla pública en Sepolia se despliega con npm run deploy:sepolia y npm run seal:sepolia; sin evidencias/red-sepolia.json la auditoría solo comprueba que la interfaz lo declara pendiente.
+- Sepolia: cada arranque del servidor archiva el período y el reloj activos en el historial (evidencias/sepolia-historial/ y evidencias/reloj-sepolia-historial/), sin borrar nada. El período se prepara y se sella en vivo con MetaMask, que no se automatiza: la auditoría comprueba que la interfaz abre «Sin período activo» y no inventa un ancla. Los sellos reales anteriores quedan en el historial y en Sepolia.
 - Un sello acredita integridad posterior al anclaje, no veracidad ni cumplimiento institucional anterior.
 - Nivel 2: en la demo las llaves del municipio y de los proveedores están en el mismo servidor (cuentas de Ganache). En la realidad cada organización guarda la suya y firma desde su propio equipo; el contrato ya exige que cada paso lo firme la cuenta correcta.
 - Nivel 2: el SLA contractual se mide en horas corridas, no hábiles, porque así vienen los datos de tickets_proveedor.csv. El reloj registra lo que cada parte firma; no prueba que la hora firmada sea la real.

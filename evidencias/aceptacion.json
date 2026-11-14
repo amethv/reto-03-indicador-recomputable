@@ -1,5 +1,5 @@
 {
-  "started": "2026-11-14T06:23:49.735Z",
+  "started": "2026-11-14T06:57:06.565Z",
   "timezone": "America/Guayaquil",
   "criteria": [
     {
@@ -188,6 +188,10 @@
   ],
   "supplementary": [
     {
+      "test": "Arranque sin período activo: período y reloj de Sepolia archivados en el historial, Sellar dice «Sin período activo», julio no aparece sellado, pasos 1 a 4 arriba y abiertos, y los pasos 2 a 4 esperan al 1",
+      "status": "APROBADO"
+    },
+    {
       "test": "Navegación: 7 rutas con una sola vista visible, aria-current, atrás y adelante, estado de sello y verificación conservado entre vistas, guion con 5 pasos cumplidos",
       "status": "APROBADO"
     },
@@ -200,11 +204,7 @@
       "status": "APROBADO"
     },
     {
-      "test": "Sepolia: sello leído en solo lectura por RPC público",
-      "status": "APROBADO"
-    },
-    {
-      "test": "Sin período activo (arranque de presentación): «Sin período activo», julio no aparece sellado y los pasos 2 a 4 esperan al paso 1",
+      "test": "Sepolia sin período activo: la interfaz lo indica y no inventa un ancla",
       "status": "APROBADO"
     },
     {
@@ -243,7 +243,7 @@
     "status": "APROBADO",
     "test": "En la vista #/proveedor, por roles y sobre un reloj recién desplegado («Reiniciar simulación»): el proveedor intenta responder antes de la apertura (mensaje, «Caso no abierto»); el municipio firma la apertura de los 9 casos con la cuenta 0 y una segunda firma se explica («Caso ya abierto»); el proveedor 1 firma con la cuenta 1: 8 aceptados y PVT-04226 rechazado («Respuesta anterior a la apertura»), total 2.592 USD; el auditor recalcula sin llaves desde los eventos y coincide en las 8 filas. Después se repite el cálculo desde Node y se buscan los textos de proveedores.csv en calldata y eventos.",
     "result": {
-      "contrato": "0xd611F1AF9D056f00F49CB036759De2753EfA82c2",
+      "contrato": "0x6793E8E0E8ac22d71c65c2bf82e9B142dEf9eCDb",
       "municipio": "0x90F8bf6A479f320ead074411a4B0e7944Ea8c9C1",
       "proveedores": [
         {
@@ -393,7 +393,7 @@
   ],
   "completed": true,
   "instance": "nivel1-v5-auditoria",
-  "finished": "2026-11-14T06:25:17.578Z",
+  "finished": "2026-11-14T06:58:21.186Z",
   "level1Complete": true,
   "level2Complete": true
 }

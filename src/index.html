@@ -90,7 +90,7 @@
 
 <section id="s1" class="view" data-route="sellar" aria-labelledby="t-sellar" hidden>
   <header class="viewhead"><h1 id="t-sellar" tabindex="-1">Sellar</h1><p>Anclar en la cadena el compromiso de los 187 tickets de julio, sin datos personales.</p></header>
-  <details id="adminFlow" class="admin flow" open><summary>Administración · sellar julio</summary>
+  <section id="adminFlow" class="admin flow" aria-labelledby="t-admin"><h2 id="t-admin" class="flow-title">Administración · sellar julio</h2>
     <ol class="flow-steps">
       <li class="flow-step" data-flow-step="1"><span class="flow-num" aria-hidden="true">1</span><div class="flow-body">
         <h3>Conectar MetaMask</h3>
@@ -130,7 +130,7 @@
       <select id="network"><option value="sepolia">Pública (Sepolia)</option><option value="local">Local (Ganache)</option></select>
       <p id="netHint" class="small">Usa «Local (Ganache)» solo si falla internet: funciona en este equipo y sella sin MetaMask.</p>
     </div>
-  </details>
+  </section>
   <div class="card">
     <output id="sealStatus" class="status pending" aria-live="polite">Sin sellado comprobado.</output>
     <div id="commitment" class="factbox"></div>

@@ -17,11 +17,18 @@ services:
         value: "24"
       - key: HOST
         value: 0.0.0.0
+      # Dirección del portal del proveedor para «Enviar al proveedor». Render pasa el host del
+      # sitio estático (sin https://) y el servidor lo completa. Se puede reemplazar en el panel.
+      - key: PORTAL_PROVEEDOR_URL
+        fromService:
+          type: web
+          name: portal-proveedor
+          property: host
 
   # Portal del proveedor (Nivel 2): servicio SEPARADO, sitio estático con su propia dirección web.
   # Publica solo la carpeta portal-proveedor/: HTML, CSS y JS que leen Sepolia por RPC público y
   # firman con la MetaMask del proveedor. No comparte estado con el servicio del municipio.
-  # Después de crearlo, en el servicio del municipio se configura PORTAL_PROVEEDOR_URL con su dirección.
+  # Su dirección llega al servicio del municipio como PORTAL_PROVEEDOR_URL (arriba).
   - type: web
     name: portal-proveedor
     runtime: static

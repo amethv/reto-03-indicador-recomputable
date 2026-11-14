@@ -13,7 +13,7 @@ let network='local',config,provider,baseline,evidence=null,prepared=null,prepare
 let lastAnchor=null,lastStatus=null,privacyMatches=null;const done=new Set();
 // Sellado en vivo: cuenta conectada en MetaMask (o null), su owner comprobado y el modo de arranque del servidor.
 // Sin período activo en Sepolia, config es null: la vista lo dice y no se lee ningún sello.
-let wallet=null,walletOwner=null,walletMsg=null,modo={presentacion:false,sepoliaRpc:'https://ethereum-sepolia-rpc.publicnode.com'};
+let wallet=null,walletOwner=null,walletMsg=null,modo={sepoliaRpc:'https://ethereum-sepolia-rpc.publicnode.com'};
 const SIN_PERIODO='Sin período activo · prepara un nuevo período para sellar julio';
 const PREF_RED='atenea-red';
 const recordarRed=n=>{try{sessionStorage.setItem(PREF_RED,n);}catch{}};
@@ -384,7 +384,7 @@ function renderPolicy(){
 const CONFIG_FILES={local:'red-local.json',sepolia:'red-sepolia.json'};
 async function useNetwork(name){
  const response=await fetch(`/evidencias/${CONFIG_FILES[name]}`);
- // Sepolia sin red-sepolia.json no es un error: es «sin período activo» (por ejemplo, tras npm run presentacion).
+ // Sepolia sin red-sepolia.json no es un error: es «sin período activo» (así empieza cada arranque del servidor).
  if(!response.ok&&name!=='sepolia'){$('network').value=network;throw new Error(`Falta la configuración de la red ${name}`);}
  const next=response.ok?await response.json():null;
  provider?.destroy();
@@ -516,13 +516,13 @@ async function rpcResponde(url,ms=8000){
  try{const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({jsonrpc:'2.0',id:1,method:'eth_blockNumber',params:[]}),signal:ctl.signal});return r.ok&&!!(await r.json()).result;}
  catch{return false;}finally{clearTimeout(t);}
 }
-// Red al abrir: Sepolia por defecto. La red local si no hay internet, o si no hay período fuera del modo presentación.
+// Red al abrir: Sepolia. Cada arranque del servidor empieza sin período activo («Sin período activo · prepara…»);
+// el período preparado en la sesión se conserva al recargar. La red local solo si no hay internet o si se eligió.
 async function redInicial(){
  let pref=null;try{pref=sessionStorage.getItem(PREF_RED);}catch{}
  try{const r=await fetch('/api/modo');if(r.ok)modo={...modo,...await r.json()};}catch{}
  if(pref==='local')return 'local';
  const cfg=await fetch('/evidencias/red-sepolia.json');
- if(!cfg.ok&&!modo.presentacion&&pref!=='sepolia')return 'local';
  const rpc=cfg.ok?(await cfg.json()).rpc:modo.sepoliaRpc;
  if(await rpcResponde(rpc))return 'sepolia';
  $('netHint').textContent='Sin conexión con Sepolia: se abrió la red local. Cuando vuelva internet, elige «Pública (Sepolia)».';

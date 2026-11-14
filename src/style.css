@@ -487,8 +487,9 @@ table.cases td.small { white-space: normal; min-width: 190px; }
 details.admin { background: transparent; border: 1px dashed var(--border-strong); }
 details.admin summary { font-weight: 600; color: var(--text); }
 /* Sellado en vivo: cuatro pasos numerados; cada uno se habilita cuando el anterior está completo. */
-details.admin.flow { background: var(--surface); border: 1px solid var(--border); box-shadow: var(--shadow); margin-bottom: var(--space-5); }
-details.admin.flow > summary { font-family: var(--font-display); font-size: 17px; color: var(--navy); }
+/* Siempre arriba y abierto: una sección fija, no un desplegable. */
+.admin.flow { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow); padding: var(--space-4) var(--space-5) var(--space-5); margin-bottom: var(--space-5); }
+.flow-title { margin: 0; font-family: var(--font-display); font-size: 18px; color: var(--navy); }
 .flow-steps { list-style: none; margin: var(--space-4) 0 0; padding: 0; display: grid; gap: var(--space-3); }
 .flow-step { display: grid; grid-template-columns: 36px minmax(0, 1fr); gap: var(--space-3); padding: var(--space-3) var(--space-4); border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface-soft); }
 .flow-step h3 { margin: 4px 0 var(--space-1); font-family: var(--font-display); font-size: 16px; color: var(--navy); }

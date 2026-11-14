@@ -29,7 +29,6 @@ Para una demostración desde cero (contrato sin sellar en una instancia nueva): 
 | Comando | Qué hace |
 |---|---|
 | `npm.cmd test` | 65 pruebas: núcleo, sal, hallazgos, contrato, privacidad, Sepolia ensayado en Ganache y reloj del proveedor (Nivel 2, con lotes y el flujo municipio → proveedor) |
-| `npm.cmd run presentacion` | El día de la presentación: archiva el período y el reloj activos de Sepolia y abre la app sin período |
 | `npm.cmd run proveedor` | Portal del proveedor, programa aparte, en http://127.0.0.1:8081 |
 | `npm.cmd run test:evidencia` | Las mismas pruebas, guardadas en `evidencias/pruebas-unitarias.txt` sin rutas personales |
 | `npm.cmd run compile` | Recompila el contrato y regenera `contracts/RegistroIndicador.json` (abi, bytecode, compilador e input estándar) |
@@ -85,7 +84,7 @@ La vista **6 · Reloj del proveedor** (`#/proveedor`) tiene dos modos:
 | Municipio | Esta app, `npm.cmd start` (puerto 8080) | Su MetaMask, por ejemplo en Chrome | 1 «Preparar reloj en Sepolia»: despliega `RelojProveedor` y registra al proveedor 1 con la dirección del campo (por defecto `0x417502991342eAf1B71015b66D128B75D7a0fA67`). 2 «Firmar apertura de 9 casos»: una sola firma (`abrirCasos`). 3 «Enviar al proveedor»: copia el enlace al portal con `?contrato=0x…`. |
 | Proveedor 1 | Portal del proveedor, `npm.cmd run proveedor` (puerto 8081), carpeta `portal-proveedor/` | **Otra** MetaMask, con su propia frase secreta, por ejemplo en Edge | «Conectar MetaMask» (dice si la cuenta es la del proveedor 1), aviso en naranja «Nuevos casos del municipio: 9 pendientes de tu respuesta», simulación de cada caso sin gas (PVT-04226 en rojo) y «Firmar respuestas»: un solo lote con los casos válidos (`responderCasos`). |
 
-- El servidor del municipio valida el despliegue del reloj por RPC público, como en el Nivel 1: bytecode de `RelojProveedor` (salvo el inmutable `municipio`), argumentos del constructor (solo PV-01, con su SLA y tarifa), red y cuenta que desplegó. Solo entonces escribe `evidencias/reloj-sepolia.json`. El reloj anterior pasa a `evidencias/reloj-sepolia-historial/`, y `npm.cmd run presentacion` también lo archiva.
+- El servidor del municipio valida el despliegue del reloj por RPC público, como en el Nivel 1: bytecode de `RelojProveedor` (salvo el inmutable `municipio`), argumentos del constructor (solo PV-01, con su SLA y tarifa), red y cuenta que desplegó. Solo entonces escribe `evidencias/reloj-sepolia.json`. El reloj anterior pasa a `evidencias/reloj-sepolia-historial/`. Cada arranque del servidor también lo archiva: la vista empieza en «Preparar reloj en Sepolia».
 - La vista del municipio revisa Sepolia cada 5 segundos y se actualiza sola: estado de cada caso, horas, penalidad leída de `penalidad()`, PVT-04226 rechazado, total **2.592 USD** y enlaces a Etherscan de cada apertura y respuesta.
 - El portal **no comparte estado** con el servidor del municipio: es un sitio estático (HTML, CSS y JS) que lee Sepolia por RPC público y firma con la MetaMask del proveedor. Las horas de respuesta salen del registro del propio proveedor (`portal-proveedor/casos-pv01.json`, una prueba comprueba que coinciden con `datos/tickets_proveedor.csv`).
 - Si se conecta en el portal la cuenta del municipio u otra cualquiera, el portal explica que esa llave no puede responder, y no envía nada.
@@ -118,7 +117,9 @@ El mismo `render.yaml` crea **dos servicios separados**, cada uno con su propia 
 | `reto-03-indicador-recomputable` | Web (Node) | La app del municipio, igual que antes. |
 | `portal-proveedor` | Sitio estático | Solo la carpeta `portal-proveedor/`. No tiene servidor ni API: el navegador del proveedor lee Sepolia por RPC público y firma con su MetaMask. |
 
-Después de crear los dos servicios, en el servicio del municipio (Render → *Environment*) agregar la variable **`PORTAL_PROVEEDOR_URL`** con la dirección del portal, por ejemplo `https://portal-proveedor.onrender.com/`. Así «Enviar al proveedor» arma el enlace al portal publicado. Sin esa variable, el enlace apunta a `http://127.0.0.1:8081/` (el portal en este mismo equipo, con `npm.cmd run proveedor`).
+La variable **`PORTAL_PROVEEDOR_URL`** del servicio del municipio ya viene en `render.yaml`: Render le pasa la dirección del sitio estático `portal-proveedor` y el servidor le agrega `https://`. Así «Enviar al proveedor» arma el enlace al portal publicado. Se puede reemplazar en Render → *Environment* con una dirección completa (por ejemplo, un dominio propio). Sin esa variable, como en el equipo con `npm.cmd start`, el enlace apunta a `http://127.0.0.1:8081/` (el portal con `npm.cmd run proveedor`).
+
+En Render, el disco no es persistente y cada arranque empieza sin período: se prepara y se sella en vivo.
 
 ## Ancla en Sepolia con MetaMask
 
@@ -126,11 +127,11 @@ El municipio despliega y sella **desde la página, firmando con MetaMask**: la l
 
 **Una sola vez:** instalar MetaMask, crear una cuenta **de prueba** para el municipio y pedir Sepolia ETH en un faucet (con 0,05 ETH sobra). Para la presentación la app corre en la computadora del municipio con `npm.cmd start`.
 
-**El día de la presentación:** `npm.cmd run presentacion`. Archiva el período activo (configuración y evidencia) en `evidencias/sepolia-historial/`, sin borrar sales ni historial, y abre la app sin período activo: julio no aparece sellado y se sella en vivo. `npm.cmd start` conserva el último período activo, para reabrir la app sin perder nada.
+**Cada arranque empieza sin período.** Cada vez que arranca el servidor (`npm.cmd start`, en el equipo o en Render), el período activo de Sepolia (configuración y evidencia) pasa a `evidencias/sepolia-historial/` y el reloj del proveedor a `evidencias/reloj-sepolia-historial/`. No se borra nada: las sales siguen en `.secreto/`, una por contrato. Al abrir, Sellar dice «Sin período activo · prepara un nuevo período para sellar julio» y julio nunca aparece sellado: se sella en vivo. Mientras el servidor sigue encendido, recargar la página no pierde el período preparado en la sesión. Si el servidor se reinicia, hay que preparar y sellar un período nuevo.
 
-La app abre en Sepolia por defecto. Si no hay internet (o, con `npm.cmd start`, no hay ningún período), abre la red local. El selector de red está al final de **Administración**, como respaldo para emergencias. La dirección del contrato y su enlace a Etherscan se ven en Sellar (paso 2) y en el Panel.
+La app abre en Sepolia. Si no hay internet, abre la red local. El selector de red está al final de **Administración**, como respaldo para emergencias. La dirección del contrato y su enlace a Etherscan se ven en Sellar (paso 2) y en el Panel.
 
-**Sellar en vivo**, en la vista **Sellar** → **Administración** (arriba y abierta), cuatro pasos que se habilitan en orden y se marcan con ✓:
+**Sellar en vivo**, en la vista **Sellar** → **Administración**: siempre arriba del todo y abierta, con cuatro pasos que se habilitan en orden y se marcan con ✓:
 
 1. **Conectar MetaMask**: muestra la cuenta, la red y si es la cuenta del municipio (owner del contrato).
 2. **Preparar nuevo período en Sepolia**. MetaMask pide cambiar a Sepolia si hace falta y firmar el despliegue de `RegistroIndicador` (bytecode de `contracts/RegistroIndicador.json`, con el `rulesHash` de estas reglas). El servidor comprueba en la red pública que el código desplegado es `RegistroIndicador`, que el `rulesHash` es el correcto y que el owner es quien lo desplegó. Solo entonces escribe `evidencias/red-sepolia.json`. El período anterior pasa a `evidencias/sepolia-historial/`; no se borra.

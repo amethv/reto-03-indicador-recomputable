@@ -5,10 +5,10 @@ Hilo conductor: julio de 2026. Los cinco criterios del Nivel 1, en su orden, y d
 ## Preparación (antes del cronómetro)
 
 1. `npm.cmd ci --no-audit --no-fund` y `npm.cmd test` (todo en verde).
-2. Cerrar cualquier proceso en los puertos 8080 y 8545 y ejecutar **`npm.cmd run presentacion`** en la computadora del municipio. Archiva el período activo de Sepolia en `evidencias/sepolia-historial/` (no borra nada: las sales siguen en `.secreto/`) y abre la app **sin período activo**. Abrir http://127.0.0.1:8080: Sellar dice «Sin período activo · prepara un nuevo período para sellar julio». (Para Sepolia no usar Render: su disco no guarda la sal entre reinicios.)
+2. Cerrar cualquier proceso en los puertos 8080 y 8545 y ejecutar `npm.cmd start` en la computadora del municipio. Cada arranque archiva el período y el reloj de Sepolia en el historial (no borra nada: las sales siguen en `.secreto/`) y abre la app **sin período activo**. Abrir http://127.0.0.1:8080: Sellar dice «Sin período activo · prepara un nuevo período para sellar julio». (Para Sepolia no usar Render: su disco no guarda la sal entre reinicios.)
 3. MetaMask: cuenta del municipio, red Sepolia, con Sepolia ETH de prueba, en **Chrome**.
 3b. Nivel 2, el proveedor: en otra terminal, `npm.cmd run proveedor` (portal en http://127.0.0.1:8081, programa aparte; o el portal publicado en Render). El compañero que hace de proveedor usa **Edge** con **su propia MetaMask** (otra frase secreta), en Sepolia y con Sepolia ETH; su cuenta es `0x417502991342eAf1B71015b66D128B75D7a0fA67`.
-4. Si la app se cierra por accidente durante la presentación, reabrirla con `npm.cmd start`: conserva el último período activo y su sello. (Si se cerró antes de preparar el período, volver a usar `npm.cmd run presentacion`.)
+4. Recargar la página no pierde nada mientras el servidor siga encendido. **No cerrar la terminal**: si el servidor se reinicia, el período pasa al historial y hay que preparar y sellar uno nuevo (cerca de un minuto, con dos firmas en MetaMask).
 5. Abrir en el Bloc de notas una **copia** de `datos/tickets.csv` (por ejemplo en el Escritorio). No editar el original y no usar un editor con autoguardado: guardaría el cambio a medio escribir. Dejar el cursor en TK-2026-04201, primera fila.
 6. Tener a mano las dos láminas de `presentacion/`.
 7. Sin internet: usar la red «Local (Ganache)» con `npm.cmd run demo` (o `INICIAR_DEMO.cmd`), que crea una instancia nueva sin sellar. Todo funciona igual, sellando sin MetaMask.
