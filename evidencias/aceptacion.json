@@ -1,5 +1,5 @@
 {
-  "started": "2026-11-14T04:46:58.811Z",
+  "started": "2026-11-14T05:42:55.364Z",
   "timezone": "America/Guayaquil",
   "criteria": [
     {
@@ -204,6 +204,10 @@
       "status": "APROBADO"
     },
     {
+      "test": "Sin período activo (arranque de presentación): «Sin período activo», julio no aparece sellado y los pasos 2 a 4 esperan al paso 1",
+      "status": "APROBADO"
+    },
+    {
       "test": "RPC bloqueado: sin verde ni indicadores acreditados",
       "status": "APROBADO"
     },
@@ -235,7 +239,7 @@
     "status": "APROBADO",
     "test": "En la vista #/proveedor, por roles y sobre un reloj recién desplegado («Reiniciar simulación»): el proveedor intenta responder antes de la apertura (mensaje, «Caso no abierto»); el municipio firma la apertura de los 9 casos con la cuenta 0 y una segunda firma se explica («Caso ya abierto»); el proveedor 1 firma con la cuenta 1: 8 aceptados y PVT-04226 rechazado («Respuesta anterior a la apertura»), total 2.592 USD; el auditor recalcula sin llaves desde los eventos y coincide en las 8 filas. Después se repite el cálculo desde Node y se buscan los textos de proveedores.csv en calldata y eventos.",
     "result": {
-      "contrato": "0xFcCeD5E997E7fb1D0594518D3eD57245bB8ed17E",
+      "contrato": "0xc34175A79ACca40392bECD22ff10fAeBFE780Ae7",
       "municipio": "0x90F8bf6A479f320ead074411a4B0e7944Ea8c9C1",
       "proveedores": [
         {
@@ -385,7 +389,7 @@
   ],
   "completed": true,
   "instance": "nivel1-v5-auditoria",
-  "finished": "2026-11-14T04:48:57.027Z",
+  "finished": "2026-11-14T05:45:20.148Z",
   "level1Complete": true,
   "level2Complete": true
 }

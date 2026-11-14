@@ -98,17 +98,22 @@ El municipio despliega y sella **desde la página, firmando con MetaMask**: la l
 
 **Una sola vez:** instalar MetaMask, crear una cuenta **de prueba** para el municipio y pedir Sepolia ETH en un faucet (con 0,05 ETH sobra). Para la presentación la app corre en la computadora del municipio con `npm.cmd start`.
 
-**Antes de cada presentación** (deja julio sin sellar):
+**El día de la presentación:** `npm.cmd run presentacion`. Archiva el período activo (configuración y evidencia) en `evidencias/sepolia-historial/`, sin borrar sales ni historial, y abre la app sin período activo: julio no aparece sellado y se sella en vivo. `npm.cmd start` conserva el último período activo, para reabrir la app sin perder nada.
 
-1. Vista **Sellar** → desplegable **Administración** → **Preparar nuevo período en Sepolia**. MetaMask pide cambiar a Sepolia si hace falta y firmar el despliegue de `RegistroIndicador` (bytecode de `contracts/RegistroIndicador.json`, con el `rulesHash` de estas reglas).
-2. El servidor comprueba en la red pública que el código desplegado es `RegistroIndicador`, que el `rulesHash` es el correcto y que el owner es quien lo desplegó. Solo entonces escribe `evidencias/red-sepolia.json`. El período anterior pasa a `evidencias/sepolia-historial/`; no se borra.
+La app abre en Sepolia por defecto. Si no hay internet (o, con `npm.cmd start`, no hay ningún período), abre la red local. El selector de red está al final de **Administración**, como respaldo para emergencias. La dirección del contrato y su enlace a Etherscan se ven en Sellar (paso 2) y en el Panel.
 
-**En vivo:**
+**Sellar en vivo**, en la vista **Sellar** → **Administración** (arriba y abierta), cuatro pasos que se habilitan en orden y se marcan con ✓:
 
-3. Con la red **Pública (Sepolia)** elegida: **Cargar los originales entregados** → **Sellar julio en blockchain**. Antes de firmar se comprueba que la cuenta de MetaMask sea el `owner()`; si no, se explica que solo el municipio puede sellar.
-4. La sal secreta se genera en el navegador y se guarda en el servidor **antes** de firmar, en `.secreto/sal-sepolia-<dirección del contrato>.json` (un archivo por contrato, para que un período nuevo no choque con el anterior). Nunca va a la cadena ni a `evidencias/`. Tras el sello, el botón **Descargar sal secreta (respaldo)** guarda una copia.
-5. El servidor lee la transacción por RPC público, comprueba ancla, evidencia y sal, y guarda `evidencias/sello-sepolia.json` y el bloque del sello (`sealBlock`) en la configuración. La vista muestra «✓ Julio ya está sellado» y enlaces a sepolia.etherscan.io de la transacción y del contrato; la tarjeta de red también enlaza el contrato.
-6. Recalcular, Verificar (incluida la edición manual del CSV que da ROJO), Comparar y Privacidad leen Sepolia por RPC público, sin MetaMask. Privacidad revisa la calldata y los eventos reales.
+1. **Conectar MetaMask**: muestra la cuenta, la red y si es la cuenta del municipio (owner del contrato).
+2. **Preparar nuevo período en Sepolia**. MetaMask pide cambiar a Sepolia si hace falta y firmar el despliegue de `RegistroIndicador` (bytecode de `contracts/RegistroIndicador.json`, con el `rulesHash` de estas reglas). El servidor comprueba en la red pública que el código desplegado es `RegistroIndicador`, que el `rulesHash` es el correcto y que el owner es quien lo desplegó. Solo entonces escribe `evidencias/red-sepolia.json`. El período anterior pasa a `evidencias/sepolia-historial/`; no se borra.
+3. **Cargar los originales entregados**.
+4. **Sellar julio en blockchain**. Antes de firmar se comprueba que la cuenta de MetaMask sea el `owner()`; si no, se explica que solo el municipio puede sellar.
+
+Lo que pasa por dentro:
+
+- La sal secreta se genera en el navegador y se guarda en el servidor **antes** de firmar, en `.secreto/sal-sepolia-<dirección del contrato>.json` (un archivo por contrato, para que un período nuevo no choque con el anterior). Nunca va a la cadena ni a `evidencias/`. Tras el sello, el botón **Descargar sal secreta (respaldo)** guarda una copia.
+- El servidor lee la transacción por RPC público, comprueba ancla, evidencia y sal, y guarda `evidencias/sello-sepolia.json` y el bloque del sello (`sealBlock`) en la configuración. La vista muestra «✓ Julio ya está sellado» y enlaces a sepolia.etherscan.io de la transacción y del contrato; la línea de red del Panel también enlaza el contrato.
+- Recalcular, Verificar (incluida la edición manual del CSV que da ROJO), Comparar y Privacidad leen Sepolia por RPC público, sin MetaMask. Privacidad revisa la calldata y los eventos reales.
 
 Opcional: con `SEPOLIA_MUNICIPIO=0x…` en el entorno del servidor, solo esa cuenta puede preparar períodos.
 

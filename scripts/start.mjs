@@ -36,7 +36,9 @@ function rpcAllowed(call,contracts){
  if(READ_METHODS.has(call.method))return true;
  return call.method==='eth_sendTransaction'&&typeof call.params?.[0]?.to==='string'&&contracts.some(c=>call.params[0].to.toLowerCase()===c.toLowerCase());
 }
-export async function startApp(){
+// presentacion: lo arranca npm run presentacion, después de archivar el período activo. Sin período,
+// la página espera uno nuevo en Sepolia en vez de abrir la red local (que puede estar ya sellada).
+export async function startApp({presentacion=false}={}){
  await verifySource();
  await fs.mkdir(path.join(STATE_ROOT,'.chain'),{recursive:true});
  // Cuentas: 0 municipio y sellador del Nivel 1; 1 PV-01; 2 PV-02 (Nivel 2). En una cadena persistida
@@ -102,6 +104,8 @@ export async function startApp(){
     res.writeHead(200,{'Content-Type':'application/json'});res.end(JSON.stringify(reloj));return;
    }
    if(req.method!=='GET'){res.writeHead(405);res.end();return;}
+   // Modo de arranque y RPC público de lectura: la página decide con esto qué red abrir.
+   if(url.pathname==='/api/modo'){res.writeHead(200,{'Content-Type':'application/json'});res.end(JSON.stringify({presentacion,sepoliaRpc:SEPOLIA_PUBLIC_RPC}));return;}
    if(url.pathname==='/api/sal'){
     // Solo para esta misma página: sin CORS y rechazando peticiones desde otros sitios.
     if(!sameSite(req)){res.writeHead(403);res.end();return;}

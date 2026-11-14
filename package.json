@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "start": "node scripts/start.mjs",
+    "presentacion": "node scripts/presentacion.mjs",
     "compile": "node scripts/compile.mjs",
     "compile:reloj": "node scripts/compile-reloj.mjs",
     "test": "node --test --test-concurrency=1 tests/*.test.mjs",

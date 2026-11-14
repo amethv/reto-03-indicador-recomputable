@@ -201,20 +201,11 @@ main {
 .dot.red { background: var(--red-dot); box-shadow: 0 0 0 3px rgba(214, 64, 78, 0.25); }
 .dot.gray { background: var(--gray-dot); }
 
-.netcard {
-  margin-top: auto;
-  padding: var(--space-4);
-  border: 1px solid var(--navy-line);
-  border-radius: var(--radius-lg);
-  background: var(--navy-deep);
-  font-size: 13px;
-}
-.netcard label { display: block; color: var(--ice); font-size: 12px; margin-bottom: var(--space-2); min-width: 0; }
-.netcard select { margin: 0 0 var(--space-3); background: #fff; }
-.netcard p { margin: var(--space-1) 0; color: #ede4ff; line-height: 1.5; }
-.netline { display: flex; align-items: center; gap: var(--space-2); font-weight: 600; }
-.netmeta { color: var(--ice); overflow-wrap: anywhere; }
-.netnote { color: var(--ice) !important; font-size: 12px; margin-top: var(--space-2) !important; }
+/* Red activa: una línea en el Panel (antes era un cuadro en el menú lateral). */
+.panel-net { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-1) var(--space-2); margin: calc(-1 * var(--space-2)) 0 var(--space-5); font-size: 13px; color: var(--text); overflow-wrap: anywhere; }
+.panel-net #netName { font-weight: 600; color: var(--ink); }
+.panel-net .sep { color: var(--gray-dot); }
+.panel-net a { color: var(--teal); font-weight: 600; }
 
 /* ---------- Vistas ---------- */
 
@@ -493,9 +484,30 @@ table.cases td.small { white-space: normal; min-width: 190px; }
 /* ---------- Sepolia con MetaMask ---------- */
 .seal-links { margin: var(--space-3) 0 var(--space-2); font-weight: 600; }
 .seal-links:empty { display: none; }
-.netmeta a { color: #fff; text-decoration: underline; text-underline-offset: 2px; }
 details.admin { background: transparent; border: 1px dashed var(--border-strong); }
 details.admin summary { font-weight: 600; color: var(--text); }
+/* Sellado en vivo: cuatro pasos numerados; cada uno se habilita cuando el anterior está completo. */
+details.admin.flow { background: var(--surface); border: 1px solid var(--border); box-shadow: var(--shadow); margin-bottom: var(--space-5); }
+details.admin.flow > summary { font-family: var(--font-display); font-size: 17px; color: var(--navy); }
+.flow-steps { list-style: none; margin: var(--space-4) 0 0; padding: 0; display: grid; gap: var(--space-3); }
+.flow-step { display: grid; grid-template-columns: 36px minmax(0, 1fr); gap: var(--space-3); padding: var(--space-3) var(--space-4); border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface-soft); }
+.flow-step h3 { margin: 4px 0 var(--space-1); font-family: var(--font-display); font-size: 16px; color: var(--navy); }
+.flow-step p { margin: 0 0 var(--space-2); }
+.flow-step button { margin: 0 0 var(--space-1); }
+.flow-step details { margin-top: var(--space-2); }
+.flow-num { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; background: #fff; border: 2px solid var(--border-strong); color: var(--muted); font: 700 15px/1 var(--font-display); }
+.flow-step.current { border-color: var(--accent); background: #fff; }
+.flow-step.current .flow-num { border-color: var(--accent); background: var(--accent); color: #fff; }
+.flow-step.done .flow-num { border-color: var(--navy); background: var(--navy); color: transparent; position: relative; }
+.flow-step.done .flow-num::after { content: "✓"; position: absolute; color: #fff; font-size: 16px; }
+.flow-step.na { opacity: 0.6; }
+.flow-step.na .flow-num { border-style: dashed; }
+.wallet-ok { font-weight: 600; color: var(--ink); }
+.wallet-no { font-weight: 600; color: var(--amber-ink); }
+.netpick { margin-top: var(--space-4); padding-top: var(--space-3); border-top: 1px dashed var(--border-strong); max-width: 420px; }
+.netpick label { display: block; font-size: 13px; font-weight: 600; color: var(--text); }
+.netpick select { margin-top: var(--space-1); }
+.netpick p { margin: var(--space-1) 0 0; }
 
 /* ---------- Reloj del proveedor por roles ---------- */
 .sim-note { display: inline-block; margin-top: var(--space-2); padding: 3px 10px; border-radius: 999px; background: #eee6fb; color: var(--ink); font-size: 12px; font-weight: 600; letter-spacing: 0.3px; }

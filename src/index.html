@@ -60,14 +60,6 @@
       <li><a href="#/feriado" data-route="feriado"><svg class="icon"><use href="#i-calendar"/></svg><span class="item"><strong>Calendario de feriados</strong><small>Plazos con feriados</small></span></a></li>
     </ul>
   </nav>
-
-  <div class="netcard">
-    <label for="network">Red de verificación</label>
-    <select id="network"><option value="local">Local (Ganache)</option><option value="sepolia">Pública (Sepolia)</option></select>
-    <p class="netline"><span id="rpcDot" class="dot gray" role="img" aria-label="RPC: sin comprobar"></span><span id="netName">Conectando…</span></p>
-    <p class="netmeta">Bloque <span id="netBlock">—</span> · <span id="netContract" class="hash">—</span></p>
-    <p class="netnote">Caso San Ramón de Altamira · datos de prueba</p>
-  </div>
 </aside>
 
 <main id="main">
@@ -81,6 +73,7 @@
     <article class="card stat"><h2>Tickets sellados</h2><p class="stat-value" id="sumCount">—</p><p class="small">Cantidad registrada en la cadena.</p></article>
     <article class="card stat"><h2>Brecha A − B</h2><p class="stat-value" id="sumGap">—</p><p class="small">Puntos porcentuales entre todos los cierres y los confirmados.</p></article>
   </div>
+  <p class="panel-net"><span id="rpcDot" class="dot gray" role="img" aria-label="RPC: sin comprobar"></span><span id="netName">Conectando…</span><span class="sep">·</span><span>Bloque <span id="netBlock">—</span></span><span class="sep">·</span><span>Contrato <span id="netContract" class="hash">—</span></span></p>
   <div class="card">
     <h2>Verificación del mes</h2>
     <ol id="demoScript" class="script">
@@ -97,21 +90,48 @@
 
 <section id="s1" class="view" data-route="sellar" aria-labelledby="t-sellar" hidden>
   <header class="viewhead"><h1 id="t-sellar" tabindex="-1">Sellar</h1><p>Anclar en la cadena el compromiso de los 187 tickets de julio, sin datos personales.</p></header>
+  <details id="adminFlow" class="admin flow" open><summary>Administración · sellar julio</summary>
+    <ol class="flow-steps">
+      <li class="flow-step" data-flow-step="1"><span class="flow-num" aria-hidden="true">1</span><div class="flow-body">
+        <h3>Conectar MetaMask</h3>
+        <p id="walletInfo" class="small">Sin conectar.</p>
+        <button id="connectWallet" type="button" class="secondary">Conectar MetaMask</button>
+      </div></li>
+      <li class="flow-step" data-flow-step="2"><span class="flow-num" aria-hidden="true">2</span><div class="flow-body">
+        <h3>Preparar nuevo período en Sepolia</h3>
+        <p id="periodInfo" class="small"></p>
+        <button id="prepareSepolia" type="button" class="secondary">Preparar nuevo período en Sepolia</button>
+        <output id="adminStatus" class="status info" aria-live="polite" hidden></output>
+      </div></li>
+      <li class="flow-step" data-flow-step="3"><span class="flow-num" aria-hidden="true">3</span><div class="flow-body">
+        <h3>Cargar los originales entregados</h3>
+        <p class="small">Se valida cada archivo contra la huella de la carpeta fuente verificada. Cada columna de los tickets participa en el compromiso; del catálogo, el reporte publicado, la bitácora y las reaperturas solo entra su SHA-256.</p>
+        <button id="load">Cargar los originales entregados</button>
+        <details><summary>Seleccionar los originales a mano</summary>
+          <p class="small">Sus huellas deben coincidir con las de la carpeta fuente verificada.</p>
+          <div class="inputs">
+            <label>Tickets<input id="originalTickets" type="file" accept=".csv"></label>
+            <label>Catálogo de servicios<input id="originalCatalog" type="file" accept=".csv"></label>
+            <label>Reporte mensual publicado<input id="originalReport" type="file" accept=".csv"></label>
+            <label>Bitácora de eventos<input id="originalBitacora" type="file" accept=".csv"></label>
+            <label>Reaperturas<input id="originalReopenings" type="file" accept=".csv"></label>
+          </div>
+          <button id="prepareFiles">Validar originales seleccionados</button>
+        </details>
+      </div></li>
+      <li class="flow-step" data-flow-step="4"><span class="flow-num" aria-hidden="true">4</span><div class="flow-body">
+        <h3>Sellar julio en blockchain</h3>
+        <button id="seal" disabled>Sellar julio en blockchain</button>
+        <p id="sealHint" class="small seal-hint" aria-live="polite">Primero carga los originales.</p>
+      </div></li>
+    </ol>
+    <div class="netpick">
+      <label for="network">Red · respaldo para emergencias</label>
+      <select id="network"><option value="sepolia">Pública (Sepolia)</option><option value="local">Local (Ganache)</option></select>
+      <p id="netHint" class="small">Usa «Local (Ganache)» solo si falla internet: funciona en este equipo y sella sin MetaMask.</p>
+    </div>
+  </details>
   <div class="card">
-    <p>Se valida cada archivo contra la huella de la carpeta fuente verificada. Cada columna de los tickets participa en el compromiso; del catálogo, el reporte publicado, la bitácora y las reaperturas solo entra su SHA-256. Una verificación posterior no puede cambiar el sello.</p>
-    <div class="actions"><button id="load">Cargar los originales entregados</button><button id="seal" disabled>Sellar julio en blockchain</button></div>
-    <p id="sealHint" class="small seal-hint" aria-live="polite">Primero carga los originales.</p>
-    <details><summary>Seleccionar los originales a mano</summary>
-      <p class="small">Sus huellas deben coincidir con las de la carpeta fuente verificada.</p>
-      <div class="inputs">
-        <label>Tickets<input id="originalTickets" type="file" accept=".csv"></label>
-        <label>Catálogo de servicios<input id="originalCatalog" type="file" accept=".csv"></label>
-        <label>Reporte mensual publicado<input id="originalReport" type="file" accept=".csv"></label>
-        <label>Bitácora de eventos<input id="originalBitacora" type="file" accept=".csv"></label>
-        <label>Reaperturas<input id="originalReopenings" type="file" accept=".csv"></label>
-      </div>
-      <button id="prepareFiles">Validar originales seleccionados</button>
-    </details>
     <output id="sealStatus" class="status pending" aria-live="polite">Sin sellado comprobado.</output>
     <div id="commitment" class="factbox"></div>
     <div id="sealLinks" class="seal-links"></div>
@@ -119,11 +139,6 @@
     <details><summary>Respaldo del sello</summary>
       <p class="small">Copia del manifiesto con la huella de los 187 tickets. La app ya la guarda sola en evidencias/; es una copia de respaldo.</p>
       <button id="export" class="secondary" disabled>Descargar respaldo del sellado</button>
-    </details>
-    <details class="admin"><summary>Administración</summary>
-      <p class="small">Antes de cada presentación: despliega con MetaMask un contrato nuevo en Sepolia para que julio quede sin sellar. El servidor lo comprueba en la red pública antes de usarlo; el período anterior queda en el historial.</p>
-      <button id="prepareSepolia" type="button" class="secondary">Preparar nuevo período en Sepolia</button>
-      <output id="adminStatus" class="status info" aria-live="polite" hidden></output>
     </details>
   </div>
   <a class="next" href="#/recalcular" data-next="sellar" hidden>Siguiente: Recalcular <svg class="icon"><use href="#i-arrow"/></svg></a>

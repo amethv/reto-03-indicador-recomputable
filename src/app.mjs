@@ -11,6 +11,13 @@ let network='local',config,provider,baseline,evidence=null,prepared=null,prepare
 // Para el menú y el panel: último ancla leída, estado de la última verifyText (VERDE/ROJO),
 // coincidencias de la última búsqueda de datos personales y pasos del guion cumplidos en esta sesión.
 let lastAnchor=null,lastStatus=null,privacyMatches=null;const done=new Set();
+// Sellado en vivo: cuenta conectada en MetaMask (o null), su owner comprobado y el modo de arranque del servidor.
+// Sin período activo en Sepolia, config es null: la vista lo dice y no se lee ningún sello.
+let wallet=null,walletOwner=null,walletMsg=null,modo={presentacion:false,sepoliaRpc:'https://ethereum-sepolia-rpc.publicnode.com'};
+const SIN_PERIODO='Sin período activo · prepara un nuevo período para sellar julio';
+const PREF_RED='atenea-red';
+const recordarRed=n=>{try{sessionStorage.setItem(PREF_RED,n);}catch{}};
+function periodo(){if(!config)throw new Error(`${SIN_PERIODO} (vista Sellar, paso 2).`);}
 // Nivel 2: configuración del RelojProveedor de esta red (solo existe en la red local).
 // La vista usa siempre el RelojProveedor de la red local, sin importar la red elegida para el sellado.
 let proveedorUI=null;
@@ -33,11 +40,45 @@ function clearResults(message='VERIFICACIÓN INCOMPLETA · ejecuta la verificaci
  $('tickets').replaceChildren();$('tableCount').textContent='';$('changes').replaceChildren();$('holidayResult').replaceChildren();$('personal').replaceChildren();
 }
 // Los controles de la interfaz (menú, copiar) quedan fuera del bloqueo mientras corre una acción.
-function controls(){for(const el of document.querySelectorAll('button:not([data-ui]),input,select'))el.disabled=busy;$('seal').disabled=busy||!prepared||sealed;$('export').disabled=busy||!evidence;sealUi();}
+function controls(){
+ for(const el of document.querySelectorAll('button:not([data-ui]),input,select'))el.disabled=busy;
+ // Cada paso del sellado se habilita cuando el anterior está completo. En la red local no hay MetaMask ni período.
+ const sep=network==='sepolia';
+ $('connectWallet').disabled=busy||!sep;$('prepareSepolia').disabled=busy||!sep||!wallet;
+ $('load').disabled=$('prepareFiles').disabled=busy||(sep&&!config);
+ $('seal').disabled=busy||!prepared||sealed||(sep&&!config);$('export').disabled=busy||!evidence;sealUi();flowUi();
+}
 // Estado visible del botón de sellado. No cambia cuándo se habilita: solo su texto y la línea de ayuda.
 function sealUi(){
  const b=$('seal');b.classList.toggle('sealed-done',sealed);b.textContent=sealed?'✓ Julio ya está sellado':'Sellar julio en blockchain';
- $('sealHint').textContent=sealed?'El sello de julio es único e inmutable: el contrato no permite reemplazarlo ni volver a sellar el período.':prepared?'':'Primero carga los originales.';
+ $('sealHint').textContent=sealed?'El sello de julio es único e inmutable: el contrato no permite reemplazarlo ni volver a sellar el período.':network==='sepolia'&&!config?SIN_PERIODO:prepared?'':'Primero carga los originales.';
+}
+// Pasos ① a ④ de «Administración»: hecho (✓), el que sigue, o «no aplica» en la red local.
+function flowUi(){
+ const sep=network==='sepolia',hechos=[sep?!!wallet:null,sep?!!config:null,!!prepared||sealed,sealed];
+ const sigue=hechos.findIndex(h=>h===false);
+ for(const li of document.querySelectorAll('[data-flow-step]')){
+  const i=Number(li.dataset.flowStep)-1;
+  li.classList.toggle('done',hechos[i]===true);li.classList.toggle('na',hechos[i]===null);li.classList.toggle('current',i===sigue);
+ }
+ const link=a=>config?.explorer?`<a href="${esc(config.explorer)}/address/${esc(a)}" target="_blank" rel="noopener">${esc(a)}</a>`:esc(a);
+ $('periodInfo').innerHTML=!sep?'No aplica en la red local: el contrato es el de este servidor.'
+  :config?`Período activo: contrato ${link(config.address)} · ${sealed?'julio sellado':'julio sin sellar'}.`
+  :`<strong>${esc(SIN_PERIODO)}.</strong> Despliega un contrato nuevo con la cuenta del municipio.`;
+ if(!sep){$('walletInfo').textContent='No aplica en la red local: se sella sin MetaMask.';return;}
+ if(!wallet){$('walletInfo').textContent=walletMsg??'Sin conectar. MetaMask debe tener la cuenta del municipio y Sepolia ETH de prueba.';return;}
+ const rol=!config?'<span class="wallet-ok">Sin período activo: esta cuenta quedará como municipio (owner) del contrato que prepare.</span>'
+  :walletOwner===null?'Comprobando si es la cuenta del municipio…'
+  :walletOwner.toLowerCase()===wallet.toLowerCase()?'<span class="wallet-ok">✓ Es la cuenta del municipio (owner del contrato): puede sellar.</span>'
+  :`<span class="wallet-no">No es la cuenta del municipio: el contrato lo firma ${esc(short(walletOwner))}. Con esta cuenta no se puede sellar.</span>`;
+ $('walletInfo').innerHTML=`Cuenta <span class="hash" title="${esc(wallet)}">${esc(short(wallet))}</span> · red Sepolia<br>${rol}`;
+}
+// Owner del contrato activo, leído por el RPC público (sin MetaMask).
+async function comprobarOwner(){
+ walletOwner=null;flowUi();
+ if(!config||network!=='sepolia')return;
+ try{walletOwner=await new Contract(config.address,ABI,provider).owner();}catch(e){console.error(e);}
+ flowUi();
 }
 // Nombre de la red para mostrar: sin la anotación técnica que guarda la configuración local.
 const redVisible=n=>String(n??'').replace(/\s*\(red de desarrollo real\)/i,'');
@@ -137,6 +178,7 @@ async function renderChanges(result){
 
 async function doVerify(){
  clearResults('VERIFICACIÓN INCOMPLETA · consultando blockchain y comprobando evidencias…');
+ periodo();
  if(!evidence)throw new Error('Falta la evidencia original del sellado confirmado en evidencias/.');
  if(!salt)throw new Error('Falta la sal secreta del sello: en otro equipo, copia la carpeta .secreto/ del equipo que selló y reinicia la app.');
  const t=await texts(),file=$('verifyFile').files[0],text=file?await file.text():t.tickets;
@@ -182,6 +224,7 @@ $('prepareFiles').onclick=()=>run(async()=>{
  await prepare(t);
 });
 $('seal').onclick=()=>run(async()=>{
+ periodo();
  if(!prepared||sealed)throw new Error('No hay un lote preparado para sellar o el sello ya existe.');
  const read=new Contract(config.address,ABI,provider),current=await read.getSeal(PERIOD);if(current.timestamp!==0n){sealed=true;throw new Error('El período ya está sellado. No se reemplazará.');}
  if(network==='sepolia')return sealSepolia();
@@ -199,6 +242,7 @@ const postJson=async(url,data)=>{const r=await fetch(url,{method:'POST',headers:
 async function sealSepolia(){
  try{
   const {signer,address}=await conectarSepolia(t=>status('sealStatus',t));
+  if(wallet?.toLowerCase()!==address.toLowerCase()){wallet=address;comprobarOwner();}
   // Solo el owner del contrato (la cuenta que preparó el período) puede sellar.
   const owner=await new Contract(config.address,ABI,provider).owner();
   if(owner.toLowerCase()!==address.toLowerCase())throw new Error(`Solo el municipio puede sellar: el contrato lo firma la cuenta ${short(owner)} y MetaMask está conectada con ${short(address)}. Cambia de cuenta en MetaMask.`);
@@ -227,7 +271,7 @@ $('downloadSalt').onclick=()=>{
 $('prepareSepolia').onclick=()=>run(async()=>{
  const st=(t,k='info')=>{const o=$('adminStatus');o.hidden=false;o.className=`status ${k}`;o.textContent=t;};
  try{
-  const {signer,address}=await conectarSepolia(t=>st(t));
+  const {signer,address}=await conectarSepolia(t=>st(t));wallet=address;
   const artifact=JSON.parse(await get('/contracts/RegistroIndicador.json'));
   st(`Confirma en MetaMask el despliegue del contrato (cuenta ${short(address)}).`);
   const contract=await new ContractFactory(artifact.abi,artifact.bytecode,signer).deploy(await sha(JSON.stringify(POLICY)));
@@ -235,10 +279,18 @@ $('prepareSepolia').onclick=()=>run(async()=>{
   const receipt=await contract.deploymentTransaction().wait(1);
   st('Comprobando el contrato en la red pública…');
   const nuevo=await postJson('/api/sepolia/periodo',{address:await contract.getAddress(),deploymentTransaction:receipt.hash});
-  $('network').value='sepolia';await useNetwork('sepolia');
-  st(`Período preparado: contrato ${short(nuevo.address)} sin sellar, comprobado en Sepolia. Ahora carga los originales y sella julio.`,'green');
+  $('network').value='sepolia';recordarRed('sepolia');await useNetwork('sepolia');comprobarOwner();
+  st(`Período preparado: contrato ${short(nuevo.address)} sin sellar, comprobado en Sepolia. Sigue el paso 3: carga los originales.`,'green');
  }catch(e){st(`No se preparó el período · ${mensajeBilletera(e)}`,'pending');console.error(e);}
 });
+// Paso 1: conectar MetaMask. Muestra la cuenta, la red y si es el owner del contrato activo.
+$('connectWallet').onclick=()=>run(async()=>{
+ const st=t=>{$('walletInfo').textContent=t;};
+ try{walletMsg=null;const {address}=await conectarSepolia(st);wallet=address;await comprobarOwner();}
+ catch(e){wallet=null;walletMsg=`No se conectó · ${mensajeBilletera(e)}`;console.error(e);}
+});
+// Si se cambia de cuenta en MetaMask, el paso 1 se actualiza solo (sin pedir nada).
+globalThis.ethereum?.on?.('accountsChanged',cuentas=>{wallet=cuentas?.[0]??null;comprobarOwner();controls();});
 $('verify').onclick=()=>run(doVerify);
 // ---------- Calendario de feriados: uno o varios feriados simulados, sin tocar el registro sellado ----------
 const DIAS=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
@@ -286,6 +338,7 @@ $('simulate').onclick=()=>run(async()=>{
  }catch(error){avisoFeriado(`No se pudo calcular · ${error.message}`);}
 });
 $('searchPersonal').onclick=()=>run(async()=>{
+ periodo();
  const anchor=await readAnchor(provider,config);showAnchor(anchor);
  const t=await texts(),values=personalValues(csv(t.tickets).rows,csv(t.bitacora,BITACORA_HEADERS).rows);
  const chain=await collectChainData(provider,config,anchor),result=await searchPersonalData(chain.blobs,values);
@@ -301,6 +354,7 @@ $('searchPersonal').onclick=()=>run(async()=>{
 });
 // «Consultar contrato y transacción»: lee la cadena y muestra la transacción y lo que guarda, con la hora de la consulta.
 $('inspect').onclick=()=>run(async()=>{
+ periodo();
  const anchor=await readAnchor(provider,config);showAnchor(anchor);
  const chain=await collectChainData(provider,config,anchor);
  $('chainData').innerHTML=`<h3>Lo que sí hay en la cadena</h3>${facts(chain.decoded)}<p class="small">Leído de la blockchain a las ${esc(new Date().toLocaleTimeString('es-EC',{timeZone:'America/Guayaquil'}))} · transacción en el bloque ${esc(anchor.blockNumber)}.</p>`;
@@ -329,20 +383,25 @@ function renderPolicy(){
 const CONFIG_FILES={local:'red-local.json',sepolia:'red-sepolia.json'};
 async function useNetwork(name){
  const response=await fetch(`/evidencias/${CONFIG_FILES[name]}`);
- if(!response.ok){
-  $('network').value=network;
-  throw new Error(name==='sepolia'?'Sepolia pendiente: todavía no hay un contrato desplegado en la red pública.':`Falta la configuración de la red ${name}`);
- }
- const next=await response.json();
+ // Sepolia sin red-sepolia.json no es un error: es «sin período activo» (por ejemplo, tras npm run presentacion).
+ if(!response.ok&&name!=='sepolia'){$('network').value=network;throw new Error(`Falta la configuración de la red ${name}`);}
+ const next=response.ok?await response.json():null;
  provider?.destroy();
  // El paso 6 (reloj del proveedor) vive en la red local siempre: cambiar la red del sellado no lo borra.
  const reloj6=done.has(6);
  network=name;config=next;evidence=null;salt=null;sealed=false;prepared=null;preparedSalt=null;lastAnchor=null;privacyMatches=null;done.clear();if(reloj6)done.add(6);clearResults();controls();showSalt();
+ $('network').value=name;
  $('configLink').href=`/evidencias/${CONFIG_FILES[name]}`;
  // La red local se consulta por /rpc del mismo servidor (funciona igual en el equipo y en un servicio publicado).
- const rpcUrl=config.local?new URL('/rpc',location.href).href:config.rpc;
- provider=new JsonRpcProvider(rpcUrl,undefined,{cacheTimeout:-1});provider.pollingInterval=config.local?100:4000;
- refreshNetwork();
+ const rpcUrl=!config?modo.sepoliaRpc:config.local?new URL('/rpc',location.href).href:config.rpc;
+ provider=new JsonRpcProvider(rpcUrl,undefined,{cacheTimeout:-1});provider.pollingInterval=config?.local?100:4000;
+ refreshNetwork();if(wallet)comprobarOwner();
+ if(!config){
+  $('privacy').innerHTML=facts([['Red','Sepolia (testnet pública de Ethereum)'],['Período','Sin período activo']]);
+  $('onchain').innerHTML='<p class="small">Sin consulta.</p>';$('chainData').replaceChildren();showSealLinks(null);$('explorer').textContent='';
+  $('networkNote').textContent='Pública: Sepolia. Todavía no hay un período activo: se prepara en la vista Sellar.';
+  clearResults(`VERIFICACIÓN INCOMPLETA · ${SIN_PERIODO}.`);status('sealStatus',SIN_PERIODO);controls();return;
+ }
  $('privacy').innerHTML=facts([['Contrato configurado',config.address],['Red',redVisible(config.network)],['RPC de lectura',rpcUrl],['Transacción de despliegue',config.deploymentTransaction],['Sello','Falta consultar el sellado.']]);
  $('onchain').innerHTML='<p class="small">Sin consulta.</p>';$('chainData').replaceChildren();showSealLinks(null);
  showExplorer(null);
@@ -410,11 +469,12 @@ function renderNav(){
  $('compareStart').hidden=!!verified;
 }
 async function refreshNetwork(){
- if(!config||!provider)return;
+ if(!provider)return;
  const p=provider,dot=$('rpcDot');
- $('netName').textContent=config.local?'Local · Ganache':'Pública · Sepolia';
+ $('netName').textContent=!config?'Pública · Sepolia · sin período activo':config.local?'Local · Ganache':'Pública · Sepolia';
  // En redes con explorador público (Sepolia), la dirección enlaza al contrato en Etherscan.
- $('netContract').innerHTML=config.explorer?`<a href="${esc(config.explorer)}/address/${esc(config.address)}" target="_blank" rel="noopener">${esc(short(config.address))}</a>`:esc(short(config.address));$('netContract').title=config.address;
+ if(!config){$('netContract').textContent='—';$('netContract').title='';}
+ else{$('netContract').innerHTML=config.explorer?`<a href="${esc(config.explorer)}/address/${esc(config.address)}" target="_blank" rel="noopener">${esc(short(config.address))}</a>`:esc(short(config.address));$('netContract').title=config.address;}
  try{const block=await p.getBlockNumber();if(p!==provider)return;$('netBlock').textContent=block.toLocaleString('es-EC');setDot(dot,'green','RPC: responde');}
  catch{if(p!==provider)return;$('netBlock').textContent='—';setDot(dot,'red','RPC: no responde');}
 }
@@ -447,8 +507,27 @@ $('recalcCompare').onclick=$('recalc').onclick;
 addEventListener('hashchange',()=>showRoute({focus:true}));
 showRoute();
 
-$('network').onchange=()=>run(()=>useNetwork($('network').value));
+// Selector de red: respaldo para emergencias, dentro de «Administración». La elección se recuerda en esta pestaña.
+$('network').onchange=()=>{recordarRed($('network').value);run(()=>useNetwork($('network').value));};
+// ¿Responde un RPC? Una llamada eth_blockNumber con tiempo límite, sin ethers.
+async function rpcResponde(url,ms=8000){
+ const ctl=new AbortController(),t=setTimeout(()=>ctl.abort(),ms);
+ try{const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({jsonrpc:'2.0',id:1,method:'eth_blockNumber',params:[]}),signal:ctl.signal});return r.ok&&!!(await r.json()).result;}
+ catch{return false;}finally{clearTimeout(t);}
+}
+// Red al abrir: Sepolia por defecto. La red local si no hay internet, o si no hay período fuera del modo presentación.
+async function redInicial(){
+ let pref=null;try{pref=sessionStorage.getItem(PREF_RED);}catch{}
+ if(pref==='local')return 'local';
+ try{const r=await fetch('/api/modo');if(r.ok)modo={...modo,...await r.json()};}catch{}
+ const cfg=await fetch('/evidencias/red-sepolia.json');
+ if(!cfg.ok&&!modo.presentacion&&pref!=='sepolia')return 'local';
+ const rpc=cfg.ok?(await cfg.json()).rpc:modo.sepoliaRpc;
+ if(await rpcResponde(rpc))return 'sepolia';
+ $('netHint').textContent='Sin conexión con Sepolia: se abrió la red local. Cuando vuelva internet, elige «Pública (Sepolia)».';
+ return 'local';
+}
 // Nivel 2: la vista vive en proveedor.mjs; aquí solo se le pasa el estado compartido.
 proveedorUI=initProveedor({$,esc,run,setDone:v=>{if(v)done.add(6);else done.delete(6);renderNav();}});
-await run(async()=>{baseline=JSON.parse(await get('/src/originals.json'));await useNetwork('local');});
+await run(async()=>{baseline=JSON.parse(await get('/src/originals.json'));await useNetwork(await redInicial());});
 window.__ateneaReady=true;

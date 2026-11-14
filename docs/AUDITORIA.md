@@ -1,6 +1,6 @@
 # Auditoría Nivel 1 — Reto 03
 
-Ejecución UTC: 2026-11-14T04:46:58.811Z → 2026-11-14T04:48:57.027Z. Zona de presentación: America/Guayaquil.
+Ejecución UTC: 2026-11-14T05:42:55.364Z → 2026-11-14T05:45:20.148Z. Zona de presentación: America/Guayaquil.
 
 Resultado: **NIVEL 1 COMPLETO**.
 
@@ -68,6 +68,7 @@ Resultado: **NIVEL 2 COMPLETO**.
 - Segundo sellado rechazado por EVM: APROBADO.
 - Simulación de feriado 2026-07-24: 4 tickets cambian de estado, sin tocar el sello: APROBADO.
 - Sepolia: sello leído en solo lectura por RPC público: APROBADO.
+- Sin período activo (arranque de presentación): «Sin período activo», julio no aparece sellado y los pasos 2 a 4 esperan al paso 1: APROBADO.
 - RPC bloqueado: sin verde ni indicadores acreditados: APROBADO.
 - Proxy /rpc: rechaza evm_revert, evm_mine y transacciones fuera del contrato; deja pasar lecturas: APROBADO.
 - Recarga: se conserva la vista de la ruta (#/comparar): APROBADO.

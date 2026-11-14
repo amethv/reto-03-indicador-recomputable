@@ -37,7 +37,11 @@ try {
  originals=Object.fromEntries(await Promise.all(Object.entries(SOURCES).map(async([k,f])=>[k,await fs.readFile(path.join(ROOT,'datos',f),'utf8')])));
  // Se ejecutan las cinco demostraciones en el orden del jurado.
  step=1;let item=report.criteria[0];item.test='Cargar originales, pulsar sellado en navegador si aún no existe; comprobar código, recibo, evento y getSeal mediante JSON-RPC real.';
- await expect(page.locator('section#panel')).toBeVisible();await go('sellar');await page.locator('#load').click();await expect(page.locator('#sealStatus')).toContainText('187/187');
+ // La app abre en Sepolia por defecto; la auditoría sella en la red local con el selector de respaldo de «Administración».
+ await expect(page.locator('section#panel')).toBeVisible();await go('sellar');
+ await page.locator('#network').selectOption('local');await expect(page.locator('#sealStatus')).toContainText(/Sello existente confirmado|Sin sellado comprobado/,{timeout:60000});
+ await expect(page.locator('[data-flow-step="1"]')).toHaveClass(/na/);await expect(page.locator('[data-flow-step="2"]')).toHaveClass(/na/);
+ await page.locator('#load').click();await expect(page.locator('#sealStatus')).toContainText('187/187');
  if(await page.locator('#seal').isEnabled()){await page.locator('#seal').click();await expect(page.locator('#sealStatus')).toContainText('SELLADO CONFIRMADO',{timeout:60000});item.newTransaction=true;}else{item.newTransaction=false;}
  anchor=await readAnchor(app.provider,app.config);evidence=JSON.parse(await fs.readFile(path.join(EVIDENCE_DIR,'sello-original.json'),'utf8'));salt=await readSalt(SALT_FILES.local);assert.ok(salt,'Falta la sal del sello local');
  assert.equal((await authenticateEvidence(evidence,anchor)).ok,true);assert.equal(anchor.count,187);assert.equal(evidence.tickets.length,187);
@@ -97,12 +101,19 @@ try {
  // Pruebas complementarias posteriores a los cinco criterios.
  await assert.rejects(new Contract(app.config.address,ABI,await app.provider.getSigner(0)).seal(PERIOD,anchor.root,anchor.evidenceHash,187));report.supplementary.push({test:'Segundo sellado rechazado por EVM',status:'APROBADO'});
  await go('feriado');await page.locator('#simulate').click();await expect(page.locator('#holidayResult')).toContainText('SIMULACIÓN NO SELLADA');await expect(page.locator('#holidayResult')).toContainText('124/187');report.supplementary.push({test:'Simulación de feriado 2026-07-24: 4 tickets cambian de estado, sin tocar el sello',status:'APROBADO'});
- await page.locator('#network').selectOption('sepolia');
+ await go('sellar');await page.locator('#network').selectOption('sepolia');
  // Sepolia: con período preparado y sellado se lee el sello; preparado y sin sellar, la interfaz lo dice.
  try{const sepoliaCfg=JSON.parse(await fs.readFile(path.join(ROOT,'evidencias/red-sepolia.json'),'utf8'));
   if(sepoliaCfg.sealTransaction){await expect(page.locator('#sealStatus')).toContainText('Sello existente confirmado',{timeout:60000});report.supplementary.push({test:'Sepolia: sello leído en solo lectura por RPC público',status:'APROBADO'});}
   else{await expect(page.locator('#sealStatus')).toContainText('Sin sellado comprobado',{timeout:60000});report.supplementary.push({test:'Sepolia: período preparado y aún sin sellar; la interfaz no inventa un sello',status:'APROBADO'});}}
- catch(e){if(e.code!=='ENOENT')throw e;await expect(page.locator('#verification')).toContainText('Sepolia pendiente');report.supplementary.push({test:'Sepolia sin desplegar: la interfaz lo indica y no inventa un ancla',status:'APROBADO (despliegue pendiente)'});}
+ catch(e){if(e.code!=='ENOENT')throw e;await expect(page.locator('#sealStatus')).toContainText('Sin período activo',{timeout:60000});report.supplementary.push({test:'Sepolia sin período activo: la interfaz lo indica y no inventa un ancla',status:'APROBADO (despliegue pendiente)'});}
+ // Arranque de npm run presentacion (período archivado): sin red-sepolia.json, Sellar dice «Sin período activo» y no da julio por sellado.
+ await page.locator('#network').selectOption('local');await expect(page.locator('#sealStatus')).toContainText('Sello existente confirmado',{timeout:30000});
+ await page.route('**/evidencias/red-sepolia.json',route=>route.fulfill({status:404,body:'No disponible'}));
+ await page.locator('#network').selectOption('sepolia');await expect(page.locator('#sealStatus')).toContainText('Sin período activo · prepara un nuevo período para sellar julio',{timeout:60000});
+ await expect(page.locator('#seal')).toHaveText('Sellar julio en blockchain');await expect(page.locator('#seal')).toBeDisabled();await expect(page.locator('#load')).toBeDisabled();await expect(page.locator('#prepareSepolia')).toBeDisabled();
+ await expect(page.locator('[data-flow-step="1"]')).toHaveClass(/current/);await expect(page.locator('[data-flow-step="2"]')).not.toHaveClass(/done/);
+ await page.unroute('**/evidencias/red-sepolia.json');report.supplementary.push({test:'Sin período activo (arranque de presentación): «Sin período activo», julio no aparece sellado y los pasos 2 a 4 esperan al paso 1',status:'APROBADO'});
  await page.locator('#network').selectOption('local');await expect(page.locator('#sealStatus')).toContainText('Sello existente confirmado',{timeout:30000});
  await go('verificar');await context.route('**/rpc',route=>route.abort());await page.locator('#verify').click();await expect(page.locator('#verification')).toContainText('ERROR DE CONEXIÓN',{timeout:30000});await expect(page.locator('#percentA')).toHaveText('—');await expect(page.locator('#verification')).not.toHaveClass(/green/);report.supplementary.push({test:'RPC bloqueado: sin verde ni indicadores acreditados',status:'APROBADO'});await context.unroute('**/rpc');
  // El proxy /rpc solo deja pasar lecturas y transacciones al contrato configurado.
