@@ -12,7 +12,7 @@ const PENDIENTE='atenea-catalogo-pendiente',MODO='atenea-catalogo-red';
 /** ctx: {$, esc, run, setDone(bool), modo() → {sepoliaRpc}, ocupado() → bool}. Devuelve {refresh(), botones(busy)}. */
 export function initCatalogo(ctx){
  const {$,esc}=ctx;
- let red='sepolia',config=null,provider=null,anclado=null,txAnclaje=null,wallet=null,owner=null,original=null,nombres=new Map(),verificado=null;
+ let inteligente=false,red='sepolia',config=null,provider=null,anclado=null,txAnclaje=null,wallet=null,owner=null,original=null,nombres=new Map(),verificado=null;
  try{red=sessionStorage.getItem(MODO)==='local'?'local':'sepolia';}catch{}
  const status=(t,k='info')=>{const o=$('catStatus');o.hidden=!t;o.className=`status ${k}`;o.textContent=t??'';};
  const link=(tipo,h,texto)=>config?.explorer&&h?`<a href="${esc(config.explorer)}/${tipo}/${esc(h)}" target="_blank" rel="noopener">${esc(texto)}</a>`:'';
@@ -35,6 +35,7 @@ export function initCatalogo(ctx){
  function botones(busy=ctx.ocupado()){
   $('catModo').disabled=busy;$('catConectar').disabled=busy||!sep();
   $('catAnclar').disabled=busy||(sep()&&!wallet)||!!anclado?.anclado;
+  $('catRecuperarBox').hidden=!sep()||!!anclado?.anclado;$('catRecuperar').disabled=$('catRecuperarTx').disabled=busy;
   $('catArchivo').disabled=$('catVerificar').disabled=busy||!anclado?.anclado;
   $('catReclasificar').disabled=busy||!anclado?.anclado;
  }
@@ -45,7 +46,7 @@ export function initCatalogo(ctx){
   // Paso 1: cuenta, red y si es el municipio (owner del contrato activo).
   if(!sep())$('catWallet').textContent='No aplica en la red local: ancla la cuenta del municipio de este servidor, sin MetaMask.';
   else if(!wallet)$('catWallet').textContent='Sin conectar. MetaMask debe tener la cuenta del municipio y Sepolia ETH de prueba.';
-  else $('catWallet').innerHTML=`Cuenta <span class="hash" title="${esc(wallet)}">${esc(short(wallet))}</span> · red Sepolia<br>${!owner?'<span class="wallet-ok">Sin catálogo anclado: esta cuenta quedará como municipio (owner) del contrato que despliegue.</span>':owner===wallet?'<span class="wallet-ok">✓ Es la cuenta del municipio (owner del contrato).</span>':`<span class="wallet-no">No es la cuenta del municipio: el contrato lo firma ${esc(short(owner))}.</span>`}`;
+  else $('catWallet').innerHTML=`Cuenta <span class="hash" title="${esc(wallet)}">${esc(short(wallet))}</span> · red Sepolia<br>${!owner?'<span class="wallet-ok">Sin catálogo anclado: esta cuenta quedará como municipio (owner) del contrato que despliegue.</span>':owner===wallet?'<span class="wallet-ok">✓ Es la cuenta del municipio (owner del contrato).</span>':`<span class="wallet-no">No es la cuenta del municipio: el contrato lo firma ${esc(short(owner))}.</span>`}${inteligente?'<br><span class="wallet-no">Es una cuenta inteligente de MetaMask (EIP-7702): MetaMask puede enviar las transacciones a través de otro contrato. El anclaje del catálogo se comprueba igual, por sus eventos.</span>':''}`;
   // Paso 2: estado del anclaje.
   $('catInfo').innerHTML=anclado===null?'Leyendo el catálogo anclado…':anclado.anclado?`Anclado: contrato ${link('address',config.address,config.address)||esc(config.address)} · SHA-256 del CSV <span class="hash">${esc(short(anclado.csvSha256))}</span> · ${anclado.cantidad} servicios${txAnclaje?` · ${link('tx',txAnclaje,'transacción del anclaje')||esc(short(txAnclaje))}`:''}.`
    :sep()?'<strong>Sin catálogo anclado en Sepolia.</strong> Dos firmas en MetaMask: desplegar el contrato y anclar los 14 servicios.':'Sin catálogo anclado en la red local.';
@@ -64,7 +65,10 @@ export function initCatalogo(ctx){
  $('catModo').onchange=()=>{red=$('catModo').value==='local'?'local':'sepolia';try{sessionStorage.setItem(MODO,red);}catch{}provider?.destroy();provider=null;config=null;anclado=null;txAnclaje=null;owner=null;verificado=null;$('catResultado').replaceChildren();$('catInfo').textContent='Leyendo el catálogo anclado…';status(null);pintar();refresh();};
 
  // Paso 1: MetaMask del municipio.
- $('catConectar').onclick=accion(async()=>{const {address}=await conectarSepolia(t=>status(t));wallet=getAddress(address);status(null);});
+ $('catConectar').onclick=accion(async()=>{const {address}=await conectarSepolia(t=>status(t));wallet=getAddress(address);status(null);
+  // Cuenta inteligente de MetaMask (EIP-7702): la cuenta tiene código de delegación 0xef0100… y MetaMask puede
+  // enviar las llamadas a través de otro contrato. El catálogo lo admite (se valida por eventos); se avisa igual.
+  try{inteligente=String(await provider.getCode(wallet)).startsWith('0xef0100');}catch{inteligente=false;}});
 
  // Paso 2: anclar. En Sepolia, dos firmas (desplegar y anclar) y el servidor lo comprueba; en local, la cuenta 0 por /rpc.
  $('catAnclar').onclick=accion(async()=>{
@@ -89,17 +93,36 @@ export function initCatalogo(ctx){
    const rc=await c.deploymentTransaction().wait(1);
    p={address:await c.getAddress(),deploymentTransaction:rc.hash,owner:wallet};try{sessionStorage.setItem(PENDIENTE,JSON.stringify(p));}catch{}
   }
-  const k=nuevoCatalogo(p.address,signer);
-  const r=await intentarReclasificar(nuevoCatalogo(p.address,provider),args,wallet);if(r.rechazado)throw new Error(`El contrato rechazaría el anclaje: ${r.motivo}`);
-  status('Firma 2 de 2 · Confirma en MetaMask el anclaje de los 14 servicios con su prioridad y su SLA.');
-  const tx=await k.anclarCatalogo(...argsContrato(args));
-  status(`Esperando confirmación de la red…\nTX: ${tx.hash}`);
-  const rc=await tx.wait(1);if(rc.status!==1)throw new Error('El anclaje falló en la red.');
+  const k=nuevoCatalogo(p.address,signer),lector=nuevoCatalogo(p.address,provider);
+  // Si ese contrato ya quedó anclado (por ejemplo, falló el registro), no se vuelve a firmar: se busca su anclaje y se registra.
+  let hash=null,bloque=null;
+  if((await leerAnclado(lector)).anclado){
+   const desde=(await provider.getTransactionReceipt(p.deploymentTransaction))?.blockNumber??0;
+   const ev=await lector.queryFilter(lector.filters.CatalogoAnclado(PERIODO_CATALOGO),desde,'latest');
+   if(!ev.length)throw new Error('El contrato ya está anclado, pero no se encontró la transacción del anclaje. Usa «¿Ya anclaste y la app no lo registró?».');
+   hash=ev[0].transactionHash;bloque=ev[0].blockNumber;status('Este contrato ya estaba anclado: se registra sin volver a firmar…');
+  }else{
+   const r=await intentarReclasificar(lector,args,wallet);if(r.rechazado)throw new Error(`El contrato rechazaría el anclaje: ${r.motivo}`);
+   status('Firma 2 de 2 · Confirma en MetaMask el anclaje de los 14 servicios con su prioridad y su SLA.');
+   const tx=await k.anclarCatalogo(...argsContrato(args));
+   status(`Esperando confirmación de la red…\nTX: ${tx.hash}`);
+   const rc=await tx.wait(1);if(rc.status!==1)throw new Error('El anclaje falló en la red.');
+   hash=rc.hash;bloque=rc.blockNumber;
+  }
   status('Comprobando el despliegue y el anclaje en la red pública…');
-  const resp=await fetch('/api/catalogo-sepolia/registrar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({address:p.address,deploymentTransaction:p.deploymentTransaction,anclajeTransaction:rc.hash})});
-  if(!resp.ok)throw new Error(await resp.text()||`HTTP ${resp.status}`);
+  await registrar({address:p.address,deploymentTransaction:p.deploymentTransaction,anclajeTransaction:hash});
   try{sessionStorage.removeItem(PENDIENTE);}catch{}
-  status(`Catálogo de julio anclado en Sepolia y comprobado por RPC público (bloque ${rc.blockNumber}). Sigue el paso 3: verificar.`,'green');
+  status(`Catálogo de julio anclado en Sepolia y comprobado por RPC público (bloque ${bloque}). Sigue el paso 3: verificar.`,'green');
+ });
+ const registrar=async body=>{const resp=await fetch('/api/catalogo-sepolia/registrar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});if(!resp.ok)throw new Error(await resp.text()||`HTTP ${resp.status}`);return resp.json();};
+ // Recuperar un anclaje ya hecho: solo con el hash de la transacción; el servidor encuentra el contrato en el recibo.
+ $('catRecuperar').onclick=accion(async()=>{
+  const h=$('catRecuperarTx').value.trim();
+  if(!/^0x[0-9a-fA-F]{64}$/.test(h))throw new Error('Pega el ID de la transacción del anclaje: 0x y 64 caracteres hexadecimales.');
+  status('Leyendo el recibo en Sepolia y comprobando el catálogo anclado…');
+  const c=await registrar({anclajeTransaction:h});
+  try{sessionStorage.removeItem(PENDIENTE);}catch{}
+  status(`Catálogo recuperado: contrato ${short(c.address)}, anclaje en el bloque ${c.anclajeBlock} (${c.anclajeVia}), comprobado por RPC público. Sigue el paso 3: verificar.`,'green');
  });
 
  // Paso 3: verificar el catálogo original o una copia editada contra lo anclado.

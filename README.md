@@ -28,7 +28,7 @@ Para una demostración desde cero (contrato sin sellar en una instancia nueva): 
 
 | Comando | Qué hace |
 |---|---|
-| `npm.cmd test` | 71 pruebas: núcleo, sal, hallazgos, contrato, privacidad, Sepolia ensayado en Ganache, reloj del proveedor (Nivel 2, con lotes y el flujo municipio → proveedor) y catálogo anclado (Nivel 3) |
+| `npm.cmd test` | 72 pruebas: núcleo, sal, hallazgos, contrato, privacidad, Sepolia ensayado en Ganache, reloj del proveedor (Nivel 2, con lotes y el flujo municipio → proveedor) y catálogo anclado (Nivel 3) |
 | `npm.cmd run proveedor` | Portal del proveedor, programa aparte, en http://127.0.0.1:8081 |
 | `npm.cmd run test:evidencia` | Las mismas pruebas, guardadas en `evidencias/pruebas-unitarias.txt` sin rutas personales |
 | `npm.cmd run compile` | Recompila el contrato y regenera `contracts/RegistroIndicador.json` (abi, bytecode, compilador e input estándar) |
@@ -107,7 +107,7 @@ Objetivo: fijar el catálogo de servicios, con su prioridad y su plazo, **al ini
 Vista **7 · Catálogo y SLA** (`#/catalogo`), con red «Sepolia (real)» por defecto y «Local (respaldo sin internet)»:
 
 1. **Conectar MetaMask** con la cuenta del municipio.
-2. **Anclar catálogo de julio**: dos firmas (desplegar `RegistroCatalogo` y anclar). El servidor comprueba por RPC público el bytecode, la cuenta que desplegó, la transacción de anclaje y que lo anclado sea exactamente `datos/catalogo_servicios.csv`; solo entonces escribe `evidencias/catalogo-sepolia.json`. El anterior pasa a `evidencias/catalogo-sepolia-historial/`, y cada arranque del servidor también lo archiva, igual que el sello y el reloj.
+2. **Anclar catálogo de julio**: dos firmas (desplegar `RegistroCatalogo` y anclar). El servidor comprueba por RPC público el bytecode, la cuenta que desplegó, la transacción de anclaje y que lo anclado sea exactamente `datos/catalogo_servicios.csv`; solo entonces escribe `evidencias/catalogo-sepolia.json`. El anterior pasa a `evidencias/catalogo-sepolia-historial/`, y cada arranque del servidor también lo archiva, igual que el sello y el reloj. El anclaje se comprueba por los eventos que emite el propio contrato y por su estado, no por la forma de la transacción: así vale también con una cuenta inteligente de MetaMask (EIP-7702), que envía la llamada a través de otro contrato. Si el registro falla después de firmar, «¿Ya anclaste y la app no lo registró?» lo recupera solo con el hash de la transacción, sin volver a firmar.
 3. **Verificar catálogo**: el original da VERDE (mismo SHA-256). Una copia con CS-11 relajado de CRITICA 4 h a ALTA 8 h da ROJO, con el servicio, el valor anclado y el editado, y la lista de tickets de julio cuyo cumplimiento cambiaría: TK-2026-04228 (5,80 h reales según la bitácora), TK-2026-04351 y TK-2026-04355.
 4. **Intentar reclasificar**: simula un segundo anclaje con `staticCall` y muestra en rojo el rechazo del contrato, sin gastar gas.
 

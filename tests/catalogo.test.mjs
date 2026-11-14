@@ -10,7 +10,7 @@ import {BrowserProvider,ContractFactory,Interface,encodeBytes32String} from 'eth
 import {compileCatalogo,loadCatalogoArtifact} from '../scripts/catalogo.mjs';
 import {loadRelojArtifact} from '../scripts/reloj.mjs';
 import {validarCatalogo,registrarCatalogo,readCatalogoSepolia,archivarCatalogo} from '../scripts/catalogo-sepolia.mjs';
-import {ABI_CATALOGO,PERIODO_CATALOGO,RECHAZO_RECLASIFICAR,argumentosAnclaje,argsContrato,leerAnclado,compararCatalogo,ticketsAfectados,reclasificar,intentarReclasificar,leerCatalogo} from '../src/catalogo.mjs';
+import {ABI_CATALOGO,PERIODO_CATALOGO,RECHAZO_RECLASIFICAR,argumentosAnclaje,argsContrato,leerAnclado,compararCatalogo,ticketsAfectados,reclasificar,intentarReclasificar,leerCatalogo,nuevoCatalogo} from '../src/catalogo.mjs';
 import {sha} from '../src/core.mjs';
 
 const leer=f=>fs.readFile(new URL(`../datos/${f}`,import.meta.url),'utf8');
@@ -117,6 +117,45 @@ test('anclar con MetaMask: el servidor valida despliegue y anclaje por RPC y gua
   assert.ok(c2.previous.startsWith('catalogo-sepolia-historial/'));
   assert.ok(await archivarCatalogo(dirs));assert.equal(await readCatalogoSepolia(dirs),null);
   assert.equal((await fs.readdir(path.join(dirs.evidenceDir,'catalogo-sepolia-historial'))).length,2);
+ }finally{await close();}
+});
+
+// Caso real de Sepolia (14-11-2026): la cuenta del municipio era una cuenta inteligente de MetaMask (EIP-7702) y
+// el anclaje llegó a través de otro contrato (tx.to ≠ RegistroCatalogo; los eventos los emitió el catálogo).
+// Aquí un «reenviador» hace de cuenta inteligente: despliega el catálogo (queda como owner) y ancla por dentro.
+const REENVIADOR=`// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.30;
+contract Reenviador {
+ function crear(bytes memory codigo) external returns (address a) { assembly { a := create(0, add(codigo, 0x20), mload(codigo)) } require(a != address(0), "crear"); }
+ function ejecutar(address destino, bytes calldata datos) external { (bool ok, bytes memory r) = destino.call(datos); if (!ok) { assembly { revert(add(r, 32), mload(r)) } } }
+}`;
+test('anclaje a través de otro contrato (cuenta inteligente, EIP-7702): se valida por eventos y se recupera solo con el hash',async()=>{
+ const {provider,municipio,artifact,dirs,close}=await setup();
+ try {
+  const {default:solc}=await import('solc');
+  const out=JSON.parse(solc.compile(JSON.stringify({language:'Solidity',sources:{'R.sol':{content:REENVIADOR}},settings:{evmVersion:'shanghai',outputSelection:{'*':{'*':['abi','evm.bytecode.object']}}}}))).contracts['R.sol'].Reenviador;
+  const fwd=await new ContractFactory(out.abi,out.evm.bytecode.object,municipio).deploy();await fwd.waitForDeployment();
+  const address=await fwd.crear.staticCall(artifact.bytecode);await (await fwd.crear(artifact.bytecode)).wait();
+  const k=nuevoCatalogo(address,provider),a=await argumentosAnclaje(CATALOGO);
+  assert.equal(await k.owner(),await fwd.getAddress(),'el owner es la «cuenta inteligente»');
+  // El anclaje: tx.to es el reenviador, no el catálogo; los 15 eventos los emite el catálogo.
+  const rc=await (await fwd.ejecutar(address,k.interface.encodeFunctionData('anclarCatalogo',argsContrato(a)))).wait();
+  assert.notEqual(rc.to,address);assert.equal(rc.logs.filter(l=>l.address===address).length,15);
+  // Antes del arreglo esto daba «La transacción de anclaje no es un anclaje confirmado de este contrato».
+  const v=await validarCatalogo({provider,address,anclajeTransaction:rc.hash,...local});
+  assert.equal(v.address,address);assert.equal(v.anclado.servicios.length,14);assert.match(v.anclajeVia,/^a través de 0x/);assert.equal(v.deploymentTransaction,null);
+  // Recuperar sin dirección ni despliegue: el servidor toma el contrato del evento CatalogoAnclado del recibo.
+  const c=await registrarCatalogo({provider,anclajeTransaction:rc.hash,publicRpc:'x',...local,dirs});
+  assert.equal(c.address,address);assert.equal(c.anclajeTransaction,rc.hash);assert.equal(c.servicios.length,14);assert.ok(!c.links.deployment);
+  assert.deepEqual(await readCatalogoSepolia(dirs),c);
+  // Lo que no es un anclaje del catálogo original sigue rechazado, aunque llegue por el reenviador.
+  const otra=await fwd.crear.staticCall(artifact.bytecode);await (await fwd.crear(artifact.bytecode)).wait();
+  const malo=await (await fwd.ejecutar(otra,k.interface.encodeFunctionData('anclarCatalogo',argsContrato(await argumentosAnclaje(reclasificar(CATALOGO)))))).wait();
+  await assert.rejects(validarCatalogo({provider,anclajeTransaction:malo.hash,...local}),/no corresponde a datos\/catalogo_servicios.csv/);
+  const sinAnclaje=await (await fwd.crear(artifact.bytecode)).wait();
+  await assert.rejects(validarCatalogo({provider,anclajeTransaction:sinAnclaje.hash,...local}),/no contiene el anclaje de julio/);
+  // Con la dirección de otro catálogo, el anclaje de este recibo no le corresponde.
+  await assert.rejects(validarCatalogo({provider,address:otra,anclajeTransaction:rc.hash,...local}),/no es un anclaje confirmado de este contrato/);
  }finally{await close();}
 });
 

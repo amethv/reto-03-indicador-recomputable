@@ -1,0 +1,98 @@
+{
+  "contract": "RegistroCatalogo",
+  "network": "Sepolia (testnet pública de Ethereum)",
+  "chainId": 11155111,
+  "periodo": 202607,
+  "address": "0xA56CFA85E7380111B4142b3f99EAd72F1EB02bc0",
+  "owner": "0x7cA013427943D478f18B3D37FE26883a0B982c27",
+  "deploymentBlock": 12132973,
+  "deploymentTransaction": "0x83d06ac6dbbef706eac45aab5647eb79fe7f1ef5152e23921cc2d2fc6e1d5a4b",
+  "anclajeTransaction": "0xa9aedfb4e3edbed15dae84c351735f8ecdd3b095b4232b6780ff089603339117",
+  "anclajeBlock": 12132977,
+  "anclajeFirmante": "0x7cA013427943D478f18B3D37FE26883a0B982c27",
+  "anclajeVia": "a través de 0xdb9B1e94B5b69Df7e401DDbedE43491141047dB3 (cuenta inteligente de MetaMask, EIP-7702)",
+  "codeHash": "0x20e8d68bc0b48627fb94cd2e96b9adc53d60089299bf72cab0d3ab3a0ead6d4a",
+  "csvSha256": "0xad088fc60f9fb27a240688564afb78ac9623780460f773c71094bb9ee6bd6942",
+  "servicios": [
+    {
+      "id": "CS-01",
+      "prioridad": "MEDIA",
+      "sla": 24
+    },
+    {
+      "id": "CS-02",
+      "prioridad": "ALTA",
+      "sla": 8
+    },
+    {
+      "id": "CS-03",
+      "prioridad": "ALTA",
+      "sla": 8
+    },
+    {
+      "id": "CS-04",
+      "prioridad": "MEDIA",
+      "sla": 24
+    },
+    {
+      "id": "CS-05",
+      "prioridad": "MEDIA",
+      "sla": 24
+    },
+    {
+      "id": "CS-06",
+      "prioridad": "ALTA",
+      "sla": 8
+    },
+    {
+      "id": "CS-07",
+      "prioridad": "CRITICA",
+      "sla": 4
+    },
+    {
+      "id": "CS-08",
+      "prioridad": "CRITICA",
+      "sla": 4
+    },
+    {
+      "id": "CS-09",
+      "prioridad": "CRITICA",
+      "sla": 4
+    },
+    {
+      "id": "CS-10",
+      "prioridad": "BAJA",
+      "sla": 72
+    },
+    {
+      "id": "CS-11",
+      "prioridad": "CRITICA",
+      "sla": 4
+    },
+    {
+      "id": "CS-12",
+      "prioridad": "ALTA",
+      "sla": 8
+    },
+    {
+      "id": "CS-13",
+      "prioridad": "BAJA",
+      "sla": 72
+    },
+    {
+      "id": "CS-14",
+      "prioridad": "CRITICA",
+      "sla": 4
+    }
+  ],
+  "rpc": "https://ethereum-sepolia-rpc.publicnode.com",
+  "explorer": "https://sepolia.etherscan.io",
+  "local": false,
+  "compiler": "0.8.30+commit.73712a01.Emscripten.clang",
+  "preparedFrom": "navegador (MetaMask)",
+  "links": {
+    "contract": "https://sepolia.etherscan.io/address/0xA56CFA85E7380111B4142b3f99EAd72F1EB02bc0",
+    "deployment": "https://sepolia.etherscan.io/tx/0x83d06ac6dbbef706eac45aab5647eb79fe7f1ef5152e23921cc2d2fc6e1d5a4b",
+    "anclaje": "https://sepolia.etherscan.io/tx/0xa9aedfb4e3edbed15dae84c351735f8ecdd3b095b4232b6780ff089603339117"
+  }
+}

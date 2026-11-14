@@ -313,6 +313,11 @@
         <h3>Anclar catálogo de julio</h3>
         <p id="catInfo" class="small"></p>
         <button id="catAnclar" type="button">Anclar catálogo de julio</button>
+        <details id="catRecuperarBox"><summary>¿Ya anclaste y la app no lo registró?</summary>
+          <p class="small">Pega la transacción del anclaje (MetaMask → Actividad → la interacción con el contrato → copiar el ID de transacción). El servidor lee el recibo en Sepolia y lo registra si es el catálogo original. No se firma nada.</p>
+          <div class="inputs"><label>Transacción del anclaje<input id="catRecuperarTx" type="text" spellcheck="false" autocomplete="off" placeholder="0x…"></label></div>
+          <button id="catRecuperar" type="button" class="secondary">Recuperar catálogo anclado</button>
+        </details>
       </div></li>
       <li class="flow-step" data-cat-step="3"><span class="flow-num" aria-hidden="true">3</span><div class="flow-body">
         <h3>Verificar catálogo</h3>

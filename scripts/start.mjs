@@ -120,7 +120,8 @@ export async function startApp(){
    if(req.method==='POST'&&url.pathname==='/api/catalogo-sepolia/registrar'){
     if(!req.headers.origin||!sameSite(req)){res.writeHead(403);res.end();return;}
     const body=await readJsonBody(req,10_000);
-    const result=await registrarCatalogo({provider:sepolia(),address:body.address,deploymentTransaction:body.deploymentTransaction,anclajeTransaction:body.anclajeTransaction,publicRpc:SEPOLIA_PUBLIC_RPC,admin:process.env.SEPOLIA_MUNICIPIO||null,intentos:10});
+    // Sin dirección ni despliegue (recuperar un anclaje): se toman del evento CatalogoAnclado del recibo.
+    const result=await registrarCatalogo({provider:sepolia(),address:body.address??null,deploymentTransaction:body.deploymentTransaction??null,anclajeTransaction:body.anclajeTransaction,publicRpc:SEPOLIA_PUBLIC_RPC,admin:process.env.SEPOLIA_MUNICIPIO||null,intentos:10});
     res.writeHead(200,{'Content-Type':'application/json'});res.end(JSON.stringify(result));return;
    }
    if(req.method==='POST'&&url.pathname==='/api/reloj/reiniciar'){
